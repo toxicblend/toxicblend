@@ -1,7 +1,7 @@
-package toxicblender;
+package toxicblend;
 
-option java_package = "toxicblender.protobuf";
-option java_outer_classname = "ToxicBlenderProtos";
+option java_package = "toxicblend.protobuf";
+option java_outer_classname = "ToxicBlendProtos";
 
 message Vertex {
   required int32 id = 1; // TODO remove this id
