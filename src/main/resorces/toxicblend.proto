@@ -1,0 +1,55 @@
+package toxicblender;
+
+option java_package = "toxicblender.protobuf";
+option java_outer_classname = "ToxicBlenderProtos";
+
+message Vertex {
+  required int32 id = 1; // TODO remove this id
+  required float x = 2; 
+  required float y = 3;
+  required float z = 4;
+}
+
+message Face {
+   repeated int32 vertexes = 1;
+}
+
+message Matrix4x4 {
+   required float m00 = 1;
+   required float m01 = 2;
+   required float m02 = 3;
+   required float m03 = 4;
+   
+   required float m10 = 5;
+   required float m11 = 6;
+   required float m12 = 7;
+   required float m13 = 8;
+   
+   required float m20 = 9;
+   required float m21 = 10;
+   required float m22 = 11;
+   required float m23 = 12;
+   
+   required float m30 = 13;
+   required float m31 = 14;
+   required float m32 = 15;
+   required float m33 = 16;
+}
+
+message Model {
+  required string name = 1;
+  optional Matrix4x4 worldOrientation = 2;
+  repeated Vertex vertexes = 3;
+  repeated Face faces = 4;
+}
+
+message Option {
+  required string key = 1;
+  required string value = 2;
+}
+
+message Message {
+  required string command = 1;
+  repeated Option options = 2;
+  repeated Model models = 3;
+}
