@@ -1,0 +1,1 @@
+/Users/ead/Developer/externalGit/libgdx/gdx/src/com/badlogic/gdx/utils/SharedLibraryLoader.java
