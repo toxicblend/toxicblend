@@ -1,4 +1,4 @@
-A set of plugins that will bring the power of ToxicLIbs, Boost Voronoi and other geometric libraries to Blender.
+A set of plugins that will bring the power of ToxicLibs, Boost Voronoi and other geometric libraries to Blender.
 
 I have not yet uploaded:
 * the blender plugins
