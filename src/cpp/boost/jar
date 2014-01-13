@@ -1,0 +1,2 @@
+jar -cf medianaxisfloat.jar *.dylib #org/toxicblend/operations/medianaxis/jni/MedianAxisFloatJni.class
+jar -cvf medianaxisfloat-source.jar org/toxicblend/operations/medianaxis/jni/MedianAxisFloatJni.java *.hpp *.cpp
