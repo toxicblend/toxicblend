@@ -1,9 +1,8 @@
 //
 //  pointz_data.h
-//  VoronoiVisualizer
 //
-//  Created by Daniel on 2013-03-29.
-//  Copyright (c) 2013 Daniel. All rights reserved.
+//  Created by EAD Fritz. on 2013-03-29.
+//  Copyright (c) 2013 EAD Fritz.. All rights reserved.
 //
 
 #ifndef VoronoiVisualizer_pointz_data_h

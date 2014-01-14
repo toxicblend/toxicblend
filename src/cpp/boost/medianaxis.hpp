@@ -1,8 +1,8 @@
 //
 //  medianAxisjni.h
 //
-//  Created by Daniel on 2013-05-20.
-//  Copyright (c) 2013 None. All rights reserved.
+//  Created by EAD Fritz on 2013-05-20.
+//  Copyright (c) 2013 EAD Fritz. All rights reserved.
 //
 
 

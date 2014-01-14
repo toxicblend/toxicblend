@@ -1,3 +1,10 @@
+//
+//  medianAxis.cpp
+//
+//  Created by EAD Fritz on 2013-05-20.
+//  Copyright (c) 2013 EAD Fritz. All rights reserved.
+//
+
 #include "medianaxis.hpp"
 
 #include <vector>

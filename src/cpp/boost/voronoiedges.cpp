@@ -1,3 +1,4 @@
+
 // Boost.Polygon library voronoi_visualizer.cpp file
 
 //          Copyright Andrii Sydorchuk 2010-2012.
@@ -7,6 +8,7 @@
 
 // See http://www.boost.org for updates, documentation, and revision history.
 
+// Modified by by EAD Fritz on 2013-05-18.
 
 #include <math.h>
 #include "voronoiedges.hpp"

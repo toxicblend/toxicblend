@@ -1,7 +1,12 @@
+//
+//  medianAxisjni.cpp
+//
+//  Created by EAD Fritz on 2013-05-20.
+//  Copyright (c) 2013 EAD Fritz. All rights reserved.
+//
+
 #include "org_toxicblend_operations_boostmedianaxis_MedianAxisJni.hpp"
 #include <boost/thread/mutex.hpp>
-//#include <boost/ptr_container/ptr_unordered_map.hpp>
-
 #include "medianaxis.hpp"
 #include <boost/geometry.hpp>
 #include <boost/geometry/geometry.hpp>
