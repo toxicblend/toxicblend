@@ -15,7 +15,6 @@ import org.toxicblend.operations.volumetricrender.VolumetricRenderProcessor
 import org.toxicblend.operations.projectionoutline.ProjectionOutlineProcessor
 import org.toxicblend.operations.boostmedianaxis.MedianAxisProcessor
 import org.toxicblend.operations.dragoncurve.DragonCurveProcessor
-import org.toxicblend.operations.naiveconvexhull.NaiveConvexHullProcessor
 import org.toxicblend.operations.boostsimplify.BoostSimplify
 
 object ServerThread {
@@ -52,7 +51,6 @@ case class ServerThread(socket: Socket) extends Thread("ServerThread") {
             val processor:CommandProcessorTrait = inMessage.getCommand() match {
               case "OBJECT_OT_toxicblender_volume" => new VolumetricRenderProcessor
               case "OBJECT_OT_toxicblender_add_dragon_curve" => new DragonCurveProcessor
-              case "OBJECT_OT_toxicblender_naive_convex_hull" => new NaiveConvexHullProcessor
               case "OBJECT_OT_toxicblender_projection_outline" => new ProjectionOutlineProcessor
               case "OBJECT_OT_toxicblend_medianaxis" => new MedianAxisProcessor
               case "OBJECT_OT_toxicblend_boostsimplify" => new BoostSimplify

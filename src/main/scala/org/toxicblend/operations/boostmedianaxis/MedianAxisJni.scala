@@ -80,8 +80,8 @@ class MedianAxisJni private {
 object MedianAxisJni {
   
   try {
-    new SharedLibraryLoader().load("medianaxisfloat");
-    println("loaded medianaxisfloat")
+    new SharedLibraryLoader().load("toxicblendboost");
+    println("loaded toxicblendboost")
   } catch {
     case e:java.lang.UnsatisfiedLinkError =>
       System.out.println("java.library.path=" + System.getProperty("java.library.path"));

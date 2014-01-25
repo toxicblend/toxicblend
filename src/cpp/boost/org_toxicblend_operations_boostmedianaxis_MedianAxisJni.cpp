@@ -85,14 +85,16 @@ JNIEXPORT jfloatArray JNICALL Java_org_toxicblend_operations_boostmedianaxis_Med
   }
   
   // Step 1: Convert the incoming JNI jintArray to C's jint[]
-  jint *inCArrayOuter = env->GetIntArrayElements(inJNIArray_outer, false);
+  jboolean isCopy1 = false;
+  jint *inCArrayOuter = env->GetIntArrayElements(inJNIArray_outer, &isCopy1);
   if (NULL == inCArrayOuter){
     std::cerr << " Java_org_toxicblend_operations_boostmedianaxis_MedianAxisJni_voronoiInternalEdgesJni_1 " << instanceId <<   " failed to read input." << std::endl;
     return NULL;
   }
   jsize inCArrayOuterLength = env->GetArrayLength(inJNIArray_outer);
-  
-  jint *inCArrayHole = env->GetIntArrayElements(inJNIArray_holes, false);
+    
+  jboolean isCopy2 = false;
+  jint *inCArrayHole = env->GetIntArrayElements(inJNIArray_holes, &isCopy2);
   if (NULL == inCArrayHole){
     std::cerr << " Java_org_toxicblend_operations_boostmedianaxis_MedianAxisJni_voronoiInternalEdgesJni_1 " << instanceId <<   " failed to read input." << std::endl;
     return NULL;
@@ -159,8 +161,8 @@ JNIEXPORT jfloatArray JNICALL Java_org_toxicblend_operations_boostmedianaxis_Med
   
   typedef boost::geometry::model::d2::point_xy<double> point_2d;
   typedef boost::geometry::model::linestring<point_2d> linestring_2d;
-  
-  jfloat *inCArray = env->GetFloatArrayElements(inJNIArray, false);
+  jboolean isCopy = false;
+  jfloat *inCArray = env->GetFloatArrayElements(inJNIArray, &isCopy);
   jsize inCarraySize = env->GetArrayLength(inJNIArray);
 
   linestring_2d line;
@@ -205,7 +207,8 @@ JNIEXPORT jfloatArray JNICALL Java_org_toxicblend_operations_boostmedianaxis_Med
   typedef boost::geometry::model::linestring<point_3d> linestring_3d;
   
   linestring_3d line;
-  jfloat *inCArray = env->GetFloatArrayElements(inJNIArray, false);
+  jboolean isCopy = false;
+  jfloat *inCArray = env->GetFloatArrayElements(inJNIArray, &isCopy);
   jsize inCarraySize = env->GetArrayLength(inJNIArray);
   
   for (int i=0; i < inCarraySize-2; i+=3) {
@@ -257,7 +260,8 @@ JNIEXPORT void JNICALL Java_org_toxicblend_operations_boostmedianaxis_MedianAxis
   }
   
   // Step 1: Convert the incoming JNI jfloatArray to C's jfloat[]
-  jfloat *inCArray = env->GetFloatArrayElements(inJNIArray, false);
+  jboolean isCopy = false;
+  jfloat *inCArray = env->GetFloatArrayElements(inJNIArray, &isCopy);
   if (NULL == inCArray){
     std::cerr << " Java_org_toxicblend_operations_boostmedianaxis_MedianAxisJni_setRing " << instanceId <<   " failed to read input." << std::endl;
     return;
@@ -286,7 +290,8 @@ JNIEXPORT jint JNICALL Java_org_toxicblend_operations_boostmedianaxis_MedianAxis
   }
   
   // Step 1: Convert the incoming JNI jfloatArray to C's jdouble[]
-  jfloat *inCArray = env->GetFloatArrayElements(inJNIArray, false);
+  jboolean isCopy = false;
+  jfloat *inCArray = env->GetFloatArrayElements(inJNIArray, &isCopy);
   if (NULL == inCArray){
     std::cerr << " Java_org_toxicblend_operations_boostmedianaxis_MedianAxisJni_addRingJni " << instanceId <<  " failed to read input." << std::endl;
     return -1;
@@ -321,7 +326,8 @@ JNIEXPORT jboolean JNICALL Java_org_toxicblend_operations_boostmedianaxis_Median
   }
   
   // Step 1: Convert the incoming JNI jfloatArray to C's jdouble[]
-  jfloat *inCArray = env->GetFloatArrayElements(inJNIArray, false);
+  jboolean isCopy = false;
+  jfloat *inCArray = env->GetFloatArrayElements(inJNIArray, &isCopy);
   if (NULL == inCArray){
     std::cerr << " Java_org_toxicblend_operations_boostmedianaxis_MedianAxisJni_pointsInRing " << instanceId <<  " ringId: " << ringId << " failed to read input."<< std::endl;
     return false;
