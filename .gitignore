@@ -19,3 +19,4 @@ src/cpp/boost/Makefile
 *.pyc
 *.blend1
 *.blend2
+src/cpp/boost/toxicblendboost.jar
