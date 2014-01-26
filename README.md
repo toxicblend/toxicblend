@@ -1,3 +1,6 @@
+Toxicblend
+==========
+
 *** Pre-Alpha code ***
 
 A set of plugins that will bring the power of ToxicLibs, Boost Voronoi and other geometric libraries to Blender 2.69+.
@@ -13,10 +16,44 @@ I have not yet uploaded:
 
 So none of the plugins are usable yet
 
-Dependencies:
+Dependencies
+------------
 blender 2.69
 https://github.com/malthe/google-protobuf.git (google protobufs with python 3 support) 
 https://bitbucket.org/ead_fritz/toxiclibs     (toxiclibs with some minor tweaks)
 one file: com/badlogic/gdx/utils/SharedLibraryLoader.java from http://libgdx.badlogicgames.com is blatantly copied
 www.boost.org version 1.55
  
+Installation & running
+----------------------
+
+1. you will have to download and compile the bitbucket.org/ead_fritz/toxiclibs code
+2. Install boost 1.55 or higher
+3. Copy the python files found in src/main/blender_addon/site-packages/ to the site-packages directory of blender.
+You will find the location with this command in the blender python console:
+	import site; site.getsitepackages()
+
+4. then import the blender addons found in src/main/blender_addon to blender
+
+5. Compile the jni code. 
+
+	cd src/cpp/boost/
+	cmake .
+	make
+	cd ../../..
+	
+6. compile the scala and java code
+    sbt
+    compile
+    
+7. run the server (still in sbt console)
+    run
+    4 (org.toxicblend.Server)
+
+8. In blender, press space and search for the addons:
+ 	toxicblend_volume
+    toxicblend_add_dragon_curve
+    toxicblend_projection_outline
+    toxicblend_medianaxis
+    toxicblend_boostsimplify
+    

@@ -32,8 +32,8 @@ class ToxicBlend_BoostSimplify(bpy.types.Operator):
     return context.active_object is not None
 
   def execute(self, context):
-    imp.reload(toxicblender)
-    with toxicblender.ByteCommunicator("localhost", 9999) as c: 
+    imp.reload(toxicblend)
+    with toxicblend.ByteCommunicator("localhost", 9999) as c: 
       # bpy.context.selected_objects,
       activeObject = context.scene.objects.active
       properties = {'useMultiThreading'     : str(self.useMultiThreadingProperty),

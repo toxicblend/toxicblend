@@ -13,7 +13,7 @@ bl_info = {
        
 class AddDragonCurve(bpy.types.Operator):
   '''Adds a dragon curve from toxiclibs server'''
-  bl_idname = "object.toxicblender_add_dragon_curve"
+  bl_idname = "object.toxicblend_add_dragon_curve"
   bl_label = "Add Dragon Curve"
   bl_options = {'REGISTER', 'UNDO'}  # enable undo for the operator.
 
@@ -25,8 +25,8 @@ class AddDragonCurve(bpy.types.Operator):
   #    return context.active_object is not None
 
   def execute(self, context):
-    imp.reload(toxicblender)
-    with toxicblender.ByteCommunicator("localhost", 9999) as c: 
+    imp.reload(toxicblend)
+    with toxicblend.ByteCommunicator("localhost", 9999) as c: 
       # bpy.context.selected_objects,
       properties = {'iterations': str(self.iterations),\
                     'edgeLength': str(self.edgeLength)}

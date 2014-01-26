@@ -1,0 +1,9 @@
+#!/bin/sh
+
+if [ -x "${PROTOC}" ]
+then
+  ${PROTOC} --cpp_out=../blender_addon --java_out=../java/ toxicblend.proto
+else
+  echo "Set the PROTOC env before running this script"
+fi
+

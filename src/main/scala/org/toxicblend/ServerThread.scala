@@ -49,9 +49,9 @@ case class ServerThread(socket: Socket) extends Thread("ServerThread") {
           
           val outMessage = {
             val processor:CommandProcessorTrait = inMessage.getCommand() match {
-              case "OBJECT_OT_toxicblender_volume" => new VolumetricRenderProcessor
-              case "OBJECT_OT_toxicblender_add_dragon_curve" => new DragonCurveProcessor
-              case "OBJECT_OT_toxicblender_projection_outline" => new ProjectionOutlineProcessor
+              case "OBJECT_OT_toxicblend_volume" => new VolumetricRenderProcessor
+              case "OBJECT_OT_toxicblend_add_dragon_curve" => new DragonCurveProcessor
+              case "OBJECT_OT_toxicblend_projection_outline" => new ProjectionOutlineProcessor
               case "OBJECT_OT_toxicblend_medianaxis" => new MedianAxisProcessor
               case "OBJECT_OT_toxicblend_boostsimplify" => new BoostSimplify
               case s:String => System.err.println("Unknown command: " + s); new EchoProcessor

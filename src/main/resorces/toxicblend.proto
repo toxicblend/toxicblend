@@ -1,6 +1,6 @@
 package toxicblend;
 
-option java_package = "toxicblend.protobuf";
+option java_package = "org.toxicblend.protobuf";
 option java_outer_classname = "ToxicBlendProtos";
 
 message Vertex {
