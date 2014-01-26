@@ -11,7 +11,7 @@ bin/
 .settings
 org.eclipse.jdt.core.prefs
 lib/
-lib/toxicblendboost.jar
+!lib/toxicblendboost.jar
 cmake_install.cmake
 src/cpp/boost/CMakeFiles/
 src/cpp/boost/CMakeCache.txt
