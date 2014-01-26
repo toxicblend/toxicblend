@@ -27,8 +27,9 @@ www.boost.org version 1.55
 Installation & running
 ----------------------
 
-1. you will have to download and compile the bitbucket.org/ead_fritz/toxiclibs code
-2. Install boost 1.55 or higher
+1. Download and compile the bitbucket.org/ead_fritz/toxiclibs code
+2. Install boost 1.55 or higher (on ubuntu 13.10 i had to download from source, because i could not find and 1.55 ppa)
+	export BOOST_INCLUDEDIR=/opt/local/include
 3. Copy the python files found in src/main/blender_addon/site-packages/ to the site-packages directory of blender.
 You will find the location with this command in the blender python console:
 	import site; site.getsitepackages()
@@ -36,7 +37,7 @@ You will find the location with this command in the blender python console:
 4. then import the blender addons found in src/main/blender_addon to blender
 
 5. Compile the jni code. 
-
+	export JAVA_HOME=...path to java...
 	cd src/cpp/boost/
 	cmake .
 	make
