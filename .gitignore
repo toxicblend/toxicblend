@@ -17,3 +17,5 @@ src/cpp/boost/CMakeFiles/
 src/cpp/boost/CMakeCache.txt
 src/cpp/boost/Makefile
 *.pyc
+*.blend1
+*.blend2
