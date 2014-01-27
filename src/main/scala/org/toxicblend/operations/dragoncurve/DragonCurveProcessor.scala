@@ -9,6 +9,10 @@ import org.toxicblend.typeconverters.LineStripConverter
 import org.toxicblend.typeconverters.OptionConverter
 import org.toxicblend.util.Regex
 
+/**
+ * This class is a scala port of http://rosettacode.org/wiki/Dragon_curve#Java
+ * Author unknown
+ */
 class DragonCurveProcessor extends CommandProcessorTrait {
   
   def processInput(inMessage:Message) = {

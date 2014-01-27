@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.11)
-SET(BOOST_MIN_VERSION "1.54")
+SET(BOOST_MIN_VERSION "1.55")
 
 project( toxicblend-boost1 )
 set(BOOST_DIR "$ENV{BOOST_HOME}")
@@ -24,6 +24,18 @@ if (JNI_FOUND)
   message (STATUS "JNI_LIBRARIES=${JNI_LIBRARIES}")
  # Java_JAR_EXECUTABLE points to ANY old file named jar, even non-executable ones!
   message (STATUS "jar command=${Java_JAR_EXECUTABLE}")
+endif()
+# on linux I get this annoying error:
+# Exception in thread "main" java.lang.UnsatisfiedLinkError:
+# libvtkgdcmJava.so:
+# libmawt.so: cannot open shared object file: No such file or directory
+
+# let's find this lib here then
+if(UNIX)
+  find_library(JAVA_MAWT_LIBRARY NAMES mawt
+    # there is one also in headless but it does not work...
+    PATHS ${JavaProp_SUN_BOOT_LIBRARY_PATH}/xawt
+  )
 endif()
 
 include_directories(${Boost_INCLUDE_DIR} ${JNI_INCLUDE_DIRS})

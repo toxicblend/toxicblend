@@ -8,8 +8,7 @@ There are several blender plugins, one for each operation. They send objects (ve
 protocol buffers) to a JVM server. This server then computes the operation (volumetric brush, median axis, 
 simplify 2D polygon, etc. etc) and sends the resulting object back to the blender plugin.
 
-I have tested the code on Ubuntu 13.10 (64 bit) and OSX 10.9 with mac ports
-Tests will be made on Gentoo (x64) really soon
+I have tested the code on Ubuntu 13.10, Gentoo (64 bit) and OSX 10.9 with mac ports
 
 Dependencies
 ------------
@@ -23,12 +22,21 @@ Installation & running
 ----------------------
 
 1. Download and compile the bitbucket.org/ead_fritz/toxiclibs code
-	
+
+	hg clone https://bitbucket.org/ead_fritz/toxiclibs
+
+	cd toxiclibs
+
+	ant -f ant/build_all.xml 
+
 	make soft links from toxicblend/lib/toxiclibscore.jar -> compilation_path/toxiclibs/dist/toxiclibscore.jar 
 	and toxicblend/lib/volumeutils.jar ->  compilation_path/toxiclibs/dist/volumeutils.jar
 	
-2. Install boost 1.55 or higher (on ubuntu 13.10 i had to download from source, because i could not find any 1.55 ppa)
+2. Install boost 1.55 (boost.org)
 	
+	./bootstrap.sh --with-python-version=3.3 --with-libraries=system --prefix=/opt/local
+	b2 install
+	export BOOST_HOME=/opt/local/
 	export BOOST_INCLUDEDIR=/opt/local/include
 	
 3. Copy the python files found in src/main/blender_addon/site-packages/ to the site-packages directory of blender.
@@ -56,7 +64,7 @@ You will find the location with this command in the blender python console:
 
     sbt
     
-    compile
+    compile  (there are a few warnings generated from gdx and google-protobuf)
     
 7. run the server (still in sbt console)
     
@@ -64,7 +72,34 @@ You will find the location with this command in the blender python console:
     
     4 (org.toxicblend.Server)
 
+    If you experience problems with a missing java library (libmawt.so im my case)
+    you can search for the location and add it to LD_LIBRARY_PATH and restart sbt
+    
+    find / -name libmawt.so
+    
+    /opt/oracle-jdk-bin-1.7.0.51/jre/lib/amd64/headless/libmawt.so
+    
+    /opt/oracle-jdk-bin-1.7.0.51/jre/lib/amd64/xawt/libmawt.so
+    
+    /opt/icedtea-bin-6.1.12.7/jre/lib/amd64/headless/libmawt.so 
+    
+    /opt/icedtea-bin-6.1.12.7/jre/lib/amd64/xawt/libmawt.so
+    
+    export LD_LIBRARY_PATH=/opt/oracle-jdk-bin-1.7.0.51/jre/lib/amd64/xawt/
+    
+    sbt  
+    
+8.  Run blender from a terminal 
+	
+	cd  .../blender-2.69-linux-glibc211-x86_64/
+	
+	./blender
+	
+	If any of the plugins should hang, you can abort plugin execution with ctrl-c in the terminal.
+	
+	
 8. In blender, press space and search for the addons:
+ 	
  	
  	toxicblend_volume
     
@@ -76,3 +111,4 @@ You will find the location with this command in the blender python console:
     
     toxicblend_boostsimplify
     
+    Some day i will document what the plugins actually does :)
