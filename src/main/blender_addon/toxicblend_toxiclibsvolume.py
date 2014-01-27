@@ -28,6 +28,7 @@ class ToxicLibsVolume(bpy.types.Operator):
           )
   voxelBrushMode = bpy.props.EnumProperty(
     name="Volumetric brush mode",
+    description="Best kept at Peak",
     items=(("MODE_ADDITIVE", "Additive",
            "Use the additive mode"),
            ("MODE_MULTIPLY", "Multiply",
@@ -38,10 +39,10 @@ class ToxicLibsVolume(bpy.types.Operator):
            "Use the replace mode. Lower density values don't overwrite existing higher ones")
             #update=mode_update_callback
           ), default="MODE_PEAK")
-  voxelBrushSize = bpy.props.FloatProperty(name="Volumetric brush size", default=1, min=0.001, max=25)
-  voxelResolution = bpy.props.FloatProperty(name="Voxel resolution", default=32, min=1, max=512)
-  voxelIsoValue = bpy.props.FloatProperty(name="Voxel Iso value", default=0.66, min=0.01, max=1.0)
-  voxelBrushDrawStep = bpy.props.FloatProperty(name="Voxel brush draw step", default=1, min=0.001, max=256)  
+  voxelBrushSize = bpy.props.FloatProperty(name="Volumetric brush size", description="The size of the brush (in pixels)", default=1, min=0.001, max=25)
+  voxelResolution = bpy.props.FloatProperty(name="Voxel resolution", description="The resolution of the brush, if nothing is shown this value needs to be increased", default=32, min=1, max=512)
+  voxelIsoValue = bpy.props.FloatProperty(name="Voxel Iso value", description="Not exactly sure what this does, better kept at 0.66", default=0.66, min=0.01, max=1.0)
+  voxelBrushDrawStep = bpy.props.FloatProperty(name="Voxel brush draw step", description="Distance between each 'brushpaint' along a segment (in pixels)", default=1, min=0.001, max=256)  
    
   @classmethod
   def poll(cls, context):
