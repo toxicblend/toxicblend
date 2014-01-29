@@ -14,12 +14,12 @@ class ToxicBlend_MetaVolume(bpy.types.Operator):
   bl_idname = "object.toxicblend_metavolume"
   bl_label = "Metacapsule Volume"
   bl_options = {'REGISTER', 'UNDO'}  # enable undo for the operator.
+  
   CAPSULE_VECTOR = mathutils.Vector((1.0, 0.0, 0.0)) # capsule orientation
-  INV_SQRT_2 = 1.0/math.sqrt(2)
             
   radiusProperty = bpy.props.FloatProperty(name="Radius", default=1.0, min=0.0001, max=1000, description="Radius of the meta capsules")  
   resolutionProperty = bpy.props.FloatProperty(name="Resolution", default=0.25, min=0.05, max=1, description="Resolution of the meta capsules")  
-  thresholdProperty = bpy.props.FloatProperty(name="Threshold", default=0.05, min=0.001, max=1.99999, description="Resolution of the meta capsules")  
+  thresholdProperty = bpy.props.FloatProperty(name="Threshold", default=0.05, min=0.001, max=1.99999, description="Threshold of the meta capsules")  
   
   @classmethod
   def poll(cls, context):
@@ -46,7 +46,7 @@ class ToxicBlend_MetaVolume(bpy.types.Operator):
     #ele.use_negative = False 
     capsule.radius = radius
     #print("length/2 = %f" % (segment.length / 2.0))
-    capsule.size_x = (segment.length / 2.0)-radius*0.1
+    capsule.size_x = segment.length/2.0
     direction = segment.normalized()
     #print("direction = %s" % direction )
     quaternion = self.getRotationTo(self.CAPSULE_VECTOR,direction)
@@ -60,26 +60,22 @@ class ToxicBlend_MetaVolume(bpy.types.Operator):
     
     sourceBm = bmesh.new()
     sourceBm.from_mesh(bpy.context.scene.objects.active.data)
-    #sourceBm = bpy.context.scene.objects.active.data
     worldOriention = bpy.context.scene.objects.active.matrix_world.copy()
-    
-    metaballEgdes = []
-    for edge in sourceBm.edges:
-      fromV = mathutils.Vector(edge.verts[0].co)
-      toV = mathutils.Vector(edge.verts[1].co)
-      metaballEgdes.append((fromV,toV))
-      
     mball = bpy.data.metaballs.new("Volumetric metacapsules")
-    print("Resolution = %f" % self.resolutionProperty)
+    #print("Resolution = %f" % self.resolutionProperty)
     mball.resolution = self.resolutionProperty
     mball.threshold = self.thresholdProperty
     metaObj = bpy.data.objects.new("Volumetric metacapsules", mball)
+
+    for edge in sourceBm.edges:
+      fromV = mathutils.Vector(edge.verts[0].co)
+      toV = mathutils.Vector(edge.verts[1].co)
+      self.newCapsule(mball.elements, fromV, toV, self.radiusProperty) 
+      
     bpy.context.scene.objects.link(metaObj)
     bpy.context.scene.objects.active = metaObj
     metaObj.select = True  
 
-    for edge in metaballEgdes:
-      self.newCapsule(mball.elements, edge[0], edge[1], self.radiusProperty) 
     metaObj.matrix_world = worldOriention
     #metaObj.update(calc_edges=True)
     return {'FINISHED'}
