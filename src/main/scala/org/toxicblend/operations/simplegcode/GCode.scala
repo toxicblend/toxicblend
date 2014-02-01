@@ -1,13 +1,10 @@
-package org.toxicblend.operations.boostmedianaxis
-
-import toxi.geom.ReadonlyVec2D
-import org.toxicblend.operations.boostmedianaxis.MedianAxisJni.simplify3D
-import toxi.geom.Vec2D
-//import toxi.geom.Vec3D
+package org.toxicblend.operation.simplegcode
 import toxi.geom.ReadonlyVec3D
+import toxi.geom.Vec3D
 import scala.collection.mutable.ListBuffer
 import scala.collection.mutable.ArrayBuffer
-
+import org.toxicblend.geometry.IntersectionVec3DImplicit._
+import scala.collection.TraversableOnce.flattenTraversableOnce
 
 object GCode {
   
@@ -19,11 +16,11 @@ object GCode {
   }
 }
 
-class GCode(val gcodePoints:Array[IntersectionVec3D]) {
+class GCode(val gcodePoints:Array[Vec3D]) {
   val MAGIC_DEPTH_LIMIT = 0.2f
   def startPoint=gcodePoints(0)
   def endPoint=gcodePoints(gcodePoints.size-1)
-  def this(input:Array[Float]) = this({input.sliding(3,3).map(x => new IntersectionVec3D(x(0), x(1), x(2)) ).toArray})
+  def this(input:Array[Float]) = this({input.sliding(3,3).map(x => new Vec3D(x(0), x(1), x(2)) ).toArray})
   
   /*
   def this(startPoint:(Float,Float,Float), endPoint:(Float,Float,Float), gcodePoints:Array[(Float,Float,Float)] ) = 
@@ -40,7 +37,7 @@ class GCode(val gcodePoints:Array[IntersectionVec3D]) {
   
   def heightFilter(atDepth:Float):ArrayBuffer[GCode] = { 
     var state:() => Unit = null
-    val segment = new ArrayBuffer[IntersectionVec3D]    
+    val segment = new ArrayBuffer[Vec3D]    
     val rv = new ArrayBuffer[GCode]
     var i = 0
 
@@ -51,14 +48,14 @@ class GCode(val gcodePoints:Array[IntersectionVec3D]) {
         if ( gcodePoints(i).z - MAGIC_DEPTH_LIMIT <=  atDepth){
           //println("stateSearching at z = %f atDepth = %f i=%d".format(gcodePoints(i).z, atDepth, i))
           val p = gcodePoints(i)
-          segment += new IntersectionVec3D(p.x, p.y, p.z-atDepth)
+          segment += new Vec3D(p.x, p.y, p.z-atDepth)
           state = stateFound
         }
       } else {
         if (gcodePoints(i).intersectsXYPlane(gcodePoints(i-1), atDepth+MAGIC_DEPTH_LIMIT)){
           //println("stateSearching at z = %f atDepth = %f i=%d".format(gcodePoints(i).z, atDepth, i))
-          val p = gcodePoints(i).intersectoPoint(gcodePoints(i-1),atDepth+MAGIC_DEPTH_LIMIT)
-          segment += new IntersectionVec3D(p.x, p.y, p.z-atDepth)
+          val p = gcodePoints(i).intersectionPoint(gcodePoints(i-1),atDepth+MAGIC_DEPTH_LIMIT)
+          segment += new Vec3D(p.x, p.y, p.z-atDepth)
           state = stateFound
         }
       }
@@ -73,11 +70,11 @@ class GCode(val gcodePoints:Array[IntersectionVec3D]) {
       }
       if ( gcodePoints(i).z - MAGIC_DEPTH_LIMIT <= atDepth ) {
         val p = gcodePoints(i) 
-        segment += new IntersectionVec3D(p.x, p.y, p.z-atDepth)
+        segment += new Vec3D(p.x, p.y, p.z-atDepth)
       } else {
 	      if (gcodePoints(i).intersectsXYPlane(gcodePoints(i-1), atDepth+MAGIC_DEPTH_LIMIT)){
-	        val p = gcodePoints(i).intersectoPoint(gcodePoints(i-1),atDepth+MAGIC_DEPTH_LIMIT)
-	        segment += new IntersectionVec3D(p.x, p.y, p.z-atDepth)
+	        val p = gcodePoints(i).intersectionPoint(gcodePoints(i-1),atDepth+MAGIC_DEPTH_LIMIT)
+	        segment += new Vec3D(p.x, p.y, p.z-atDepth)
 	        //println("stateFound %d point segment at depth %f".format(segment.size, atDepth))
 	        rv += new GCode(segment.toArray)
 	        segment.clear

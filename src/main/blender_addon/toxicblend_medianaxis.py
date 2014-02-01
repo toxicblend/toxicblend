@@ -7,7 +7,7 @@ import toxicblend
 import imp
 
 bl_info = {
-  "name": "Naive implementation of projection outline (toxiclibs service)",
+  "name": "Naive implementation of median axis",
   "category": "Object",
 }
        

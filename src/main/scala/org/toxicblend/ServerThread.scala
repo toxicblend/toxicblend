@@ -16,6 +16,7 @@ import org.toxicblend.operations.projectionoutline.ProjectionOutlineProcessor
 import org.toxicblend.operations.boostmedianaxis.MedianAxisProcessor
 import org.toxicblend.operations.dragoncurve.DragonCurveProcessor
 import org.toxicblend.operations.boostsimplify.BoostSimplify
+import org.toxicblend.operations.simplegcode.SimpleGcodeOperation
 
 object ServerThread {
     private val CHARSET = Charset.forName("UTF-8")
@@ -54,6 +55,7 @@ case class ServerThread(socket: Socket) extends Thread("ServerThread") {
               case "OBJECT_OT_toxicblend_projection_outline" => new ProjectionOutlineProcessor
               case "OBJECT_OT_toxicblend_medianaxis" => new MedianAxisProcessor
               case "OBJECT_OT_toxicblend_boostsimplify" => new BoostSimplify
+              case "OBJECT_OT_toxicblend_simplegcode" => new SimpleGcodeOperation              
               case s:String => System.err.println("Unknown command: " + s); new EchoProcessor
             }
             processor.processInput(inMessage)

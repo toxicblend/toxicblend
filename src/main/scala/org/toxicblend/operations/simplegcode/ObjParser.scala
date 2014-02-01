@@ -14,12 +14,15 @@ import toxi.geom.ReadonlyVec2D
 import toxi.geom.ReadonlyVec3D
 import toxi.geom.Vec3D
 import toxi.geom.AABB
+import org.toxicblend.geometry.BoundingBoxDeprecaded
+import org.toxicblend.geometry.BoundingBoxMutableDeprecaded
+import org.toxicblend.geometry.Vec2DZ
 
 /**
  * com.badlogic.gdx.graphics.g3d.loaders.wavefront.ObjLoader refuses to import meshes without faces.
  * This class does just that (and only that)
- * /
-object ObjParser extends RingParser {
+ */
+object ObjParser { //extends RingParser {
   
   def saveEdgesToObj(filename: String, inEdges:Array[InteriorEdges]) = {
     var vertices = new ArrayBuffer[String]
@@ -31,14 +34,14 @@ object ObjParser extends RingParser {
     
     for(edges <- inEdges) {
       prevVert = -1
-	    if (edges==null||edges.numberOfPoints==0){
+	    if (edges==null||edges.numberOfVertexes==0){
 	      System.out.println("saveObj: empty array");
 	    } else {
 	      totalText += "o median%d\n".format(objectNameIndex)
 	      
 	      objectNameIndex += 1 
 	      prevVert = -1
-	      edges.edges.foreach(el=> {  
+	      /*edges.interiorEdges.foreach(el => {  
           prevVert = -1
           el.iterator.sliding(3,3).foreach(ep=>{
             if(ep(2).isNaN){
@@ -53,11 +56,13 @@ object ObjParser extends RingParser {
             } else {
               prevVert = curVert
               curVert += 1
-              val facess = "f %d %d\n".format(prevVert,curVert)
+              val facesStr = "f %d %d\n".format(prevVert,curVert)
               //print(facess)
-              faces += facess
+              faces += facesStr
             }
-            })})
+           })
+         })
+         */
 	     }
        totalText.appendAll(vertices)
        totalText.appendAll(faces)
@@ -168,7 +173,7 @@ object ObjParser extends RingParser {
     println("Wrote rings to %s".format(filename))
   }
   
-  def loadObj(ma:MedianAxisFloatJni, filename: String, simplifyLimit:Float):Array[Ring2D] = {
+  def loadObj(ma:MedianAxisJni, filename: String, simplifyLimit:Float):Array[Ring2D] = {
 		val verts: ArrayBuffer[ReadonlyVec3D] = new ArrayBuffer(0);
 		val faces: ArrayBuffer[Array[Int]] = new ArrayBuffer(0);
 		val vertexNeigbours: HashMap[Int,Array[Int]] = new HashMap();
@@ -245,11 +250,11 @@ object ObjParser extends RingParser {
       }
     }
 		
-    state = parseObject
+    /*state = parseObject
 		for(line <- Source.fromFile(filename).getLines())
 		  state(line)
-		
-		doSomethingWithTheRings(ma, verts, vertexNeigbours, objectName, simplifyLimit)
+		*/
+		//doSomethingWithTheRings(ma, verts, vertexNeigbours, objectName, simplifyLimit)
 		
 		/**
 		val alreadyProcessed = new HashSet[Int]()
@@ -289,9 +294,10 @@ object ObjParser extends RingParser {
     //val intermediate2 = foundSegments.map(x=>new RingsInRings(x)).toArray
     sortOutInternals(ma,foundSegments.toArray)
     */
+		new ArrayBuffer[Ring2D].toArray
 	}
   
-  def loadObj(filename: String):(Array[Array[Vec2DZ]],BoundingBox) = {
+  def loadObj(filename: String):(Array[Array[Vec2DZ]],BoundingBoxDeprecaded) = {
 		val allVerts = new ArrayBuffer[Array[Vec2DZ]];
 		var verts = new ArrayBuffer[Vec2DZ];
 		var vertexCounter = 0
@@ -299,7 +305,7 @@ object ObjParser extends RingParser {
 		
 		//val faces = new ArrayBuffer[Array[Int]];
 		val vertexId2vertex = new HashMap[Int,Vec2DZ];
-		val bb = new BoundingBoxMutable
+		val bb = new BoundingBoxMutableDeprecaded
 
 		var objectName = "";		
 		var state:(String)=>Unit = null
@@ -400,4 +406,3 @@ object ObjParser extends RingParser {
 		(allVerts.toArray, bb.immutable)
 	}
 }
-*/

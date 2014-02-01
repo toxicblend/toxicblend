@@ -167,12 +167,27 @@ object Mesh3DConverter {
    * Constructs from a packet buffer model
    */
   def apply(pbModel:Model):Mesh3DConverter = {
+    apply(pbModel,false)
+  }
+  
+  /** 
+   * Constructs from a packet buffer model, if there is a world transformation it will be used to calculate the 'real' vertexes
+   */
+  def apply(pbModel:Model, useWorldCoordinares:Boolean):Mesh3DConverter = {
     val aabb = new AABB
     val vbuffer = new Array[ReadonlyVec3D](pbModel.getVertexesList().size).toBuffer
     val fbuffer = new ArrayBuffer[ArrayBuffer[Int]](pbModel.getFacesList().size)
+    val hasWorldTransformation = pbModel.hasWorldOrientation()
     
+    val worldTransformation = if (hasWorldTransformation) Option(Matrix4fConverter(pbModel.getWorldOrientation())) else None
+      
     pbModel.getVertexesList().foreach( vertex => {
-      val v = new Vec3D(vertex.getX, vertex.getY, vertex.getZ)
+      val v = {
+        if (hasWorldTransformation) 
+          worldTransformation.get.matrix.transformOne(new Vec3D(vertex.getX, vertex.getY, vertex.getZ))
+        else 
+          new Vec3D(vertex.getX, vertex.getY, vertex.getZ)
+      }
       aabb.growToContainPoint(v)
       vbuffer(vertex.getId()) = v
     })
@@ -204,8 +219,6 @@ object Mesh3DConverter {
     })
     new Mesh3DConverter(vbuffer, fbuffer, aabb, name)
   }
-  
-  
   
   /** 
    * Constructs from one toxi.geom.mesh.Mesh3D

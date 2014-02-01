@@ -1,22 +1,21 @@
-package org.toxicblend.operations.boostmedianaxis
+package org.toxicblend.operation.simplegcode
 
-import scala.collection.mutable.ArrayBuffer
+import toxi.geom.Vec3D
+import toxi.geom.ReadonlyVec3D
+import toxi.geom.Matrix4f
 import scala.collection.mutable.HashSet
 import scala.collection.mutable.HashMap
+import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.ListBuffer
-import scala.annotation.tailrec
 import java.io.PrintWriter
 import java.io.File
-import toxi.geom.ReadonlyVec2D
-import toxi.geom.ReadonlyVec3D
-import toxi.geom.Vec2D
-import toxi.geom.Vec3D
-
-import org.toxicblend.geometry.Matrix4f
-
+import scala.annotation.tailrec
+import org.toxicblend.geometry.Vec2DZ
+import org.toxicblend.geometry.IntersectionVec3D
+import org.toxicblend.geometry.BoundingBoxDeprecaded
 
 object GenerateGCode {
-  /*
+
   //val gCodeProperties = Map("SizeX"->300f, "SafeZ"->3f, "SpindleSpeed"->1000f, "G0Feedrate" -> 1000f,"G1PlungeFeedrate" -> 100f,"G1Feedrate"->500f) // "DebugGCode"->1f,
   val gCodeProperties = Map("simplifyLimit"->0.05f, "StepDown"->1f, "SizeZ"->4f, "SafeZ"->2f, "SpindleSpeed"->1000f, "G0Feedrate" -> 1000f,"G1PlungeFeedrate" -> 100f,"G1Feedrate"->500f) // "DebugGCode"->1f,
   //val gCodeProperties = Map("SafeZ"->5f, "SpindleSpeed"->1000f, "G0Feedrate" -> 1000f,"G1PlungeFeedrate" -> 100f,"G1Feedrate"->500f)
@@ -37,10 +36,10 @@ object GenerateGCode {
   	rv
   }
     
-  def generateGcode(edges:Array[ReadonlyVec3D], bb:BoundingBox, gcodeProperties:Map[String,Float]):Array[GCode]= {
+  def generateGcode(edges:Array[Vec2DZ], bb:BoundingBoxDeprecaded, gcodeProperties:Map[String,Float]):Array[GCode]= {
     
     val debugGCode = gcodeProperties.get("DebugGCode")!=None 
-    val transform = {
+    val transform:Matrix4f = {
       val scale = {
 	      if (gcodeProperties.get("SizeX")!=None){
 	        val sizeX = gcodeProperties.get("SizeX").get
@@ -63,13 +62,13 @@ object GenerateGCode {
     }
   
     val visited = new HashSet[(Int,Int)] // (objIndex, objIndex)
-    val map = new HashMap[Int, ReadonlyVec3D] // (objIndex, Vec2DZ)
+    val map = new HashMap[Int, Vec2DZ] // (objIndex, Vec2DZ)
 
     val ret = new ArrayBuffer[ArrayBuffer[(Int,Int)]]  // ArrayBuffer[retSegment]
     var retSegment = new ArrayBuffer[(Int,Int)]
        
     @tailrec
-    def walkEdge(point:ReadonlyVec3D, from:ReadonlyVec3D, backlog:List[((ReadonlyVec3D,ReadonlyVec3D))]):ArrayBuffer[ArrayBuffer[(Int,Int)]] ={
+    def walkEdge(point:Vec2DZ, from:Vec2DZ, backlog:List[((Vec2DZ,Vec2DZ))]):ArrayBuffer[ArrayBuffer[(Int,Int)]] ={
       
       if (!map.contains(point.objIndex)){
         map.put(point.objIndex, point)
@@ -161,7 +160,7 @@ object GenerateGCode {
 		  } 
  
 	    val walkpath = walkEdge(startPoint, startPoint, Nil)
-			val gcodePointArray = walkpath.par.map(s => indexListToCoords(s)).map(x => x.map( y=> new IntersectionVec3D(transform.transformOne3D(new IntersectionVec3D(y._1, y._2, y._3)) )))
+			val gcodePointArray = walkpath.par.map(s => indexListToCoords(s)).map(x => x.map( y=> new Vec3D(transform.transformOne(new Vec3D(y._1, y._2, y._3)) )))
 			gcodePointArray.map(g => new GCode(g.toArray)).toArray
 		}
        
@@ -223,7 +222,7 @@ object GenerateGCode {
     }
     rv
   }
-  */
+
   def main(args: Array[String]): Unit = {
     /*
     val safeZ:Float = 5

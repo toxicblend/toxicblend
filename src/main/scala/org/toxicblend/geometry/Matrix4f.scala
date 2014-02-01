@@ -8,7 +8,7 @@ import toxi.geom.Vec3D
  * Basically the same as toxi.geom.Matrix4f
  * Just added some convenience methods
  */
-class Matrix4f( m̈00:Float, m̈01:Float, m̈02:Float, m̈03:Float, 
+class Matrix4fDeprecated( m̈00:Float, m̈01:Float, m̈02:Float, m̈03:Float, 
                 m̈10:Float, m̈11:Float, m̈12:Float, m̈13:Float, 
                 m̈20:Float, m̈21:Float, m̈22:Float, m̈23:Float,
                 m̈30:Float, m̈31:Float, m̈32:Float, m̈33:Float) 

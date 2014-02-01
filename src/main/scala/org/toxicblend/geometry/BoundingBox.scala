@@ -1,4 +1,4 @@
-package org.toxicblend.operations.boostmedianaxis
+package org.toxicblend.geometry
 
 import org.toxicblend.geometry.Interval
 
@@ -6,7 +6,7 @@ import org.toxicblend.geometry.Interval
  * TODO: Why not use toxiclibs AABB??
  * @deprecated
  */
-class BoundingBox(val intervalX:Interval, val intervalY:Interval, val intervalZ:Interval) { 
+class BoundingBoxDeprecaded(val intervalX:Interval, val intervalY:Interval, val intervalZ:Interval) { 
   
   def this() = this(new Interval(Float.PositiveInfinity, Float.NegativeInfinity), 
                     new Interval(Float.PositiveInfinity, Float.NegativeInfinity), 

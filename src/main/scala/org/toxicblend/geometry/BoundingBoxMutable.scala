@@ -1,7 +1,6 @@
-package org.toxicblend.operations.boostmedianaxis
+package org.toxicblend.geometry
 
-import scala.math.max
-import scala.math.min
+import org.toxicblend.geometry.BoundingBoxDeprecaded
 import org.toxicblend.geometry.Interval
 
 class BoundingBoxMutableDeprecaded(var intervalX:Interval, var intervalY:Interval, var intervalZ:Interval) { 
@@ -44,8 +43,8 @@ class BoundingBoxMutableDeprecaded(var intervalX:Interval, var intervalY:Interva
      include(x.toFloat, y.toFloat, z.toFloat)
    }
    
-   def immutable():BoundingBox = {
-     new BoundingBox(intervalX,intervalY,intervalZ)
+   def immutable():BoundingBoxDeprecaded = {
+     new BoundingBoxDeprecaded(intervalX,intervalY,intervalZ)
    }
    
    override def toString():String = { 
