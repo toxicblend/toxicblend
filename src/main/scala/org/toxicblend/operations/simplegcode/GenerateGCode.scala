@@ -1,8 +1,9 @@
-package org.toxicblend.operation.simplegcode
+package org.toxicblend.operations.simplegcode
 
 import toxi.geom.Vec3D
 import toxi.geom.ReadonlyVec3D
 import toxi.geom.Matrix4f
+import toxi.geom.AABB
 import scala.collection.mutable.HashSet
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.ArrayBuffer
@@ -13,11 +14,14 @@ import scala.annotation.tailrec
 import org.toxicblend.geometry.Vec2DZ
 import org.toxicblend.geometry.IntersectionVec3D
 import org.toxicblend.geometry.BoundingBoxDeprecaded
+import org.toxicblend.util.FileOperations
+import org.toxicblend.protobuf.ToxicBlenderProtos.Model
+import org.toxicblend.typeconverters.Mesh3DConverter
 
 object GenerateGCode {
 
   //val gCodeProperties = Map("SizeX"->300f, "SafeZ"->3f, "SpindleSpeed"->1000f, "G0Feedrate" -> 1000f,"G1PlungeFeedrate" -> 100f,"G1Feedrate"->500f) // "DebugGCode"->1f,
-  val gCodeProperties = Map("simplifyLimit"->0.05f, "StepDown"->1f, "SizeZ"->4f, "SafeZ"->2f, "SpindleSpeed"->1000f, "G0Feedrate" -> 1000f,"G1PlungeFeedrate" -> 100f,"G1Feedrate"->500f) // "DebugGCode"->1f,
+  val gCodeProperties = Map("simplifyLimit"->0.05f, "StepDown"->1f, "SizeZ"->5f, "SafeZ"->2f, "SpindleSpeed"->1000f, "G0Feedrate" -> 1000f,"G1PlungeFeedrate" -> 100f,"G1Feedrate"->500f, "DebugGCode"->1f)
   //val gCodeProperties = Map("SafeZ"->5f, "SpindleSpeed"->1000f, "G0Feedrate" -> 1000f,"G1PlungeFeedrate" -> 100f,"G1Feedrate"->500f)
 
   def gHeader():String = {
@@ -36,28 +40,30 @@ object GenerateGCode {
   	rv
   }
     
-  def generateGcode(edges:Array[Vec2DZ], bb:BoundingBoxDeprecaded, gcodeProperties:Map[String,Float]):Array[GCode]= {
+  def generateGcode(edges:IndexedSeq[Vec2DZ], bb:AABB, gcodeProperties:Map[String,Float]):Array[GCode]= {
     
     val debugGCode = gcodeProperties.get("DebugGCode")!=None 
     val transform:Matrix4f = {
       val scale = {
+        val extent = bb.getExtent
 	      if (gcodeProperties.get("SizeX")!=None){
 	        val sizeX = gcodeProperties.get("SizeX").get
-	        val scaleX = sizeX / bb.intervalX.length
+	        val scaleX = sizeX / extent.x
 	        new Vec3D(scaleX,scaleX,scaleX)
 	      } else if (gcodeProperties.get("SizeY")!=None){
 	        val sizeY = gcodeProperties.get("SizeY").get
-	        val scaleY = sizeY / bb.intervalY.length 
+	        val scaleY = sizeY / extent.y 
 	        new Vec3D(scaleY,scaleY,scaleY)
 	      } else if (gcodeProperties.get("SizeZ")!=None){
 	        val sizeZ = gcodeProperties.get("SizeZ").get
-	        val scaleZ = sizeZ / bb.intervalZ.length 
+	        val scaleZ = sizeZ / extent.z 
 	        new Vec3D(scaleZ,scaleZ,scaleZ)
 	      } else {
 	        new Vec3D(1f, 1f, 1f)
 	      }
 	    }
-	    val offset = new Vec3D(-bb.intervalX.minRange*scale.x,-bb.intervalY.minRange*scale.y,-bb.intervalZ.maxRange*scale.z)
+      val min = bb.getMin
+	    val offset = new Vec3D(min.x*scale.x,min.y*scale.y,min.z*scale.z)
 	    new Matrix4f(offset, scale)
     }
   
@@ -85,8 +91,9 @@ object GenerateGCode {
 	          point.edges.filter(p => visited.contains((point.objIndex,p.objIndex))).map(p=>p.objIndex).mkString(" "),
 	          point.edges.filter(p => !visited.contains((point.objIndex,p.objIndex))).map(p=>p.objIndex).mkString(" "), 
 	          backlog.map(p=>"%d->%d".format(p._1.objIndex, p._2.objIndex)).mkString(" ")))   
-	      //println("Point oid=%d %s".format(point.objIndex, point.edges.map(x => x.objIndex).mkString("(",",",")")))
-	      System.out.println() */
+	      println("Point oid=%d %s".format(point.objIndex, point.edges.map(x => x.objIndex).mkString("(",",",")")))
+	      System.out.println()
+	      */ 
       } else {
         println("This segment was alreay visited, maybe refresh your map once in a while eh? oid=%d".format(point.objIndex))
       }
@@ -182,7 +189,7 @@ object GenerateGCode {
   /**
    * Filter the gcodes so that they only cut at desired depth
    */
-  def heightFilter(input:Array[GCode], atDepth:Float):ArrayBuffer[GCode] = {
+  def heightFilter(input:IndexedSeq[GCode], atDepth:Float):ArrayBuffer[GCode] = {
     val rv = new ArrayBuffer[GCode]
     input.foreach(g => rv ++= g.heightFilter(atDepth)) 
     rv
@@ -194,15 +201,15 @@ object GenerateGCode {
    * this could have been easily done with .sortBy or .sortWith but i'm getting a lot of compiler errors
    * "diverging implicit expansion for type scala.math.Ordering...."
    */
-  def mySort(input:Array[GCode]):Array[GCode] ={
+  def sortByStartPoint(input:Array[GCode]):Array[GCode] ={
     var rv = new Array[GCode](input.size)
     val usedGCodes = new HashSet[Int]
     var lastEndPoint:ReadonlyVec3D = new Vec3D()
-    for (i <- 0 until input.size){
+    for (i <- 0 until input.size) yield {
       var bestSoFar = -1
       var reverseSoFar = false
       var bestDistanceSoFar = Float.PositiveInfinity
-	    for (j:Int <- 0 until input.size) {
+	    for (j:Int <- 0 until input.size) yield {
 	      if( !usedGCodes.contains(j) ){
 		      val (distance, reverse) = input(j).xyDistanceTo(lastEndPoint)
 		      if (distance < bestDistanceSoFar){
@@ -222,38 +229,44 @@ object GenerateGCode {
     }
     rv
   }
-
-  def main(args: Array[String]): Unit = {
-    /*
-    val safeZ:Float = 5
-    val (objects,bb) = ObjParser.loadObj("data/axel_out.obj")
-    println("Found %d object groups".format(objects.length))
-    //print(edges)
-    println("Bounding Box: %s".format(bb.toString))
-    //val fileName="/Volumes/Publikt/test_out.ngc" // "data/
-    //val fileName="Data/test_out.ngc" // "data/
-    val fileName = "/Users/ead/VirtualBox VMs/share/cnc/axel_out.ngc"
-      
+  
+  def mesh3d2GCode(mesh:Mesh3DConverter):IndexedSeq[GCode] = {
     val allGCodes = {
-      val simplifyLimit = gCodeProperties.get("simplifyLimit").get  
-      objects.map(o => generateGcode(o, bb, gCodeProperties)).flatten.par.map( o => o.simplify(simplifyLimit)).toArray
+      val scaleMToMM = 1000f
+      //val simplifyLimit = gCodeProperties.get("simplifyLimit").get  
+      val aabb = mesh.getBounds.scaleSelf(scaleMToMM).asInstanceOf[AABB]
+      println("Bounding Box: %s".format(aabb.toString))
+      val segments = mesh.getEdgesAsVec2DZ(scaleMToMM)
+      generateGcode(segments, aabb, gCodeProperties)//.simplify(simplifyLimit
     }
-    
-    val totalGCodes = new ListBuffer[GCode]
+    allGCodes.foreach(g => println(g))
+    val totalGCodes = new ArrayBuffer[GCode]
     val stepDown = gCodeProperties.get("StepDown").get  
-    var depth = bb.intervalZ.minRange
+    var depth = mesh.getBounds.getMin.z 
     while (depth < 0) {
       val filteredGCodes = heightFilter(allGCodes, depth).toArray
-      totalGCodes ++= mySort(filteredGCodes)
+      totalGCodes ++= sortByStartPoint(filteredGCodes)
       depth += stepDown
       if (depth > 0f) {
         depth = 0f
       }
     }
-    saveGCode(fileName, gHeader, totalGCodes.map(g => g.generateText(gCodeProperties)), gFooter)
+    totalGCodes
+  }
+  
+  def main(args: Array[String]): Unit = {
     
+    val inFilename = "gcode.toxicblend"
+    val outFilename = "/Users/ead/VirtualBox VMs/share/cnc/gcode.ngc"
+    val safeZ:Float = 5
+    val mesh = {
+      val testObject = FileOperations.readSerializable(inFilename).asInstanceOf[Model]
+      Mesh3DConverter(testObject,true)
+    }
+    val totalGCodes = mesh3d2GCode(mesh)
+    //println("gcodes:")
+    //totalGCodes.foreach(g => println(g))
+    saveGCode(outFilename, gHeader, totalGCodes.map(g => g.generateText(gCodeProperties)), gFooter)
     println("done")
- 
-    */
   }
 }

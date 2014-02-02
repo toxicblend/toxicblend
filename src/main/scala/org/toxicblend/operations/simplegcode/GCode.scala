@@ -1,4 +1,4 @@
-package org.toxicblend.operation.simplegcode
+package org.toxicblend.operations.simplegcode
 import toxi.geom.ReadonlyVec3D
 import toxi.geom.Vec3D
 import scala.collection.mutable.ListBuffer
@@ -191,7 +191,9 @@ class GCode(val gcodePoints:Array[Vec3D]) {
   }
 
   override def toString():String = {
-    "StartPoint:%s endPoint:%s gcode.len:%d".format(startPoint.toString, endPoint.toString, gcodePoints.size) 
+    
+    val avgZ = if (gcodePoints.size>0) gcodePoints.foldLeft(0f)((r,c)=>r+c.z)/gcodePoints.size else 0f
+    "(StartPoint:%s endPoint:%s gcode.len:%d avgz:%f)".format(startPoint.toString, endPoint.toString, gcodePoints.size, avgZ) 
   }
 }
 

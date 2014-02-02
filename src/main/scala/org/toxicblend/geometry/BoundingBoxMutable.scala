@@ -1,8 +1,5 @@
 package org.toxicblend.geometry
 
-import org.toxicblend.geometry.BoundingBoxDeprecaded
-import org.toxicblend.geometry.Interval
-
 class BoundingBoxMutableDeprecaded(var intervalX:Interval, var intervalY:Interval, var intervalZ:Interval) { 
   
   def this() = this(new Interval(Float.PositiveInfinity, Float.NegativeInfinity), 

@@ -1,21 +1,24 @@
 package org.toxicblend.geometry
 import scala.collection.mutable.HashSet
 import toxi.geom.Vec2D
+import toxi.geom.ReadonlyVec3D
 
 /**
  * This is a 2.5D representation of a vertex
  * Distances between points are calculated in 2D while there is an additional Z parameter
+ * This object also 'knows' its neighbourhood vertexes
  * 
  * @param ẍ, ÿ is named this way because of the way scala handles constructor input parameters (non-var or val). 
  *     If the variable is, by accident, referenced anywhere in this class it will be retained as a 'private final' in bytecode
  */
-class Vec2DZ(ẍ:Float,ÿ:Float,var z:Float) extends toxi.geom.Vec2D(ẍ,ÿ) {
+class Vec2DZ(ẍ:Float, ÿ:Float, var z:Float, var objIndex:Int) extends Vec2D(ẍ,ÿ) {
   
-  def this(v:Array[Double]) = this (v(0).toFloat, v(1).toFloat, v(2).toFloat)
-  def this(v:Array[Float]) = this (v(0), v(1), v(2))
-  def this(v:Vec2DZ) = this (v.x, v.y, v.z)
+  def this(v:Array[Double]) = this (v(0).toFloat, v(1).toFloat, v(2).toFloat, -1)
+  def this(v:Array[Float]) = this (v(0), v(1), v(2), -1)
+  def this(v:Vec2DZ) = this (v.x, v.y, v.z, v.objIndex)
+  def this(v:ReadonlyVec3D) = this (v.x, v.y, v.z, -1)
+  def this(v:ReadonlyVec3D,objIndex:Int) = this (v.x, v.y, v.z, objIndex)
   
-  var objIndex:Int = -1
   val edges = new HashSet[Vec2DZ]()
   
   def getX():Float=x

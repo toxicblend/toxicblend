@@ -1,7 +1,5 @@
 package org.toxicblend.geometry
 
-import org.toxicblend.geometry.Interval
-
 /**
  * TODO: Why not use toxiclibs AABB??
  * @deprecated

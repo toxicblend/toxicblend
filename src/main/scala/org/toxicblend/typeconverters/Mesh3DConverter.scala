@@ -13,6 +13,7 @@ import scala.collection.mutable.Buffer
 import scala.collection.IndexedSeqLike
 import scala.collection.mutable.HashMap
 import org.toxicblend.geometry.ProjectionPlane
+import org.toxicblend.geometry.Vec2DZ
 import org.toxicblend.protobuf.ToxicBlenderProtos.{Model,Face}
 import org.toxicblend.operations.boostmedianaxis.InteriorEdges
 import org.toxicblend.util.VertexToFaceMap
@@ -29,6 +30,42 @@ class Mesh3DConverter protected (protected val vertexes:Buffer[ReadonlyVec3D], p
   
   def getVertexes:Seq[ReadonlyVec3D] = vertexes
   def getFaces:Seq[Seq[Int]] = faces
+  def getBounds = bounds
+  
+  /**
+   * gets the edges of the faces with only 2 vertexes
+   * @param scale is needed when converting to mm from meter (for example)
+   */
+  def getEdgesAsVec2DZ(scale:Float=1f):IndexedSeq[Vec2DZ] = {
+    val mapId2vec2dz = new HashMap[Int,Vec2DZ] 
+    
+    def getOrAddVec2d(objectId:Int):Vec2DZ = {
+      if (mapId2vec2dz.contains(objectId)) {
+        mapId2vec2dz.get(objectId).get
+      } else {
+        val aVec2DZ = new Vec2DZ(vertexes(objectId).scale(scale),objectId)
+        mapId2vec2dz.put(objectId, aVec2DZ)
+        aVec2DZ
+      }
+    }
+    
+    val trueEdges = faces.filter(f => f.size < 3)
+    val rv = new ArrayBuffer[Vec2DZ]
+    trueEdges.foreach(face => {
+      if (face.size ==1) {
+        rv += new Vec2DZ(vertexes(face(0)),face(0))
+      } else if (face.size ==2) { // must be size == 2
+        val v1 = getOrAddVec2d(face(0))
+        val v2 = getOrAddVec2d(face(1))
+        v1.addEdge(v2)
+        v2.addEdge(v1)
+        rv += v1
+        rv += v2
+      } 
+      assert(face.size<=2)
+    })
+    rv
+  }
   
   /**
    * Adds a unique vertex to the vertexes list. If a the vertex is already found the vertex id is returned 
@@ -58,7 +95,7 @@ class Mesh3DConverter protected (protected val vertexes:Buffer[ReadonlyVec3D], p
       val distincts = vertexes.distinct
       if (distincts.size != vertexes.size) {
         if (distincts.size>1) {
-          println("This is terrible wrong, i know. But is just distinctified the vertexes of a face and added them.")
+          println("This is terrible wrong, i know. But i just distinctified the vertexes of a face and added them.") // TODO: fix it
           println("" + vertexes.mkString("{",",","}") + " => " + distincts.mkString("{",",","}"))
           map.add(distincts, faceId)
         }
@@ -178,12 +215,11 @@ object Mesh3DConverter {
     val vbuffer = new Array[ReadonlyVec3D](pbModel.getVertexesList().size).toBuffer
     val fbuffer = new ArrayBuffer[ArrayBuffer[Int]](pbModel.getFacesList().size)
     val hasWorldTransformation = pbModel.hasWorldOrientation()
-    
     val worldTransformation = if (hasWorldTransformation) Option(Matrix4fConverter(pbModel.getWorldOrientation())) else None
       
     pbModel.getVertexesList().foreach( vertex => {
       val v = {
-        if (hasWorldTransformation) 
+        if (useWorldCoordinares && hasWorldTransformation) 
           worldTransformation.get.matrix.transformOne(new Vec3D(vertex.getX, vertex.getY, vertex.getZ))
         else 
           new Vec3D(vertex.getX, vertex.getY, vertex.getZ)
@@ -191,6 +227,11 @@ object Mesh3DConverter {
       aabb.growToContainPoint(v)
       vbuffer(vertex.getId()) = v
     })
+    
+    if (useWorldCoordinares && hasWorldTransformation) {
+      // world transformation already applied, set it to none
+      //pbModel.clearWorldOrientation() TODO: this does now work, figure out how to do this
+    }
     
     pbModel.getFacesList().foreach( face => {
       val eBuffer = new ArrayBuffer[Int](face.getVertexesList().size())

@@ -1,4 +1,4 @@
-package org.toxicblend.operations.boostmedianaxis
+package org.toxicblend.operation.simplegcode
 
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.ListBuffer
@@ -24,6 +24,7 @@ import org.toxicblend.geometry.Vec2DZ
  */
 object ObjParser { //extends RingParser {
   
+  /*
   def saveEdgesToObj(filename: String, inEdges:Array[InteriorEdges]) = {
     var vertices = new ArrayBuffer[String]
     var faces = new ArrayBuffer[String]
@@ -77,6 +78,7 @@ object ObjParser { //extends RingParser {
     }
     println("Wrote to %s".format(filename))
   }  
+  */
   
   protected def edges2Text(totalText:ArrayBuffer[String], vertexNumbering:Int, ringId:Int, inEdges:Array[Vec2DZ]):Int = {
     var vertices = new ArrayBuffer[String]
@@ -131,7 +133,7 @@ object ObjParser { //extends RingParser {
     }
     println("Wrote to %s".format(filename))
   }  
-  
+   /*
   protected def saveSubRingsAsObj( ring:Ring2D, inVertNumber:Int, totalText:ListBuffer[String]):Int = {
     val verts = new ListBuffer[String];
     val faces = new ListBuffer[String];
@@ -157,7 +159,7 @@ object ObjParser { //extends RingParser {
     }
     return vertNumber
   }
-  
+ 
   def saveRingsAsObj(filename:String, inRings:Array[Ring2D]):Unit = {
     val totalText = new ListBuffer[String];
     var vertNumber = 1
@@ -249,14 +251,14 @@ object ObjParser { //extends RingParser {
         faces += fline
       }
     }
-		
+  
     /*state = parseObject
 		for(line <- Source.fromFile(filename).getLines())
 		  state(line)
 		*/
 		//doSomethingWithTheRings(ma, verts, vertexNeigbours, objectName, simplifyLimit)
 		
-		/**
+		/ **
 		val alreadyProcessed = new HashSet[Int]()
     val foundSegments = new ArrayBuffer[Ring2D]()
     while (alreadyProcessed.size != verts.length) {
@@ -293,10 +295,11 @@ object ObjParser { //extends RingParser {
     //val intermediate1 = foundSegments.map(x=>new Ring2D(ma, objectName, x.verts, convert(ma, objectName, x.subRings))).toArray
     //val intermediate2 = foundSegments.map(x=>new RingsInRings(x)).toArray
     sortOutInternals(ma,foundSegments.toArray)
-    */
+    * /
 		new ArrayBuffer[Ring2D].toArray
 	}
-  
+  */
+ 
   def loadObj(filename: String):(Array[Array[Vec2DZ]],BoundingBoxDeprecaded) = {
 		val allVerts = new ArrayBuffer[Array[Vec2DZ]];
 		var verts = new ArrayBuffer[Vec2DZ];

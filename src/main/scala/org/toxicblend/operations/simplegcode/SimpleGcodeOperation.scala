@@ -27,6 +27,7 @@ class SimpleGcodeOperation extends CommandProcessorTrait {
       case "NONE" => None
       case "IMPERIAL" => UnitSystem.Imperial
       case "RETARDED" => UnitSystem.Imperial
+      case "MEDIEVAL" => UnitSystem.Imperial
       case s:String => System.err.println("Unrecognizable 'unitSystem' property value: " +  s ); None
     }
     if (unitIsMetric != UnitSystem.Metric) {
