@@ -53,12 +53,14 @@ class ToxicLibsVolume(bpy.types.Operator):
     with toxicblend.ByteCommunicator("localhost", 9999) as c: 
       # bpy.context.selected_objects,
       activeObject = context.scene.objects.active
-      properties = {'voxelBrushSize': str(self.voxelBrushSize), \
-                    'voxelResolution': str(self.voxelResolution), \
-                    'voxelIsoValue': str(self.voxelIsoValue), \
+      properties = {'voxelBrushSize'    : str(self.voxelBrushSize), \
+                    'voxelResolution'   : str(self.voxelResolution), \
+                    'voxelIsoValue'     : str(self.voxelIsoValue), \
                     'voxelBrushDrawStep': str(self.voxelBrushDrawStep), \
-                    'voxelBrushType': str(self.voxelBrushType),
-                    'voxelBrushMode': str(self.voxelBrushMode) }
+                    'voxelBrushType'    : str(self.voxelBrushType),
+                    'voxelBrushMode'    : str(self.voxelBrushMode),
+                    'unitSystem'        : str(unitSystemProperty.system), 
+                    'unitScale'         : str(unitSystemProperty.scale_length) }
       #print(str(self.voxelBrushType))               
       c.sendSingleBlenderObject(activeObject, self.bl_idname, properties) 
       c.receiveObjects()

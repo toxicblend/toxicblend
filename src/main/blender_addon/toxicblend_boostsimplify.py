@@ -37,7 +37,9 @@ class ToxicBlend_BoostSimplify(bpy.types.Operator):
       # bpy.context.selected_objects,
       activeObject = context.scene.objects.active
       properties = {'useMultiThreading'     : str(self.useMultiThreadingProperty),
-                    'simplifyLimit'         : str(self.simplifyLimitProperty) }
+                    'simplifyLimit'         : str(self.simplifyLimitProperty),
+                    'unitSystem'            : str(unitSystemProperty.system), 
+                    'unitScale'             : str(unitSystemProperty.scale_length) }
                      
       c.sendSingleBlenderObject(activeObject, self.bl_idname, properties) 
       c.receiveObjects()

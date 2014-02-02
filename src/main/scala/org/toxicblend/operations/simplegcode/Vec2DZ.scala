@@ -7,7 +7,7 @@ import toxi.geom.Vec2D
  * Distances between points are calculated in 2D while there is an additional Z parameter
  * 
  * @param ẍ, ÿ is named this way because of the way scala handles constructor input parameters (non-var or val). 
- *     If the variable is, by accident, referenced anywhere in this object it will be retained as a 'private final' in bytecode
+ *     If the variable is, by accident, referenced anywhere in this class it will be retained as a 'private final' in bytecode
  */
 class Vec2DZ(ẍ:Float,ÿ:Float,var z:Float) extends toxi.geom.Vec2D(ẍ,ÿ) {
   

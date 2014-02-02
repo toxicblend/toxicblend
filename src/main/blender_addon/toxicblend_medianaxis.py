@@ -54,7 +54,9 @@ class ToxicBlend_MedianAxis(bpy.types.Operator):
                     'simplifyLimit'         : str(self.simplifyLimitProperty),
                     'zEpsilon'              : str(self.zEpsilonProperty),
                     'dotProductLimit'       : str(self.dotProductLimitProperty),
-                    'calculationResolution' : str(self.calculationResolutionProperty) }
+                    'calculationResolution' : str(self.calculationResolutionProperty),
+                    'unitSystem'            : str(unitSystemProperty.system), 
+                    'unitScale'             : str(unitSystemProperty.scale_length) }
                      
       c.sendSingleBlenderObject(activeObject, self.bl_idname, properties) 
       c.receiveObjects()
@@ -68,3 +70,4 @@ def unregister():
 
 if __name__ == "__main__":
   register()
+  

@@ -4,30 +4,20 @@ import toxicblend
 import imp # needed when reloading toxicblend site-packages, won't be used in a release version
 
 bl_info = {
-  "name": "Naive implementation gcode generation",
+  "name": "SaveObj",
   'author': 'EAD Fritz',
   'blender': (2, 69, 0),
   #'api': 35774,
-  'description': 'Converts a set of edges into GCode using toxicblend.',
+  'description': 'Saves an object in a format native to toxicblend (for testing purposes).',
   "category": "Object",
 }
           
-class ToxicBlend_SimpleGcode(bpy.types.Operator):
+class ToxicBlend_SaveObj(bpy.types.Operator):
   '''Simple gcode generation'''
-  bl_idname = "object.toxicblend_simplegcode"
-  bl_label = "Simple Gcode"
+  bl_idname = "object.toxicblend_saveobj"
+  bl_label = "Save object (for testing purposes)"
   bl_options = {'REGISTER', 'UNDO'}  # enable undo for the operator.
-  
-  useMultiThreadingProperty = bpy.props.EnumProperty(
-    name="Use experimental mulithreading algorithm",
-    items=(("TRUE", "True",""),
-           ("FALSE", "False","")),
-           #update=mode_update_callback
-           default="FALSE"    
-          )
-          
-  simplifyLimitProperty = bpy.props.FloatProperty(name="Simplify Limit", default=0.5, min=0.0001, max=100, description="the maximum allowed 3d deviation (in pixels) from a straight line, if the deviation is larger than this the line will be segmented.")  
-  
+
   @classmethod
   def poll(cls, context):
     return context.active_object is not None
@@ -39,9 +29,7 @@ class ToxicBlend_SimpleGcode(bpy.types.Operator):
       activeObject = context.scene.objects.active
       unitSystemProperty = context.scene.unit_settings
       
-      properties = {'useMultiThreading'     : str(self.useMultiThreadingProperty),
-                    'simplifyLimit'         : str(self.simplifyLimitProperty),
-                    'unitSystem'            : str(unitSystemProperty.system), 
+      properties = {'unitSystem'            : str(unitSystemProperty.system), 
                     'unitScale'             : str(unitSystemProperty.scale_length) }
       c.sendSingleBlenderObject(activeObject, self.bl_idname, properties) 
       c.receiveObjects()
@@ -55,10 +43,10 @@ def register():
     msg = 'Blender too old: %s < %s' % ((a,b,c), tuple(version))
     raise NameError(msg)
  
-  bpy.utils.register_class(ToxicBlend_SimpleGcode)
+  bpy.utils.register_class(ToxicBlend_SaveObj)
 
 def unregister():
-  bpy.utils.unregister_class(ToxicBlend_SimpleGcode)
+  bpy.utils.unregister_class(ToxicBlend_SaveObj)
 
 if __name__ == "__main__":
   register()
