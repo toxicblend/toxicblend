@@ -5,6 +5,7 @@ import toxi.geom.ReadonlyVec3D
 import toxi.geom.Vec3D
 import scala.collection.mutable.ArrayBuffer
 import scala.annotation.migration
+import java.io.BufferedReader
 
 class GcodeParameter(val key:String, val value:Float) {
   override def toString = key+value
@@ -30,7 +31,7 @@ class GcodeMultiCommand(val key:String, val steps:List[List[GcodeParameter]]) ex
 }
 
 /**
- * container for the parse gcode operation
+ * container for the parsed gcode operation
  */
 class GcodeLines(val commands:List[GcodeLine]) {
   override def toString = commands.toString
@@ -40,7 +41,7 @@ class GcodeLines(val commands:List[GcodeLine]) {
    */
   def getSegments:IndexedSeq[Segment] = {
      val rv = new ArrayBuffer[Segment]
-     val state = new State(new Vec3D, new Vec3D, 0, 0)
+     val state = new InternalState(new Vec3D, new Vec3D, 0, 0)
      commands.foreach(aCommand => aCommand match {
        case command:GcodeMultiCommand => 
          if (command.key=="G0" || command.key=="G1") {
@@ -64,7 +65,7 @@ class GcodeLines(val commands:List[GcodeLine]) {
      })
      rv
   }
-  class State(val p0:Vec3D, val p1:Vec3D, var f0:Float, var f1:Float) 
+  protected class InternalState(val p0:Vec3D, val p1:Vec3D, var f0:Float, var f1:Float) 
   class Segment(val command:String, val p0:ReadonlyVec3D, val p1:ReadonlyVec3D, val f0:Float, val f1:Float){
     override def toString = command + " " + p0 + "->" + p1 + " f0=" + f0 + " f1=" + f1
   }
@@ -134,12 +135,26 @@ class GCodeParser extends RegexParsers {
    */
   def gParameterValue: Parser[Float] = """-?\d+(?:\.(?:\d*)?)?(?:[E|e]-?\d+)?""".r ^^ { _.toFloat }
   
+  
+  protected val commentsAndWhitespace = """(?s)(?:[ \t\r\f]+)|(?:\([^\)]*\))""".r
+  protected val emptyLinesAndLineNumbers = """(?i)(?m)(?:^\n)|(?:^N\d+)+""".r
+  
+  def filterOutWhiteSpace(source: Iterator[String]) : String= {
+    val sb = new StringBuilder 
+    source.foreach(line => {
+      val trimmed = commentsAndWhitespace.replaceAllIn(line, "")
+      sb.append( emptyLinesAndLineNumbers.replaceAllIn(trimmed, ""))
+    })
+    // meh, do it all over again to fix multiline comments
+    filterOutWhiteSpace(sb.result)
+  }
+  
   /**
    * remove non-nested comments and other whitespace
    * This is done in a super inefficient two pass. TODO: figure out how to avoid these steps
    */
   def filterOutWhiteSpace(input:java.lang.CharSequence) = {
-    val tmp = """(?s)(?:[ \t\r\f]+)|(?:\([^\)]*\))""".r.replaceAllIn(input, "") // remove non-nested comments and whitespace
-    """(?i)(?m)(?:^\n)|(?:^N\d+)+""".r.replaceAllIn(tmp, "") // remove empty lines and line numbers
+    val tmp = commentsAndWhitespace.replaceAllIn(input, "") // remove non-nested comments and whitespace
+    emptyLinesAndLineNumbers.replaceAllIn(tmp, "") // remove empty lines and line numbers
   }
 }
