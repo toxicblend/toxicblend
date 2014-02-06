@@ -14,12 +14,14 @@ class GcodeParameter(val key:String, val value:Float) {
  * base class for single and multi line commands
  */
 class GcodeLine
+
 /**
  * Gcode command where the parameters only can occur once
  */
 class GcodeSingleCommand(val key:String,val parameters:Option[List[GcodeParameter]]) extends GcodeLine {
   override def toString = key
 }
+
 /**
  * Gcode command where the parameters only can occur more than once (separate lines though)
  */
@@ -27,9 +29,12 @@ class GcodeMultiCommand(val key:String, val steps:List[List[GcodeParameter]]) ex
   override def toString = "key:" + key + " " + steps
 }
 
-class GcodeLines(inputCommands:List[List[GcodeLine]]) {
-  val commands = inputCommands.flatten
+/**
+ * container for the parse gcode operation
+ */
+class GcodeLines(val commands:List[GcodeLine]) {
   override def toString = commands.toString
+  
   /**
    * Generates a sequence of state, on step for each active line in the gcode file
    */
@@ -65,6 +70,12 @@ class GcodeLines(inputCommands:List[List[GcodeLine]]) {
   }
 }
 
+object GcodeLines {
+  def apply (inputCommands:List[List[GcodeLine]]) = {
+    new GcodeLines(inputCommands.flatten)
+  }
+}
+
 /** 
  * Parses the gcode text into an object hierarchy.
  * G0 and G1 commands can look like this:
@@ -75,15 +86,15 @@ class GcodeLines(inputCommands:List[List[GcodeLine]]) {
  *    
  * 'Settings' can sometimes occur on the same line:
  * G40 G49 G54 G80 G90 G94
- * 
- * I make the assumtion that multiple G0 and G1 commands never occupy the same line  
+ *
+ * I make the assumption that multiple G0 and G1 commands never occupy the same line  
  */
 class GCodeParser extends RegexParsers {
   val NEWLINE = String.format("%n") // """\n""" is sometimes """\r\n""" :/
   override val skipWhitespace = false
   
   def gCode: Parser[GcodeLines] = rep((rep1sep(gMultiLineCommand,NEWLINE) | rep1(gSingleLineCommand))<~NEWLINE.? ) ^^ {
-    case lines => new GcodeLines(lines)
+    case lines => GcodeLines(lines)
   }
   
   /**
@@ -117,13 +128,17 @@ class GCodeParser extends RegexParsers {
     case gArgumentKey~fNumber => new GcodeParameter(gArgumentKey.capitalize,fNumber) 
   }
   
+  /**
+   * A float 
+   * Accepted forms: 2., -1.0,  12, 1.2E3, -1.2E-3,5e-1    etc etc
+   */
   def gParameterValue: Parser[Float] = """-?\d+(?:\.(?:\d*)?)?(?:[E|e]-?\d+)?""".r ^^ { _.toFloat }
   
   /**
    * remove non-nested comments and other whitespace
    * This is done in a super inefficient two pass. TODO: figure out how to avoid these steps
    */
-  def filterOutWhiteSpace(input:String) = {
+  def filterOutWhiteSpace(input:java.lang.CharSequence) = {
     val tmp = """(?s)(?:[ \t\r\f]+)|(?:\([^\)]*\))""".r.replaceAllIn(input, "") // remove non-nested comments and whitespace
     """(?i)(?m)(?:^\n)|(?:^N\d+)+""".r.replaceAllIn(tmp, "") // remove empty lines and line numbers
   }
