@@ -26,7 +26,7 @@ class GCodeParserTests1 extends FlatSpec with Matchers {
     if (rest.size > 0) println("unparsed:" + rest)
     rest.size should be (0)
     
-    val stepData = ret.parameters.toArray 
+    val stepData = ret.toArray 
     stepData.size should be (3)
     stepData(0).key   should be ("X")
     stepData(0).value should be (1f)
@@ -46,7 +46,7 @@ class GCodeParserTests1 extends FlatSpec with Matchers {
     if (rest.size > 0) println("unparsed:" + rest)
     rest.size should be (0)
     
-    val stepData = ret.parameters.toArray 
+    val stepData = ret.toArray 
     stepData.size should be (3)
     stepData(0).key   should be ("X")
     stepData(0).value should be (5f)
@@ -68,7 +68,7 @@ class GCodeParserTests1 extends FlatSpec with Matchers {
     
     val steps = ret.steps.toArray 
     steps.size should be (1)
-    val stepData = steps(0).parameters.toArray
+    val stepData = steps(0).toArray
     ret.key should be ("G0")
     stepData.size should be (3)
     stepData(0).key   should be ("X")
@@ -91,7 +91,7 @@ class GCodeParserTests1 extends FlatSpec with Matchers {
     
     val steps = ret.steps.toArray 
     steps.size should be (1)
-    val stepData = steps(0).parameters.toArray
+    val stepData = steps(0).toArray
     ret.key should be ("G0")
     stepData.size should be (3)
     stepData(0).key   should be ("X")
@@ -114,7 +114,7 @@ class GCodeParserTests1 extends FlatSpec with Matchers {
     
     val steps = ret.steps.toArray 
     steps.size should be (2)
-    var stepData = steps(0).parameters.toArray
+    var stepData = steps(0).toArray
     ret.key should be ("G0")
     stepData.size should be (3)
     stepData(0).key   should be ("X")
@@ -123,7 +123,7 @@ class GCodeParserTests1 extends FlatSpec with Matchers {
     stepData(1).value should be (2f)
     stepData(2).key   should be ("Z")
     stepData(2).value should be (3f)
-    stepData = steps(1).parameters.toArray
+    stepData = steps(1).toArray
     stepData.size should be (3)
     stepData(0).key   should be ("X")
     stepData(0).value should be (2f)
@@ -144,8 +144,8 @@ class GCodeParserTests1 extends FlatSpec with Matchers {
     rest.size should be (0)
     
     val parameters = ret.parameters.get
-    parameters.parameters.size should be (3)
-    val stepData = parameters.parameters.toArray
+    parameters.size should be (3)
+    val stepData = parameters.toArray
     ret.key should be ("G17")
     stepData.size should be (3)
     stepData(0).key   should be ("X")
@@ -231,7 +231,7 @@ class GCodeParserTests1 extends FlatSpec with Matchers {
     var command1 = ret.commands(8) match { case c:GcodeMultiCommand => c}
     command1.key should be ("G0")   
     command1.steps.size should be (2)
-    var stepData = command1.steps(0).parameters
+    var stepData = command1.steps(0).toArray
     stepData(0).key   should be ("X")
     stepData(0).value should be (1f)
     stepData(1).key   should be ("Y")
@@ -242,7 +242,7 @@ class GCodeParserTests1 extends FlatSpec with Matchers {
     command1 = ret.commands(9) match { case c:GcodeMultiCommand => c}
     command1.key should be ("G1")   
     command1.steps.size should be (1)
-    stepData = command1.steps(0).parameters
+    stepData = command1.steps(0).toArray
     stepData.size should be (3)
     stepData(0).key   should be ("X")
     stepData(0).value should be (2f)

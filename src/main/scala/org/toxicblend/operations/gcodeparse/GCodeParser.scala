@@ -10,10 +10,6 @@ class GcodeParameter(val key:String, val value:Float) {
   override def toString = key+value
 }
 
-class GcodeParameters(val parameters:List[GcodeParameter]) {
-  override def toString = parameters.toString
-}
-
 /**
  * base class for single and multi line commands
  */
@@ -21,13 +17,13 @@ class GcodeLine
 /**
  * Gcode command where the parameters only can occur once
  */
-class GcodeSingleCommand(val key:String,val parameters:Option[GcodeParameters]) extends GcodeLine {
+class GcodeSingleCommand(val key:String,val parameters:Option[List[GcodeParameter]]) extends GcodeLine {
   override def toString = key
 }
 /**
  * Gcode command where the parameters only can occur more than once (separate lines though)
  */
-class GcodeMultiCommand(val key:String, val steps:List[GcodeParameters]) extends GcodeLine {
+class GcodeMultiCommand(val key:String, val steps:List[List[GcodeParameter]]) extends GcodeLine {
   override def toString = "key:" + key + " " + steps
 }
 
@@ -44,7 +40,7 @@ class GcodeLines(inputCommands:List[List[GcodeLine]]) {
        case command:GcodeMultiCommand => 
          if (command.key=="G0" || command.key=="G1") {
            command.steps.foreach(step => {
-             step.parameters.foreach( argument => {
+             step.foreach( argument => {
                argument.key match {
                  case "F" => if (command.key == "G0") state.f0 = argument.value else state.f1 = argument.value
                  case "X" => state.p1.x = argument.value
@@ -107,14 +103,12 @@ class GCodeParser extends RegexParsers {
   /**
    * A list (potentially multi line) command steps. e.g. matching:"X43.2 F1000 Z-1  \n  X2 Z1"
    */
-  def gMultiLineParameters: Parser[List[GcodeParameters]] = rep1sep(gSingleLineParameters,NEWLINE) 
+  def gMultiLineParameters: Parser[List[List[GcodeParameter]]] = rep1sep(gSingleLineParameters,NEWLINE) 
   
   /**
    * A list of single line command arguments representing one step. e.g. matching:"X43.2 F1000 Z-1"
    */
-  def gSingleLineParameters: Parser[GcodeParameters] = rep1(gParameter) ^^ { 
-    case arguments => new GcodeParameters(arguments)
-  } 
+  def gSingleLineParameters: Parser[List[GcodeParameter]] = rep1(gParameter) 
   
   /**
    * a single argument to the commands. e.g matching: "X43.2", "F1000", "Z-1"
@@ -132,43 +126,5 @@ class GCodeParser extends RegexParsers {
   def filterOutWhiteSpace(input:String) = {
     val tmp = """(?s)(?:[ \t\r\f]+)|(?:\([^\)]*\))""".r.replaceAllIn(input, "") // remove non-nested comments and whitespace
     """(?i)(?m)(?:^\n)|(?:^N\d+)+""".r.replaceAllIn(tmp, "") // remove empty lines and line numbers
-  }
-}
-
-object GCodeParser {
-  def main(args: Array[String]) {
-   val objParser = new GCodeParser
-   val arg0 = "G17 G20 G40 G49 G54 G80 G90 G94"
-   var arg1 = "\n\n\nn1G0 Z2.0x2y0 (goto safe z)\nn2g0  x1 y2  z3 (comme\nnt comment)\nn3 g1 x2 y2 z3\n x1\nz0"
-   var arg = """
-     N0G17 G20 G40 G49 G54 G80 G90 G94
-G0 Z2.0 (goto safe z) x0
-G4 P3  (dwell 3 seconds)
-G0 F1000 (set rapid feedrate)
-G1 F500 (set normal feedrate)
-G64 P0.02 Q0.02
-G0 Z2.000000 x2
-G0 X19.01426 Y26.41212
-G1 X19.01426 Y26.41212 Z0 F500.000000
-G1 X19.01426 Y26.41212 Z-11.68791 F100.000000
-G1 X19.01426 Y26.41212 Z-11.68791 F500.000000
-G1 X19.01426 Y26.41212 Z-11.68791
- X19.01426 Y26.41212 Z-11.68791
-G1 X20.81396 Y27.20154 Z-13.37177 
-G1 X23.99418 Y24.75371 Z-11.88044 
- X26.76230 Y23.35208 Z-10.87037 
- X30.86569 Y22.06351 Z-9.78996 
- X35.54356 Y21.31058 Z-9.02444 
-G1 X40.85203 Y21.03279 Z-8.58315 
-G1 X48.17540 Y21.27965 Z-8.31863 
-G1 X61.07601 Y22.72789 Z-7.92359"""
-   arg = objParser.filterOutWhiteSpace(arg)
-   val rv = objParser.parse(objParser.gCode, arg)
-   println("rest:>" + rv.next.source.toString.substring(rv.next.offset) + "<")
-   println()
-   val objects = rv.get
-   println("input : " + arg + "\noutput:" + objects)
-   //println("output : " + objects + " len:" + objects.getSegments.size)
-   println("output : \n" + objects.getSegments.mkString("\n"))
   }
 }
