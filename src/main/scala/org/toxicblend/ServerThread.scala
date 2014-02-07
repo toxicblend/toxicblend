@@ -57,7 +57,7 @@ case class ServerThread(socket: Socket) extends Thread("ServerThread") {
               case "OBJECT_OT_toxicblend_projection_outline" => new ProjectionOutlineProcessor
               case "OBJECT_OT_toxicblend_medianaxis" => new MedianAxisProcessor
               case "OBJECT_OT_toxicblend_boostsimplify" => new BoostSimplify
-              case "OBJECT_OT_toxicblend_simplegcode" => new SimpleGcodeOperation     
+              case "OBJECT_OT_toxicblend_simplegcodegenerator" => new SimpleGcodeOperation     
               case "OBJECT_OT_toxicblend_simplegcodeviewer" => new ParseGcodeOperation
               case "OBJECT_OT_toxicblend_saveobj" => new SaveObjOperation
               case s:String => System.err.println("Unknown command: " + s); new EchoProcessor

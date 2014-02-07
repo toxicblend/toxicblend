@@ -11,6 +11,7 @@ import org.toxicblend.typeconverters.OptionConverter
 import org.toxicblend.typeconverters.Matrix4fConverter
 import org.toxicblend.operations.boostmedianaxis.MedianAxisJni.simplify3D
 import org.toxicblend.operations.boostmedianaxis.MedianAxisJni.simplify2D
+import  org.toxicblend.operations.gcodeparse.ParseGcodeOperation
 
 import scala.collection.JavaConversions._
 
@@ -28,6 +29,8 @@ class SimpleGcodeOperation extends CommandProcessorTrait {
       case "IMPERIAL" => UnitSystem.Imperial
       case s:String => System.err.println("Unrecognizable 'unitSystem' property value: " +  s ); None
     }
+    val outFilename:String = options.getOrElse("outFilename", "gcode.ngc")
+    
     if (unitIsMetric != UnitSystem.Metric) {
       System.err.println("SimpleGcodeOperation::processInput only metric is supported for now");
     }
@@ -35,8 +38,18 @@ class SimpleGcodeOperation extends CommandProcessorTrait {
     // translate every vertex into world coordinates
     val models = inMessage.getModelsList().map(inModel => Mesh3DConverter(inModel,true))
     
+    val totalGCodes = GenerateGCode.mesh3d2GCode(models(0))  // For now, only process the first model
+    GenerateGCode.saveGCode(outFilename, GenerateGCode.gHeader, totalGCodes.map(g => g.generateText(GenerateGCode.gCodeProperties)), GenerateGCode.gFooter)
+    
     println(options)
     val returnMessageBuilder = Message.newBuilder()
+    try {
+      ParseGcodeOperation.readGcode(outFilename, options, returnMessageBuilder)
+    } catch {
+      case e: java.io.FileNotFoundException => System.err.println("ParseGcodeOperationNo file not found:\"" + outFilename + "\"")
+      case e: Exception => throw e
+    }
+      
     returnMessageBuilder
   }
 }

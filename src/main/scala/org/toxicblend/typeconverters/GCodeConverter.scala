@@ -19,7 +19,7 @@ object GCodeConverter {
     if (unitIsMetric != UnitSystem.Metric) {
       System.err.println("GCodeConverter::processInput only metric is supported for now");
     }
-    val segments = parsed.getSegments
+    val segments = parsed.getSegments(0.001f) // convert mm to meter
     val splitG0andG1 = true
     
     val g0Model = if (splitG0andG1) new Mesh3DConverter(name="GCODE-G0") else new Mesh3DConverter(name="GCODE")

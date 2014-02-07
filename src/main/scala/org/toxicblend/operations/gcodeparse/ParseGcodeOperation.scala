@@ -70,3 +70,24 @@ class ParseGcodeOperation extends CommandProcessorTrait {
     returnMessageBuilder
   }
 }
+
+object ParseGcodeOperation {
+  def readGcode(filename:String, options:OptionConverter, returnMessageBuilder:Builder) = {
+    val parser = new GCodeParser
+    
+    try {
+      val reader = scala.io.Source.fromFile(filename)(scala.io.Codec.UTF8).getLines
+      val filtered = parser.filterOutWhiteSpace(reader) 
+      println("ParseGcodeOperation: filtered file size " + filtered.size)
+      val parsed = parser.parseAll(parser.gCode,filtered)
+      if (parsed.successful){
+        GCodeConverter.writeGCode(parsed.get, options, returnMessageBuilder)
+        println("ParseGcodeOperation: successfully parsed gcode. Filename: " + filename)
+      } else {
+        println("ParseGcodeOperation: failed to parse gcode. Filename: " + filename)
+      }
+    } catch {
+      case exc:IOException => System.err.println(exc)
+    }
+  }
+}

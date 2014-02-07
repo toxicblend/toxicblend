@@ -12,10 +12,10 @@ bl_info = {
   "category": "Object",
 }
           
-class ToxicBlend_SimpleGcode(bpy.types.Operator):
-  '''Simple gcode generation'''
-  bl_idname = "object.toxicblend_simplegcode"
-  bl_label = "Simple Gcode"
+class ToxicBlend_SimpleGcodeGenerator(bpy.types.Operator):
+  '''Simple gcode generator'''
+  bl_idname = "object.toxicblend_simplegcodegenerator"
+  bl_label = "Simple Gcode generator"
   bl_options = {'REGISTER', 'UNDO'}  # enable undo for the operator.
   
   useMultiThreadingProperty = bpy.props.EnumProperty(
@@ -27,6 +27,7 @@ class ToxicBlend_SimpleGcode(bpy.types.Operator):
           )
           
   simplifyLimitProperty = bpy.props.FloatProperty(name="Simplify Limit", default=0.5, min=0.0001, max=100, description="the maximum allowed 3d deviation (in pixels) from a straight line, if the deviation is larger than this the line will be segmented.")  
+  filenameProperty = bpy.props.StringProperty(name="Filename", default="gcode.ngc", description="the filename of the gcode file. Usually a .ngc file")
   
   @classmethod
   def poll(cls, context):
@@ -42,7 +43,8 @@ class ToxicBlend_SimpleGcode(bpy.types.Operator):
       properties = {'useMultiThreading'     : str(self.useMultiThreadingProperty),
                     'simplifyLimit'         : str(self.simplifyLimitProperty),
                     'unitSystem'            : str(unitSystemProperty.system), 
-                    'unitScale'             : str(unitSystemProperty.scale_length) }
+                    'unitScale'             : str(unitSystemProperty.scale_length),
+                    'filename'              : self.filenameProperty }
       c.sendSingleBlenderObject(activeObject, self.bl_idname, properties) 
       c.receiveObjects()
       return {'FINISHED'}
@@ -55,10 +57,10 @@ def register():
     msg = 'Blender too old: %s < %s' % ((a,b,c), tuple(version))
     raise NameError(msg)
  
-  bpy.utils.register_class(ToxicBlend_SimpleGcode)
+  bpy.utils.register_class(ToxicBlend_SimpleGcodeGenerator)
 
 def unregister():
-  bpy.utils.unregister_class(ToxicBlend_SimpleGcode)
+  bpy.utils.unregister_class(ToxicBlend_SimpleGcodeGenerator)
 
 if __name__ == "__main__":
   register()
