@@ -1,5 +1,6 @@
 package org.toxicblend.operations.boostsimplify
 
+import org.toxicblend.UnitSystem
 import org.toxicblend.CommandProcessorTrait
 import org.toxicblend.util.Regex
 import scala.collection.mutable.ArrayBuffer
@@ -24,7 +25,17 @@ class BoostSimplify extends CommandProcessorTrait {
       case "FALSE" => false
       case s:String => System.err.println("Unrecognizable 'useMultiThreading' property value: " +  s ); false
     }
-    
+    val unitScale:Float = options.getOrElse("unitScale", "1.0") match {
+      case Regex.FLOAT_REGEX(limit) => limit.toFloat
+      case s:String => System.err.println("SimpleGcodeOperation: unrecognizable 'unitScale' property value: " +  s ); 1f
+    }
+    val unitIsMetric = options.getOrElse("unitSystem", "METRIC").toUpperCase() match {
+      case "METRIC" => UnitSystem.Metric
+      case "NONE" => None
+      case "IMPERIAL" => UnitSystem.Imperial
+      case s:String => System.err.println("Unrecognizable 'unitSystem' property value: " +  s ); None
+    }
+ 
     val simplifyLimit:Float = options.getOrElse("simplifyLimit", "0.1") match {
       case Regex.FLOAT_REGEX(limit) => limit.toFloat
       case s:String => System.err.println("BoostSimplify: unrecognizable 'simplifyLimit' property value: " +  s ); .1f
@@ -46,7 +57,7 @@ class BoostSimplify extends CommandProcessorTrait {
       println("vertexes=" + model._1.getVertexes.mkString(","))
       println("faces=" + model._1.getFaces.map(x=>x.mkString("(",",",")")).mkString(","))
 
-      val segments = model._1.findLineSegments
+      val segments = model._1.findContinuousLineSegments
       val newMesh = new Mesh3DConverter; 
       segments._1.foreach(ngon => newMesh.addFace(ngon))
       segments._2.foreach(segment =>  {

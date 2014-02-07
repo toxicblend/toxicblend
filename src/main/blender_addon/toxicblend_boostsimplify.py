@@ -25,7 +25,7 @@ class ToxicBlend_BoostSimplify(bpy.types.Operator):
            default="FALSE"    
           )
           
-  simplifyLimitProperty = bpy.props.FloatProperty(name="Simplify Limit", default=0.5, min=0.0001, max=100, description="the maximum allowed 3d deviation (in pixels) from a straight line, if the deviation is larger than this the line will be segmented.")  
+  simplifyLimitProperty = bpy.props.FloatProperty(name="Simplify Limit", default=0.1, min=0.001, max=100, description="the maximum allowed 3d deviation (in mm) from a straight line, if the deviation is larger than this the line will be segmented.")  
   
   @classmethod
   def poll(cls, context):
