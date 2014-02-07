@@ -15,7 +15,7 @@ import  org.toxicblend.operations.gcodeparse.ParseGcodeOperation
 
 import scala.collection.JavaConversions._
 
-class SimpleGcodeOperation extends CommandProcessorTrait {
+class SimpleGcodeGeneratorOperation extends CommandProcessorTrait {
   
   def processInput(inMessage:Message) = {
     val options = OptionConverter(inMessage)
