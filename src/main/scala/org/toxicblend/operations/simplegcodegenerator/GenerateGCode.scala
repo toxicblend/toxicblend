@@ -1,4 +1,4 @@
-package org.toxicblend.operations.simplegcode
+package org.toxicblend.operations.simplegcodegenerator
 
 import toxi.geom.Vec3D
 import toxi.geom.ReadonlyVec3D

@@ -1,4 +1,4 @@
-package org.toxicblend.operation.simplegcode
+package org.toxicblend.operations.simplegcodegenerator
 
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.ListBuffer

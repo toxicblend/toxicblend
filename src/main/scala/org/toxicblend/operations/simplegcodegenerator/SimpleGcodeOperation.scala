@@ -1,4 +1,4 @@
-package org.toxicblend.operations.simplegcode
+package org.toxicblend.operations.simplegcodegenerator
 
 import org.toxicblend.CommandProcessorTrait
 import org.toxicblend.UnitSystem
