@@ -6,6 +6,7 @@ import toxi.geom.Matrix4f
 import toxi.geom.AABB
 import scala.collection.mutable.HashSet
 import scala.collection.mutable.HashMap
+import scala.collection.Map
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.ListBuffer
 import java.io.PrintWriter
@@ -40,7 +41,7 @@ object GenerateGCode {
   	rv
   }
     
-  def generateGcode(edges:IndexedSeq[Vec2DZ], bb:AABB, gcodeProperties:Map[String,Float]):Array[GCode]= {
+  def generateGcode(edges:IndexedSeq[IndexedSeq[Vec2DZ]], bb:AABB, gcodeProperties:Map[String,Float]):IndexedSeq[GCode]= {
     
     val debugGCode = gcodeProperties.get("DebugGCode")!=None 
     val transform:Matrix4f = {
@@ -145,15 +146,22 @@ object GenerateGCode {
         }
 	    }
       val p = findLeaf(point, Nil)
-      if (p == null) point else p
+      if (p == null) 
+        point 
+      else 
+        p
     }
     
     def indexListToCoords(edges:ArrayBuffer[(Int,Int)]):ArrayBuffer[(Float,Float,Float)] = {
-      edges.map(e => {
-      	val p1 = map(e._1)
-		    (p1.getX,p1.getY,p1.getZ)		
-		  }) += ({ val p2 = map(edges.last._2); (p2.getX, p2.getY, p2.getZ)}) 
-		  	  //  ).map(x => new Vec3D(x._1, x._2, x._3))
+      if (edges.size>0){
+        edges.map(e => {
+        	val p1 = map(e._1)
+  		    (p1.getX,p1.getY,p1.getZ)		
+  		  }) += ({ val p2 = map(edges.last._2); (p2.getX, p2.getY, p2.getZ)}) 
+  		  	  //  ).map(x => new Vec3D(x._1, x._2, x._3))
+      } else {
+        new ArrayBuffer[(Float,Float,Float)]
+      }
     }
     
     /**
@@ -170,7 +178,16 @@ object GenerateGCode {
 			val gcodePointArray = walkpath.par.map(s => indexListToCoords(s)).map(x => x.map( y=> new Vec3D(transform.transformOne(new Vec3D(y._1, y._2, y._3)) )))
 			gcodePointArray.map(g => new GCode(g.toArray)).toArray
 		}
-    initiateWalkEdge(edges(0)) 
+    
+    val rv = new ArrayBuffer[GCode]
+    edges.foreach(ring => {
+      val gcode = initiateWalkEdge(ring(0)) 
+      if (gcode.size>0) rv ++= gcode
+      else {
+        println("could find any gcode from the point"+ ring(0) )
+      }
+    })
+    rv 
   }  
       
    def saveGCode(filename: String, header:()=>String, inPut:Seq[String], footer:()=>String) = {    
@@ -229,14 +246,17 @@ object GenerateGCode {
     rv
   }
   
+  /**
+   * TODO: I simply assume the unit is meter here, - fix it
+   */
   def mesh3d2GCode(mesh:Mesh3DConverter):IndexedSeq[GCode] = {
     val allGCodes = {
       val scaleMToMM = 1000f
       //val simplifyLimit = gCodeProperties.get("simplifyLimit").get  
       val aabb = mesh.getBounds.scaleSelf(scaleMToMM).asInstanceOf[AABB]
       println("Bounding Box: %s".format(aabb.toString))
-      val segments = mesh.getEdgesAsVec2DZ(scaleMToMM)
-      generateGcode(segments, aabb, gCodeProperties)//.simplify(simplifyLimit
+      val segments = mesh.findContinuousLineSegmentsAsVec2DZ(scaleMToMM)
+      generateGcode(segments._2, aabb, gCodeProperties).filter(g => g.gcodePoints.size > 0)
     }
     allGCodes.foreach(g => println(g))
     val totalGCodes = new ArrayBuffer[GCode]
@@ -252,7 +272,7 @@ object GenerateGCode {
     }
     totalGCodes
   }
-  
+  /*
   def main(args: Array[String]): Unit = {
     
     val inFilename = "gcode.toxicblend"
@@ -267,5 +287,5 @@ object GenerateGCode {
     //totalGCodes.foreach(g => println(g))
     saveGCode(outFilename, gHeader, totalGCodes.map(g => g.generateText(gCodeProperties)), gFooter)
     println("done")
-  }
+  } */
 }

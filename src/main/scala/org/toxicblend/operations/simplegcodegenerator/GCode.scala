@@ -1,7 +1,9 @@
 package org.toxicblend.operations.simplegcodegenerator
+
 import toxi.geom.ReadonlyVec3D
 import toxi.geom.Vec3D
 import scala.collection.mutable.ListBuffer
+import scala.collection.Map
 import scala.collection.mutable.ArrayBuffer
 import org.toxicblend.geometry.IntersectionVec3DImplicit._
 import scala.collection.TraversableOnce.flattenTraversableOnce

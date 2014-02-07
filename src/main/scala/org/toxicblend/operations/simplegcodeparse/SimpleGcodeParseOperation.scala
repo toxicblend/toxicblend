@@ -3,7 +3,6 @@ package org.toxicblend.operations.simplegcodeparse
 import org.toxicblend.CommandProcessorTrait
 import org.toxicblend.UnitSystem
 import org.toxicblend.util.Regex
-import org.toxicblend.util.Managed.managed
 import scala.collection.mutable.ArrayBuffer
 import toxi.geom.Vec3D
 import org.toxicblend.protobuf.ToxicBlenderProtos.Message

@@ -12,6 +12,7 @@ import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.Buffer
 import scala.collection.IndexedSeqLike
 import scala.collection.mutable.HashMap
+import scala.collection.Map
 import org.toxicblend.geometry.ProjectionPlane
 import org.toxicblend.geometry.Vec2DZ
 import org.toxicblend.protobuf.ToxicBlenderProtos.{Model,Face}
@@ -20,7 +21,9 @@ import org.toxicblend.util.VertexToFaceMap
 
 import scala.collection.JavaConversions._
 
-class Mesh3DConverter protected (protected val vertexes:Buffer[ReadonlyVec3D], protected val faces:Buffer[ArrayBuffer[Int]], protected val bounds:AABB, val name:String="") {
+class Mesh3DConverter protected (protected val vertexes:Buffer[ReadonlyVec3D], protected val faces:Buffer[ArrayBuffer[Int]], 
+                                 protected val bounds:AABB, val name:String="") {
+  
   val vert2id = new HashMap[ReadonlyVec3D,Int]()
   (0 until vertexes.size).foreach(i => vert2id.put(vertexes(i),i ))
   
@@ -33,10 +36,22 @@ class Mesh3DConverter protected (protected val vertexes:Buffer[ReadonlyVec3D], p
   def getBounds = bounds
   
   /**
-   * gets the edges of the faces with only 2 vertexes
+   * Returns the edges of the faces with only 2 vertexes
+   * @param scale is needed when converting to mm from meter (for example)
+   * /
+  def getAsVec2DZ(vertexes:IndexedSeq[ReadonlyVec3D], scale:Float=1f):IndexedSeq[Vec2DZ] = {
+    val rv = new ArrayBuffer[Vec2DZ]
+    vertexes.forearch( v3d => {
+      val vz = new Vec2DZ(v3d.x, ,)
+      rv.append(n)
+    })
+  }*/
+  
+  /**
+   * Returns the edges of the faces with only 2 vertexes
    * @param scale is needed when converting to mm from meter (for example)
    */
-  def getEdgesAsVec2DZ(scale:Float=1f):IndexedSeq[Vec2DZ] = {
+  def getEdgesAsVec2DZ(scale:Float=1f):Map[Int,Vec2DZ] = {
     val mapId2vec2dz = new HashMap[Int,Vec2DZ] 
     
     def getOrAddVec2d(objectId:Int):Vec2DZ = {
@@ -50,21 +65,22 @@ class Mesh3DConverter protected (protected val vertexes:Buffer[ReadonlyVec3D], p
     }
     
     val trueEdges = faces.filter(f => f.size < 3)
-    val rv = new ArrayBuffer[Vec2DZ]
+    //val rv = new ArrayBuffer[Vec2DZ]
     trueEdges.foreach(face => {
       if (face.size ==1) {
-        rv += new Vec2DZ(vertexes(face(0)),face(0))
+        //rv += new Vec2DZ(vertexes(face(0)),face(0))
+        getOrAddVec2d(face(0))
       } else if (face.size ==2) { // must be size == 2
         val v1 = getOrAddVec2d(face(0))
         val v2 = getOrAddVec2d(face(1))
         v1.addEdge(v2)
         v2.addEdge(v1)
-        rv += v1
-        rv += v2
+        //rv += v1
+        //rv += v2
       } 
       assert(face.size<=2)
     })
-    rv
+    mapId2vec2dz
   }
   
   /**
@@ -81,13 +97,12 @@ class Mesh3DConverter protected (protected val vertexes:Buffer[ReadonlyVec3D], p
       rv
     }
   }
-  
   /**
-   * finds continous segments of vertexes. 
+   * finds continuous segments of edges as vertexes (by int id)
    * returns a tuple containing _1 = ngons (faces with 3 or more vertices)
    *                            _2 = line segments of vertices
    */
-  def findLineSegments():(IndexedSeq[IndexedSeq[ReadonlyVec3D]],IndexedSeq[IndexedSeq[ReadonlyVec3D]]) = {
+  def findContinuousLineSegmentsAsId():(IndexedSeq[IndexedSeq[Int]],IndexedSeq[IndexedSeq[Int]]) = {
     val map = new VertexToFaceMap()
     val lineStrings = new ArrayBuffer[ArrayBuffer[ReadonlyVec3D]]
     (0 until faces.size).foreach(faceId => {
@@ -95,7 +110,7 @@ class Mesh3DConverter protected (protected val vertexes:Buffer[ReadonlyVec3D], p
       val distincts = vertexes.distinct
       if (distincts.size != vertexes.size) {
         if (distincts.size>1) {
-          println("This is terrible wrong, i know. But i just distinctified the vertexes of a face and added them.") // TODO: fix it
+          println("findLineSegments:: This is terrible wrong, i know. But i just took the unique vertexes of a face and added them to the result set.") // TODO: fix it
           println("" + vertexes.mkString("{",",","}") + " => " + distincts.mkString("{",",","}"))
           map.add(distincts, faceId)
         }
@@ -104,8 +119,34 @@ class Mesh3DConverter protected (protected val vertexes:Buffer[ReadonlyVec3D], p
       }
     })
     val result = map.findVertexIdLineStrips
-    val ngons = result._1.map(vertexList => vertexList.map(vertexId => this.vertexes(vertexId.toInt)))
-    val lineSegments = result._2.map(vertexList => vertexList.map(vertexId => this.vertexes(vertexId.toInt)))
+    val ngons = result._1.map(vertexList => vertexList.map(vertexId => vertexId.toInt))
+    val lineSegments = result._2.map(vertexList => vertexList.map(vertexId => vertexId.toInt))
+    (ngons,lineSegments)
+  }
+  
+  /**
+   * finds continuous segments of edges as Vec2DZ
+   * returns a tuple containing _1 = ngons (faces with 3 or more vertices)
+   *                            _2 = line segments of vertices
+   * @param scale is needed when converting to mm from meter (for example)
+   */
+  def findContinuousLineSegmentsAsVec2DZ(scale:Float=1f):(IndexedSeq[IndexedSeq[Vec2DZ]],IndexedSeq[IndexedSeq[Vec2DZ]]) = {
+    val vec2dzmap = getEdgesAsVec2DZ(scale)
+    val result = findContinuousLineSegmentsAsId
+    val ngons = result._1.map(vertexList => vertexList.map(vertexId => vec2dzmap(vertexId)))
+    val lineSegments = result._2.map(vertexList => vertexList.map(vertexId => vec2dzmap(vertexId)))
+    (ngons,lineSegments)
+  }
+  
+  /**
+   * finds continuous segments of edges. 
+   * returns a tuple containing _1 = ngons (faces with 3 or more vertices)
+   *                            _2 = line segments of vertices
+   */
+  def findContinuousLineSegments():(IndexedSeq[IndexedSeq[ReadonlyVec3D]],IndexedSeq[IndexedSeq[ReadonlyVec3D]]) = {
+    val result = findContinuousLineSegmentsAsId
+    val ngons = result._1.map(vertexList => vertexList.map(vertexId => this.vertexes(vertexId)))
+    val lineSegments = result._2.map(vertexList => vertexList.map(vertexId => this.vertexes(vertexId)))
     (ngons,lineSegments)
   }
     
@@ -208,7 +249,7 @@ object Mesh3DConverter {
   }
   
   /** 
-   * Constructs from a packet buffer model. Assuming unitScale = 1.0
+   * Constructs from a packet buffer model. Will convert to world coordinates. Assuming unitScale = 1.0
    */
   def apply(pbModel:Model,useWorldCoordinares:Boolean):Mesh3DConverter = {
     apply(pbModel,useWorldCoordinares,1.0f)
@@ -217,7 +258,7 @@ object Mesh3DConverter {
   /** 
    * Constructs from a packet buffer model, if there is a world transformation it will be used to calculate the 'real' vertexes
    * @param pbModel the model we are reading from
-   * @param useWorldCoordinares convert coordinates in the pbModel into world coordinates (apply worldtransformation)
+   * @param useWorldCoordinares convert coordinates in the pbModel into world coordinates (apply world transformation)
    * @param unitScale 'extra' scaling needed to convert from one unit of measure to another (e.g. meter to millimeter)
    */
   def apply(pbModel:Model, useWorldCoordinares:Boolean, unitScale:Float):Mesh3DConverter = {
@@ -334,7 +375,7 @@ object Mesh3DConverter {
       val v2as3Dmedian = map2(v2as2D)
       undoubled.addEdges(v1as3Dmedian, v2as3Dmedian)
     }))
-    val segments = undoubled.findLineSegments._2
+    val segments = undoubled.findContinuousLineSegments._2
     val rv = new Mesh3DConverter(undoubled.name)
     segments.foreach(segment => rv.addMultipleEdges(segment))
     rv
