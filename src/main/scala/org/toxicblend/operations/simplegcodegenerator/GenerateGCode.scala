@@ -21,16 +21,16 @@ import org.toxicblend.typeconverters.Mesh3DConverter
 object GenerateGCode {
 
   //val gCodeProperties = Map("SizeX"->300f, "SafeZ"->3f, "SpindleSpeed"->1000f, "G0Feedrate" -> 1000f,"G1PlungeFeedrate" -> 100f,"G1Feedrate"->500f) // "DebugGCode"->1f,
-  val gCodeProperties = Map("simplifyLimit"->0.05f, "StepDown"->1f, "SizeZ"->5f, "SafeZ"->2f, "SpindleSpeed"->1000f, "G0Feedrate" -> 1000f,"G1PlungeFeedrate" -> 100f,"G1Feedrate"->500f, "DebugGCode"->1f)
+  val gCodeProperties = Map("simplifyLimit"->0.05f, "StepDown"->1f/*,"SizeZ"->5f*/, "SafeZ"->2f, "SpindleSpeed"->1000f, "G0Feedrate" -> 1000f,"G1PlungeFeedrate" -> 100f,"G1Feedrate"->500f, "DebugGCode"->1f)
   //val gCodeProperties = Map("SafeZ"->5f, "SpindleSpeed"->1000f, "G0Feedrate" -> 1000f,"G1PlungeFeedrate" -> 100f,"G1Feedrate"->500f)
 
   def gHeader():String = {
-    	"G0 Z%s (goto safe z)\n".format(gCodeProperties.get("SafeZ").get.toString)+
-    	"M3 S%s (start splindle)\n".format(gCodeProperties.get("SpindleSpeed").get.toInt.toString) +
-    	"G4 P3  (dwell 3 seconds)\n" +
-    	"G0 F%s (set rapid feedrate)\n".format(gCodeProperties.get("G0Feedrate").get.toInt.toString) + 
-    	"G1 F%s (set normal feedrate)\n".format(gCodeProperties.get("G1Feedrate").get.toInt.toString) +
-    	"G64 P0.02 Q0.02\n"
+  	"G0 Z%s (goto safe z)\n".format(gCodeProperties.get("SafeZ").get.toString)+
+  	"M3 S%s (start splindle)\n".format(gCodeProperties.get("SpindleSpeed").get.toInt.toString) +
+  	"G4 P3  (dwell 3 seconds)\n" +
+  	"G0 F%s (set rapid feedrate)\n".format(gCodeProperties.get("G0Feedrate").get.toInt.toString) + 
+  	"G1 F%s (set normal feedrate)\n".format(gCodeProperties.get("G1Feedrate").get.toInt.toString) +
+  	"G64 P0.02 Q0.02\n"
   }
     
   def gFooter():String = {
@@ -170,7 +170,6 @@ object GenerateGCode {
 			val gcodePointArray = walkpath.par.map(s => indexListToCoords(s)).map(x => x.map( y=> new Vec3D(transform.transformOne(new Vec3D(y._1, y._2, y._3)) )))
 			gcodePointArray.map(g => new GCode(g.toArray)).toArray
 		}
-       
     initiateWalkEdge(edges(0)) 
   }  
       

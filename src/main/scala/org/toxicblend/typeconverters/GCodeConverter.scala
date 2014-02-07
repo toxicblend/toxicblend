@@ -1,5 +1,5 @@
 package org.toxicblend.typeconverters
-import org.toxicblend.operations.gcodeparse.GcodeLines
+import org.toxicblend.operations.simplegcodeparse.GcodeLines
 import org.toxicblend.protobuf.ToxicBlenderProtos.Message.Builder
 import org.toxicblend.util.Regex
 import org.toxicblend.UnitSystem
@@ -19,7 +19,7 @@ object GCodeConverter {
     if (unitIsMetric != UnitSystem.Metric) {
       System.err.println("GCodeConverter::processInput only metric is supported for now");
     }
-    val segments = parsed.getSegments(0.001f) // convert mm to meter
+    val segments = parsed.getSegments(0.001f/unitScale) // convert mm to meter
     val splitG0andG1 = true
     
     val g0Model = if (splitG0andG1) new Mesh3DConverter(name="GCODE-G0") else new Mesh3DConverter(name="GCODE")

@@ -48,6 +48,7 @@ class ToxicBlend_MedianAxis(bpy.types.Operator):
     imp.reload(toxicblend)
     with toxicblend.ByteCommunicator("localhost", 9999) as c: 
       # bpy.context.selected_objects,
+      unitSystemProperty = context.scene.unit_settings
       activeObject = context.scene.objects.active
       properties = {'projectionPlane'       : str(self.projectionPlaneProperty), 
                     'useMultiThreading'     : str(self.useMultiThreadingProperty),

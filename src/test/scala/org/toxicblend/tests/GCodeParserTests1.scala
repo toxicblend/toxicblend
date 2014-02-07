@@ -2,11 +2,11 @@ package org.toxicblend.tests
 
 import collection.mutable.Stack
 import org.scalatest._
-import org.toxicblend.operations.gcodeparse.GCodeParser
-import org.toxicblend.operations.gcodeparse.GcodeMultiCommand
-import org.toxicblend.operations.gcodeparse.GcodeSingleCommand
-import org.toxicblend.operations.gcodeparse.GcodeLines
-import org.toxicblend.operations.gcodeparse.GcodeParameter
+import org.toxicblend.operations.simplegcodeparse.GCodeParser
+import org.toxicblend.operations.simplegcodeparse.GcodeMultiCommand
+import org.toxicblend.operations.simplegcodeparse.GcodeSingleCommand
+import org.toxicblend.operations.simplegcodeparse.GcodeLines
+import org.toxicblend.operations.simplegcodeparse.GcodeParameter
 
 class GCodeParserTests1 extends FlatSpec with Matchers {
  

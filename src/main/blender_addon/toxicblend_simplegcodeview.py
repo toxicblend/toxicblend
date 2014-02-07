@@ -39,7 +39,7 @@ class ToxicBlend_SimpleGcodeViewer(bpy.types.Operator):
                     'simplifyLimit'         : str(self.simplifyLimitProperty),
                     'unitSystem'            : str(unitSystemProperty.system), 
                     'unitScale'             : str(unitSystemProperty.scale_length),
-                    'filename'              : str(self.filenameProperty) }
+                    'filename'              : self.filenameProperty }
       c.sendOnlyCommand(self.bl_idname, properties) 
       c.receiveObjects()
       return {'FINISHED'}

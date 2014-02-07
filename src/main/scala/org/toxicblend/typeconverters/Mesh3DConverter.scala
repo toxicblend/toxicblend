@@ -201,33 +201,46 @@ class Mesh3DConverter protected (protected val vertexes:Buffer[ReadonlyVec3D], p
 
 object Mesh3DConverter {
   /** 
-   * Constructs from a packet buffer model
+   * Constructs from a packet buffer model, assuming no world transformation and unitScale = 1.0
    */
   def apply(pbModel:Model):Mesh3DConverter = {
-    apply(pbModel,false)
+    apply(pbModel,false,1.0f)
+  }
+  
+  /** 
+   * Constructs from a packet buffer model. Assuming unitScale = 1.0
+   */
+  def apply(pbModel:Model,useWorldCoordinares:Boolean):Mesh3DConverter = {
+    apply(pbModel,useWorldCoordinares,1.0f)
   }
   
   /** 
    * Constructs from a packet buffer model, if there is a world transformation it will be used to calculate the 'real' vertexes
+   * @param pbModel the model we are reading from
+   * @param useWorldCoordinares convert coordinates in the pbModel into world coordinates (apply worldtransformation)
+   * @param unitScale 'extra' scaling needed to convert from one unit of measure to another (e.g. meter to millimeter)
    */
-  def apply(pbModel:Model, useWorldCoordinares:Boolean):Mesh3DConverter = {
+  def apply(pbModel:Model, useWorldCoordinares:Boolean, unitScale:Float):Mesh3DConverter = {
     val aabb = new AABB
     val vbuffer = new Array[ReadonlyVec3D](pbModel.getVertexesList().size).toBuffer
     val fbuffer = new ArrayBuffer[ArrayBuffer[Int]](pbModel.getFacesList().size)
     val hasWorldTransformation = pbModel.hasWorldOrientation()
     val worldTransformation = if (hasWorldTransformation) Option(Matrix4fConverter(pbModel.getWorldOrientation())) else None
-      
-    pbModel.getVertexesList().foreach( vertex => {
-      val v = {
-        if (useWorldCoordinares && hasWorldTransformation) 
-          worldTransformation.get.matrix.transformOne(new Vec3D(vertex.getX, vertex.getY, vertex.getZ))
-        else 
-          new Vec3D(vertex.getX, vertex.getY, vertex.getZ)
-      }
-      aabb.growToContainPoint(v)
-      vbuffer(vertex.getId()) = v
-    })
     
+    if (useWorldCoordinares && hasWorldTransformation) {
+      val wtransform = worldTransformation.get.matrix
+      pbModel.getVertexesList().foreach( vertex => {
+        val v = wtransform.transformOne(new Vec3D(vertex.getX*unitScale, vertex.getY*unitScale, vertex.getZ*unitScale))
+        aabb.growToContainPoint(v)
+        vbuffer(vertex.getId()) = v
+      })
+    } else {
+      pbModel.getVertexesList().foreach( vertex => {
+        val v = new Vec3D(vertex.getX*unitScale, vertex.getY*unitScale, vertex.getZ*unitScale)
+        aabb.growToContainPoint(v)
+        vbuffer(vertex.getId()) = v
+      })
+    }
     if (useWorldCoordinares && hasWorldTransformation) {
       // world transformation already applied, set it to none
       //pbModel.clearWorldOrientation() TODO: this does now work, figure out how to do this

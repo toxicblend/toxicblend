@@ -1,4 +1,4 @@
-package org.toxicblend.operations.gcodeparse
+package org.toxicblend.operations.simplegcodeparse
 
 import scala.util.parsing.combinator.RegexParsers
 import toxi.geom.ReadonlyVec3D

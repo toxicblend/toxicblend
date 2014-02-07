@@ -11,7 +11,7 @@ import org.toxicblend.typeconverters.OptionConverter
 import org.toxicblend.typeconverters.Matrix4fConverter
 import org.toxicblend.operations.boostmedianaxis.MedianAxisJni.simplify3D
 import org.toxicblend.operations.boostmedianaxis.MedianAxisJni.simplify2D
-import  org.toxicblend.operations.gcodeparse.ParseGcodeOperation
+import org.toxicblend.operations.simplegcodeparse.SimpleGcodeParseOperation
 
 import scala.collection.JavaConversions._
 
@@ -36,7 +36,7 @@ class SimpleGcodeGeneratorOperation extends CommandProcessorTrait {
     }
     
     // translate every vertex into world coordinates
-    val models = inMessage.getModelsList().map(inModel => Mesh3DConverter(inModel,true))
+    val models = inMessage.getModelsList().map(inModel => Mesh3DConverter(inModel,true,unitScale))
     
     val totalGCodes = GenerateGCode.mesh3d2GCode(models(0))  // For now, only process the first model
     GenerateGCode.saveGCode(outFilename, GenerateGCode.gHeader, totalGCodes.map(g => g.generateText(GenerateGCode.gCodeProperties)), GenerateGCode.gFooter)
@@ -44,7 +44,7 @@ class SimpleGcodeGeneratorOperation extends CommandProcessorTrait {
     println(options)
     val returnMessageBuilder = Message.newBuilder()
     try {
-      ParseGcodeOperation.readGcode(outFilename, options, returnMessageBuilder)
+      SimpleGcodeParseOperation.readGcodeIntoBuilder(outFilename, options, returnMessageBuilder)
     } catch {
       case e: java.io.FileNotFoundException => System.err.println("ParseGcodeOperationNo file not found:\"" + outFilename + "\"")
       case e: Exception => throw e

@@ -1,4 +1,4 @@
-package org.toxicblend.operations.gcodeparse
+package org.toxicblend.operations.simplegcodeparse
 
 import org.toxicblend.CommandProcessorTrait
 import org.toxicblend.UnitSystem
@@ -21,26 +21,8 @@ import java.nio.channels.FileChannel
 import java.nio.ByteBuffer
 import java.io.IOException
 
-class ParseGcodeOperation extends CommandProcessorTrait {
-  
-  protected def processGcode(filename:String, options:OptionConverter, returnMessageBuilder:Builder) = {
-    val parser = new GCodeParser
+class SimpleGcodeParseOperation extends CommandProcessorTrait {
     
-    try {
-      val reader = scala.io.Source.fromFile(filename)(scala.io.Codec.UTF8).getLines
-      val filtered = parser.filterOutWhiteSpace(reader) 
-      println("ParseGcodeOperation: filtered file size " + filtered.size)
-      val parsed = parser.parseAll(parser.gCode,filtered)
-      if (parsed.successful){
-        GCodeConverter.writeGCode(parsed.get, options, returnMessageBuilder)
-      } else {
-        println("ParseGcodeOperation: failed to parse gcode. Filename: " + filename)
-      }
-    } catch {
-      case exc:IOException => System.err.println(exc)
-    }
-  }
-  
   def processInput(inMessage:Message) = {
     val options = OptionConverter(inMessage)
     println("ParseGcodeOperation::options=" + options)
@@ -61,7 +43,7 @@ class ParseGcodeOperation extends CommandProcessorTrait {
     } else {
       val filename = options("filename")
       try {
-        processGcode(filename, options, returnMessageBuilder)
+        SimpleGcodeParseOperation.readGcodeIntoBuilder(filename, options, returnMessageBuilder)
       } catch {
         case e: java.io.FileNotFoundException => System.err.println("ParseGcodeOperationNo file not found:\"" + filename + "\"")
         case e: Exception => throw e
@@ -71,18 +53,17 @@ class ParseGcodeOperation extends CommandProcessorTrait {
   }
 }
 
-object ParseGcodeOperation {
-  def readGcode(filename:String, options:OptionConverter, returnMessageBuilder:Builder) = {
+object SimpleGcodeParseOperation {
+  
+  def readGcodeIntoBuilder(filename:String, options:OptionConverter, returnMessageBuilder:Builder) = {
     val parser = new GCodeParser
-    
-    try {
+    try {      
       val reader = scala.io.Source.fromFile(filename)(scala.io.Codec.UTF8).getLines
       val filtered = parser.filterOutWhiteSpace(reader) 
       println("ParseGcodeOperation: filtered file size " + filtered.size)
       val parsed = parser.parseAll(parser.gCode,filtered)
       if (parsed.successful){
         GCodeConverter.writeGCode(parsed.get, options, returnMessageBuilder)
-        println("ParseGcodeOperation: successfully parsed gcode. Filename: " + filename)
       } else {
         println("ParseGcodeOperation: failed to parse gcode. Filename: " + filename)
       }

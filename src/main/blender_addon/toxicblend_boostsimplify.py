@@ -35,6 +35,7 @@ class ToxicBlend_BoostSimplify(bpy.types.Operator):
     imp.reload(toxicblend)
     with toxicblend.ByteCommunicator("localhost", 9999) as c: 
       # bpy.context.selected_objects,
+      unitSystemProperty = context.scene.unit_settings
       activeObject = context.scene.objects.active
       properties = {'useMultiThreading'     : str(self.useMultiThreadingProperty),
                     'simplifyLimit'         : str(self.simplifyLimitProperty),
