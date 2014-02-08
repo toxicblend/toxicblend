@@ -14,7 +14,7 @@ bl_info = {
 class ToxicLibsVolume(bpy.types.Operator):
   '''Volumetric operation an a lattice'''
   bl_idname = "object.toxicblend_volume"
-  bl_label = "Toxiclibs volume"
+  bl_label = "ToxicBlend Toxiclibs volume"
   bl_options = {'REGISTER', 'UNDO'}  # enable undo for the operator.
   
   voxelBrushType = bpy.props.EnumProperty(

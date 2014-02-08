@@ -14,7 +14,7 @@ bl_info = {
 class ToxicBlend_MedianAxis(bpy.types.Operator):
   '''Naive implementation of median axis'''
   bl_idname = "object.toxicblend_medianaxis"
-  bl_label = "Median axis"
+  bl_label = "ToxicBlend Median axis"
   bl_options = {'REGISTER', 'UNDO'}  # enable undo for the operator.
   
   projectionPlaneProperty = bpy.props.EnumProperty(

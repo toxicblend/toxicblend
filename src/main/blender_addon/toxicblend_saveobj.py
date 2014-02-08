@@ -15,7 +15,7 @@ bl_info = {
 class ToxicBlend_SaveObj(bpy.types.Operator):
   '''Simple gcode generation'''
   bl_idname = "object.toxicblend_saveobj"
-  bl_label = "Save object (for testing purposes)"
+  bl_label = "ToxicBlend Save object (for testing purposes)"
   bl_options = {'REGISTER', 'UNDO'}  # enable undo for the operator.
 
   @classmethod

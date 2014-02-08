@@ -15,7 +15,7 @@ bl_info = {
 class ToxicBlend_SimpleGcodeGenerator(bpy.types.Operator):
   '''Simple gcode generator'''
   bl_idname = "object.toxicblend_simplegcodegenerator"
-  bl_label = "Simple Gcode generator"
+  bl_label = "ToxicBlend Simple Gcode generator"
   bl_options = {'REGISTER', 'UNDO'}  # enable undo for the operator.
   
   useMultiThreadingProperty = bpy.props.EnumProperty(
