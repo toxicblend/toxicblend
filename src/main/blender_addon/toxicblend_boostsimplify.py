@@ -14,7 +14,7 @@ bl_info = {
 class ToxicBlend_BoostSimplify(bpy.types.Operator):
   '''Simplify edges using boost'''
   bl_idname = "object.toxicblend_boostsimplify"
-  bl_label = "Boost simplify"
+  bl_label = "ToxicBlend Boost simplify"
   bl_options = {'REGISTER', 'UNDO'}  # enable undo for the operator.
   
   useMultiThreadingProperty = bpy.props.EnumProperty(
@@ -25,7 +25,7 @@ class ToxicBlend_BoostSimplify(bpy.types.Operator):
            default="FALSE"    
           )
           
-  simplifyLimitProperty = bpy.props.FloatProperty(name="Simplify Limit", default=0.1, min=0.001, max=100, description="the maximum allowed 3d deviation (in mm) from a straight line, if the deviation is larger than this the line will be segmented.")  
+  simplifyLimitProperty = bpy.props.FloatProperty(name="Simplify Limit [mm]", default=0.1, min=0.001, max=100, description="the maximum allowed 3d deviation (in mm) from a straight line, if the deviation is larger than this the line will be segmented.")  
   
   @classmethod
   def poll(cls, context):
@@ -43,7 +43,8 @@ class ToxicBlend_BoostSimplify(bpy.types.Operator):
                     'unitScale'             : str(unitSystemProperty.scale_length) }
                      
       c.sendSingleBlenderObject(activeObject, self.bl_idname, properties) 
-      c.receiveObjects()
+      # remove doubles with mm as unit and half the resolution of the simplify operation
+      c.receiveObjects(removeDoublesThreshold=self.simplifyLimitProperty/2000.)
       return {'FINISHED'}
 
 def register():

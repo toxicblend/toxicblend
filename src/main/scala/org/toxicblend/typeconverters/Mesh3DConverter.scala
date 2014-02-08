@@ -38,18 +38,6 @@ class Mesh3DConverter protected (protected val vertexes:Buffer[ReadonlyVec3D], p
   /**
    * Returns the edges of the faces with only 2 vertexes
    * @param scale is needed when converting to mm from meter (for example)
-   * /
-  def getAsVec2DZ(vertexes:IndexedSeq[ReadonlyVec3D], scale:Float=1f):IndexedSeq[Vec2DZ] = {
-    val rv = new ArrayBuffer[Vec2DZ]
-    vertexes.forearch( v3d => {
-      val vz = new Vec2DZ(v3d.x, ,)
-      rv.append(n)
-    })
-  }*/
-  
-  /**
-   * Returns the edges of the faces with only 2 vertexes
-   * @param scale is needed when converting to mm from meter (for example)
    */
   def getEdgesAsVec2DZ(scale:Float=1f):Map[Int,Vec2DZ] = {
     val mapId2vec2dz = new HashMap[Int,Vec2DZ] 
@@ -97,6 +85,7 @@ class Mesh3DConverter protected (protected val vertexes:Buffer[ReadonlyVec3D], p
       rv
     }
   }
+  
   /**
    * finds continuous segments of edges as vertexes (by int id)
    * returns a tuple containing _1 = ngons (faces with 3 or more vertices)
@@ -149,12 +138,29 @@ class Mesh3DConverter protected (protected val vertexes:Buffer[ReadonlyVec3D], p
     val lineSegments = result._2.map(vertexList => vertexList.map(vertexId => this.vertexes(vertexId)))
     (ngons,lineSegments)
   }
-    
+  
+  /**
+   * Transforms all the point parameters with this Matrix4f transformation matrix.
+   * The fourth element of the point parameters is
+   * assumed to be one.
+   * 
+   * @param matrix the transformation matrix
+   * @return this (not a copy)
+   */  
+  def transformOne(inMatrix:Matrix4f):Mesh3DConverter = {
+    bounds.clearAABB()
+    (0 until vertexes.size).foreach(i=>{
+      val vOld = vertexes(i)
+      val vNew =  inMatrix.transformOne(new Vec3D(vOld))
+      bounds.growToContainPoint(vNew)
+      vertexes(i) = vNew
+    })
+    this
+  }
+  
   /**
    * Create a packet buffer model from this Mesh3D.
    * The result will be a list of triangles due to the design of Mesh3D
-   * 
-   * TODO: fix the imperative:ness 
    */  
   def toPBModel(finalTransformation:Option[Matrix4fConverter], projectionPlane:Option[ProjectionPlane.ProjectionPlane]) = {
     val modelBuilder = org.toxicblend.protobuf.ToxicBlenderProtos.Model.newBuilder()
@@ -177,7 +183,7 @@ class Mesh3DConverter protected (protected val vertexes:Buffer[ReadonlyVec3D], p
       pbvertex.setX(vertex.x)
       pbvertex.setY(vertex.y)
       pbvertex.setZ(vertex.z)
-      pbvertex.setId(vertexId) // TODO remove this id
+      pbvertex.setId(vertexId) 
       modelBuilder.addVertexes(pbvertex)
       
       if (finalTransformation.isDefined) modelBuilder.setWorldOrientation(finalTransformation.get.toPBModel)
@@ -271,9 +277,9 @@ object Mesh3DConverter {
     if (useWorldCoordinares && hasWorldTransformation) {
       val wtransform = worldTransformation.get.matrix
       pbModel.getVertexesList().foreach( vertex => {
-        val v = wtransform.transformOne(new Vec3D(vertex.getX*unitScale, vertex.getY*unitScale, vertex.getZ*unitScale))
-        aabb.growToContainPoint(v)
-        vbuffer(vertex.getId()) = v
+        val transformedVector = wtransform.transformOne(new Vec3D(vertex.getX*unitScale, vertex.getY*unitScale, vertex.getZ*unitScale))
+        aabb.growToContainPoint(transformedVector)
+        vbuffer(vertex.getId()) = transformedVector
       })
     } else {
       pbModel.getVertexesList().foreach( vertex => {
@@ -281,10 +287,6 @@ object Mesh3DConverter {
         aabb.growToContainPoint(v)
         vbuffer(vertex.getId()) = v
       })
-    }
-    if (useWorldCoordinares && hasWorldTransformation) {
-      // world transformation already applied, set it to none
-      //pbModel.clearWorldOrientation() TODO: this does now work, figure out how to do this
     }
     
     pbModel.getFacesList().foreach( face => {
