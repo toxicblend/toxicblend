@@ -91,20 +91,4 @@ object DragonCurveProcessor {
     })
     rv
   }
-  
-  def println(ls:LineStrip3D) {
-    ls.getVertices().foreach(v => print(v))
-      System.out.println("")
-  }
-  
-  def main(args: Array[String]): Unit = {
-   println(draw(generateData(1), 1.0f))
-   //println(draw(generateData(2)))
-   val m1=LineStripConverter(Array(draw(generateData(1), 1.0f)))
-   val pbm=m1.toPBModel(false).build()
-   val m2=LineStripConverter(pbm)
-   m1.println
-   m2.println
-   m2.lineStrips.foreach(println)
-  }
 }

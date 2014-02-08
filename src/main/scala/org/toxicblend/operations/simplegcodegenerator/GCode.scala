@@ -18,6 +18,10 @@ object GCode {
   }
 }
 
+/**
+ * Prints to text
+ * TODO: don't print X,Y & Z coordinates if they didn't change from the previous line
+ */
 class GCode(val gcodePoints:Array[Vec3D]) {
   val MAGIC_DEPTH_LIMIT = 0.2f
   def startPoint=gcodePoints(0)
