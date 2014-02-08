@@ -65,12 +65,12 @@ class MedianAxisProcessor extends CommandProcessorTrait {
     
     val rings2D = Rings2DConverter(inModel, projectionPlane, applyWorldTransform=true)
    
-    val inverseMatrix = if (inModel.hasWorldOrientation()) {
+    val worldTransformation = if (inModel.hasWorldOrientation()) {
       Option(Matrix4fConverter(inModel.getWorldOrientation()))
     } else {
       None
     }
-    (inModel, rings2D, inverseMatrix, zEpsilon, dotProductLimit, calculationResolution, simplifyLimit, objectName, projectionPlane, useMultiThreading)
+    (inModel, rings2D, worldTransformation, zEpsilon, dotProductLimit, calculationResolution, simplifyLimit, objectName, projectionPlane, useMultiThreading)
   }
   
   def computeMedianAxis(majni:MedianAxisJni,rings2D:Rings2DConverter, zEpsilon:Float, dotProductLimit:Float, calculationResolution:Float, simplifyLimit:Float, objectName:String, useMultiThreading:Boolean):Mesh3DConverter = {
@@ -110,16 +110,16 @@ class MedianAxisProcessor extends CommandProcessorTrait {
   def processInput(inMessage:Message) = {
     val majni = MedianAxisJni()
     val returnMessageBuilder = try {
-      val (inModel, rings2D, inverseMatrix, zEpsilon, dotProductLimit, calculationResolution, simplifyLimit, objectName, projectionPlane, useMultiThreading) = 
+      val (inModel, rings2D, worldTransformation, zEpsilon, dotProductLimit, calculationResolution, simplifyLimit, objectName, projectionPlane, useMultiThreading) = 
         manageInput(inMessage)   
       val result = computeMedianAxis(majni, rings2D, zEpsilon, dotProductLimit, calculationResolution, simplifyLimit, objectName, useMultiThreading)
       println("MedianAxisProcessor found " + result.getFaces.size + " sets of edges")
-      val returnPbOutputModel = result.toPBModel(inverseMatrix, Option(projectionPlane))
+      val returnPbOutputModel = result.toPBModel(worldTransformation, Option(projectionPlane))
       returnPbOutputModel.setName(inModel.getName + " median axis output")   
       
       val returnMessageBuilder = Message.newBuilder()
       returnMessageBuilder.addModels(returnPbOutputModel)
-      val returnPbInputModel = rings2D.toPBModel(true, inverseMatrix)
+      val returnPbInputModel = rings2D.toPBModel(true, worldTransformation)
       returnPbInputModel.setName(inModel.getName + " median axis input")
       returnMessageBuilder.addModels(returnPbInputModel)
     } finally {
