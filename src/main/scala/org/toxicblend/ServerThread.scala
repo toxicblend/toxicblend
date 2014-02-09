@@ -3,14 +3,12 @@ package org.toxicblend
 import java.nio.charset.Charset
 import java.net.{InetAddress,ServerSocket,Socket,SocketException}
 import java.util.Random
-import org.toxicblend.protobuf.ToxicBlenderProtos.Message
-import org.toxicblend.protobuf.ToxicBlenderProtos.Model
 import java.io.{DataOutputStream,DataInputStream,EOFException,IOException}
-import com.google.protobuf.{CodedInputStream,CodedOutputStream}
+
+import org.toxicblend.protobuf.ToxicBlenderProtos.Message
+import org.toxicblend.protobuf.ToxicBlenderProtos.{Option => MessageOption}
+import org.toxicblend.typeconverters.OptionConverter
 import org.toxicblend.protobuf.ToxicBlenderProtos.Model
-import toxi.geom.AABB
-import toxi.geom.Vec3D
-import toxi.geom.AABB
 import org.toxicblend.operations.volumetricrender.VolumetricRenderProcessor
 import org.toxicblend.operations.projectionoutline.ProjectionOutlineProcessor
 import org.toxicblend.operations.boostmedianaxis.MedianAxisProcessor
@@ -19,6 +17,10 @@ import org.toxicblend.operations.boostsimplify.BoostSimplify
 import org.toxicblend.operations.simplegcodegenerator.SimpleGcodeGeneratorOperation
 import org.toxicblend.operations.simplegcodeparse.SimpleGcodeParseOperation
 import org.toxicblend.operations.saveobj.SaveObjOperation
+
+import com.google.protobuf.{CodedInputStream,CodedOutputStream}
+import toxi.geom.AABB
+import toxi.geom.Vec3D
 
 object ServerThread {
     private val CHARSET = Charset.forName("UTF-8")
@@ -62,7 +64,18 @@ case class ServerThread(socket: Socket) extends Thread("ServerThread") {
               case "OBJECT_OT_toxicblend_saveobj" => new SaveObjOperation
               case s:String => System.err.println("Unknown command: " + s); new EchoProcessor
             }
-            processor.processInput(inMessage)
+            try {
+              processor.processInput(inMessage)
+            } catch {
+              case e:Exception => {
+                val message = Message.newBuilder()
+                val optionBuilder = MessageOption.newBuilder()
+                optionBuilder.setKey("ERROR")
+                optionBuilder.setValue(e.toString)
+                message.addOptions(optionBuilder)
+                message
+              }
+            }
           }
           Option(outMessage.getCommand()).foreach(_ => outMessage.setCommand("None"))
           val output = outMessage.build.toByteArray()
