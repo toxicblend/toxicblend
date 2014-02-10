@@ -73,6 +73,7 @@ case class ServerThread(socket: Socket) extends Thread("ServerThread") {
                 optionBuilder.setKey("ERROR")
                 optionBuilder.setValue(e.toString)
                 message.addOptions(optionBuilder)
+                e.printStackTrace()
                 message
               }
             }

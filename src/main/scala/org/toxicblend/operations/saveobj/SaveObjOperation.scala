@@ -4,7 +4,6 @@ import org.toxicblend.CommandProcessorTrait
 import org.toxicblend.protobuf.ToxicBlenderProtos.Message
 import org.toxicblend.typeconverters.OptionConverter
 import org.toxicblend.util.FileOperations
-import scala.collection.JavaConversions._
 
 class SaveObjOperation extends CommandProcessorTrait {
   
