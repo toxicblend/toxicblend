@@ -38,7 +38,7 @@ class GenerateGCode(val gCodeProperties:GCodeSettings) {
   	rv
   }
     
-  def generateGcode(edges:IndexedSeq[IndexedSeq[Vec2DZ]], bb:AABB, gcodeProperties:GCodeSettings):IndexedSeq[GCode]= {
+  def generateGcode(edges:IndexedSeq[IndexedSeq[ReadonlyVec3D]], bb:AABB, gcodeProperties:GCodeSettings):IndexedSeq[GCode]= {
     //val debugGCode = gcodeProperties.get("DebugGCode")!=None 
     val transform:Matrix4f = {
       val scale = {
@@ -63,126 +63,14 @@ class GenerateGCode(val gCodeProperties:GCodeSettings) {
 	    new Matrix4f(offset, scale)
     }
   
-    val visited = new HashSet[(Int,Int)] // (objIndex, objIndex)
-    val map = new HashMap[Int, Vec2DZ] // (objIndex, Vec2DZ)
-
-    val ret = new ArrayBuffer[ArrayBuffer[(Int,Int)]]  // ArrayBuffer[retSegment]
-    var retSegment = new ArrayBuffer[(Int,Int)]
-       
-    @tailrec
-    def walkEdge(point:Vec2DZ, from:Vec2DZ, backlog:List[((Vec2DZ,Vec2DZ))]):ArrayBuffer[ArrayBuffer[(Int,Int)]] ={
-      
-      if (!map.contains(point.objIndex)){
-        map.put(point.objIndex, point)
-      }
-      if (!map.contains(from.objIndex)){
-        map.put(from.objIndex, from)
-      }
-      
-      if (!visited.contains((point.objIndex,from.objIndex))){
-        retSegment +=  new Tuple2(from.objIndex, point.objIndex)
-        visited.add((point.objIndex, from.objIndex))
- 	      visited.add((from.objIndex, point.objIndex))
-	      /*println("oid: %d->%d #connections:%d visited:%s fresh:%s backlog=%s".format(from.objIndex, point.objIndex, point.edges.size, 
-	          point.edges.filter(p => visited.contains((point.objIndex,p.objIndex))).map(p=>p.objIndex).mkString(" "),
-	          point.edges.filter(p => !visited.contains((point.objIndex,p.objIndex))).map(p=>p.objIndex).mkString(" "), 
-	          backlog.map(p=>"%d->%d".format(p._1.objIndex, p._2.objIndex)).mkString(" ")))   
-	      println("Point oid=%d %s".format(point.objIndex, point.edges.map(x => x.objIndex).mkString("(",",",")")))
-	      System.out.println()
-	      */ 
-      } else {
-        println("This segment was alreay visited: %d->%d".format(point.objIndex, from.objIndex))
-      }
-      // filter out already visited edges, and sort by angle between previous edge and the next. Straight lines get precedence
-      val l:List[Vec2DZ] = point.edges.iterator.filter(p => !visited.contains((point.objIndex, p.objIndex))).toList.sortBy(sx => point.sub(from).angleBetween(sx.sub(point), true))
-      //if (l.size > 1)
-      //  println(l.map(x=>point.sub(from).angleBetween(x.sub(point), true)).mkString(","))
-      l match {
-        case Nil => {
-          ret += retSegment
-          retSegment = new ArrayBuffer[(Int,Int)]
-          val bl:List[(Vec2DZ,Vec2DZ)] = {
-            val bl:List[(Vec2DZ,Vec2DZ)] = backlog.filter(p => !visited.contains((p._1.objIndex, p._2.objIndex))).toList
-            bl.sortBy(p => p._1.distanceToSquared(point))
-          }
-          bl match  {
-            case Nil => ret
-            case x :: rest => { 
-              walkEdge(x._2, x._1, rest)
-          	}
-          }
-        } 
-        case x :: Nil => walkEdge(x, point, backlog)
-        case x :: rest => walkEdge(x, point, rest.map(r => (point, r)).toList ::: backlog)
-      }
-    }
-    
-    /**
-     * Find a point with only one connection
-     */
-    def findLeaf(point:Vec2DZ): Vec2DZ = {
-      val visitedEdges = new HashSet[Vec2DZ]
-	    @tailrec def findLeaf(point:Vec2DZ, backlog:List[Vec2DZ] ):Vec2DZ = {
-        if (point.edges.size == 1) {
-          point
-        } else {
-          visitedEdges.add(point)
-		      point.edges.filter(x => !visitedEdges.contains(x)).toList match {
-		        case Nil => {
-		          val bl:List[Vec2DZ] = backlog.filter(p => !visitedEdges.contains(p)) 
-		          bl match {
-		            case Nil => point
-		            case x :: rest => findLeaf(x, rest)
-		          }
-		        }
-		        case p :: Nil => findLeaf(p, backlog)
-		        case p :: rest => findLeaf(p, rest ::: backlog)
-		      }
-        }
-	    }
-      val p = findLeaf(point, Nil)
-      if (p == null) 
-        point 
-      else 
-        p
-    }
-    
-    def indexListToCoords(edges:ArrayBuffer[(Int,Int)]):ArrayBuffer[(Float,Float,Float)] = {
-      if (edges.size>0){
-        edges.map(e => {
-        	val p1 = map(e._1)
-  		    (p1.getX,p1.getY,p1.getZ)		
-  		  }) += ({ val p2 = map(edges.last._2); (p2.getX, p2.getY, p2.getZ)}) 
-  		  	  //  ).map(x => new Vec3D(x._1, x._2, x._3))
-      } else {
-        new ArrayBuffer[(Float,Float,Float)]
-      }
-    }
-    
-    /**
-     * find a leaf (vertex with only one connection) and setup walkedge from there 
-     */
-    def initiateWalkEdge(point:Vec2DZ):Array[GCode] = {
-		  //val rv = new ListBuffer[String]
-		  var startPoint = findLeaf(point)
-		  if (startPoint == null) {
-		    startPoint = point
-		  } 
- 
-	    val walkpath = walkEdge(startPoint, startPoint, Nil)
-			val gcodePointArray = walkpath.par.map(s => indexListToCoords(s)).map(x => x.map( y=> transform.transformOne(new Vec3D(y._1, y._2, y._3)) ))
-			gcodePointArray.map(g => new GCode(g.toArray)).toArray
-		}
-    
-    val rv = new ArrayBuffer[GCode]
-    edges.foreach(ring => {
-      val gcode = initiateWalkEdge(ring(0)) 
-      if (gcode.size>0) rv ++= gcode
-      else {
-        println("could find any gcode from the point"+ ring(0) )
-      }
-    })
-    rv 
+    val rv = edges.map( segment => {
+      val pGoints = segment.map(point => {  
+        val tmp = transform.transformOne(new Vec3D(point.x*1000f, point.y*1000f,point.z*1000f))
+        tmp
+      })
+      new GCode(pGoints)
+    }) 
+    rv
   }  
       
    def saveGCode(filename:String, header:()=>String, inPut:Seq[String], footer:()=>String) = {    
@@ -251,11 +139,11 @@ class GenerateGCode(val gCodeProperties:GCodeSettings) {
       val scaleMToMM = 1000f
       //val simplifyLimit = gCodeProperties.get("simplifyLimit").get  
       //val aabb = mesh.getBounds.scaleSelf(scaleMToMM).asInstanceOf[AABB]
-      val segments = mesh.findContinuousLineSegmentsAsVec2DZ(scaleMToMM)
+      val segments = mesh.findContinuousLineSegments
       if (segments._2.size > 0 && segments._2(0).size > 0) {
         // recalculate the aabb, with the mm conversion and all
-        val aabb = new AABB(segments._2(0)(0).asVec3D, 0f)
-        segments._2.foreach(segment => segment.foreach(point => aabb.growToContainPoint(point.asVec3D)))
+        val aabb = new AABB(segments._2(0)(0).scale(1000f), 0f) // meter to mm
+        segments._2.foreach(segment => segment.foreach(point => aabb.growToContainPoint(point.scale(1000f)))) // meter to mm
         println("Bounding Box: %s min:%s max:%S".format(aabb.toString, aabb.getMin().toString(), aabb.getMax().toString() ))
         (generateGcode(segments._2, aabb, gCodeProperties).filter(g => g.gcodePoints.size > 0),aabb)
       } else {
@@ -263,7 +151,7 @@ class GenerateGCode(val gCodeProperties:GCodeSettings) {
       }
     }
     if (aabb.getMax().z > 0) {
-      throw new ToxicblendException("GCode generating edge-meshes must have all vertexed below Z=0")
+      throw new ToxicblendException("GCode generating edge-meshes must have all vertexes below Z=0")
     }
     println("allUnadjustedGCodes:")
     allUnadjustedGCodes.foreach(g => println(g))

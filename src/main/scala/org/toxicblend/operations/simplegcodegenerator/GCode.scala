@@ -12,7 +12,7 @@ import scala.collection.TraversableOnce.flattenTraversableOnce
  * Prints to text
  * TODO: don't print X,Y & Z coordinates if they didn't change from the previous line
  */
-class GCode(val gcodePoints:Array[Vec3D]) {
+class GCode(val gcodePoints:IndexedSeq[Vec3D]) {
   val MAGIC_DEPTH_LIMIT = 0.2f
   def startPoint=gcodePoints(0)
   def endPoint=gcodePoints(gcodePoints.size-1)
@@ -32,53 +32,72 @@ class GCode(val gcodePoints:Array[Vec3D]) {
   }
   
   def heightFilter(atDepth:Float):ArrayBuffer[GCode] = { 
-    var state:() => Unit = null
-    val segment = new ArrayBuffer[Vec3D]    
+    var state: (Vec3D, Vec3D) => Unit = null
+    val segment = new ArrayBuffer[Vec3D] 
     val rv = new ArrayBuffer[GCode]
     var i = 0
 
     /** 
      * Search for a segment that is below or equal to atDepth
+     * 
+     * fromV   toV     action
+     * -----   ------  ------
+     * above   above   Do nothing, next state = searching
+     * above   below   Store intersection, next state = found
+     * below   above   Store fromV and intersection, next state = searching
+     * below   below   Store fromV, next state = found
      */
-    def stateSearching() {
+    def stateSearching(fromV:Vec3D, toV:Vec3D) {
      //println("stateSearching at z = %f atDepth = %f i=%d".format(gcodePoints(i).z, atDepth, i))
 
-      if ( 0==i ) {
-        if ( gcodePoints(i).z - MAGIC_DEPTH_LIMIT <=  atDepth){
-          //println("stateSearching at z = %f atDepth = %f i=%d".format(gcodePoints(i).z, atDepth, i))
-          val p = gcodePoints(i)
-          segment += new Vec3D(p.x, p.y, p.z-atDepth)
-          println("stateSearching Added segment point: " + segment(segment.size-1) + " i=" + i+ " depth=" + atDepth)
-          state = stateFound
-        }
-      } else {
-        if (gcodePoints(i).intersectsXYPlane(gcodePoints(i-1), atDepth+MAGIC_DEPTH_LIMIT)){
-          //println("stateSearching at z = %f atDepth = %f i=%d".format(gcodePoints(i).z, atDepth, i))
-          val p = gcodePoints(i).intersectionPoint(gcodePoints(i-1),atDepth+MAGIC_DEPTH_LIMIT)
-          segment += new Vec3D(p.x, p.y, p.z-atDepth)
+      //val fromV = gcodePoints(steps(i)(0))
+      //val toV = gcodePoints(steps(i)(1))
+      if (fromV.z - MAGIC_DEPTH_LIMIT <= atDepth){
+        segment += fromV.sub(0f,0f,atDepth)
+        println("stateSearching Added segment point: " + segment(segment.size-1)+ " i=" + i+ " depth=" + atDepth)
+        if (fromV.intersectsXYPlane(toV, atDepth+MAGIC_DEPTH_LIMIT)){
+          segment += fromV.intersectionPoint(toV,atDepth+MAGIC_DEPTH_LIMIT).sub(0f,0f,atDepth)
           println("stateSearching Added segment point: " + segment(segment.size-1)+ " i=" + i+ " depth=" + atDepth)
+          rv += new GCode(segment.toArray)
+          segment.clear
+          state = stateSearching // we found an intersection, but it ended within this state. So we are still searching
+        } else {
+          assert(toV.z - MAGIC_DEPTH_LIMIT <= atDepth)
           state = stateFound
-        }
+        } 
+      } else if (fromV.intersectsXYPlane(toV, atDepth+MAGIC_DEPTH_LIMIT)){
+        //println("stateSearching at z = %f atDepth = %f i=%d".format(gcodePoints(i).z, atDepth, i))
+        segment += fromV.intersectionPoint(toV,atDepth+MAGIC_DEPTH_LIMIT).sub(0f,0f,atDepth)
+        println("stateSearching Added segment point: " + segment(segment.size-1)+ " i=" + i+ " depth=" + atDepth)
+        state = stateFound
       }
     }
     
     /**
      * A segment below or equal to atDepth is found, follow it until it ends or intersects the atDepth plane
+     * 
+     * fromV   toV     action
+     * -----   ------  ------
+     * above   above   fail
+     * above   below   fail
+     * below   above   Store fromV and intersection, next state = searching
+     * below   below   Store fromV, next state = found
      */
-    def stateFound() {
-      assert(i!=0)
-      //println("stateFound at z = %f atDepth = %f i = %d".format(gcodePoints(i).z, atDepth, i))
-      if (0<i){
-        //println("gcodePoints(i-1).z - MAGIC_DEPTH_LIMIT = %f  i=%d".format(gcodePoints(i-1).z - MAGIC_DEPTH_LIMIT, i))
-        assert(gcodePoints(i-1).z - MAGIC_DEPTH_LIMIT <= atDepth )
-      }
-      if ( gcodePoints(i).z - MAGIC_DEPTH_LIMIT <= atDepth ) {
-        val p = gcodePoints(i) 
-        segment += new Vec3D(p.x, p.y, p.z-atDepth)
+    def stateFound(fromV:Vec3D, toV:Vec3D) {
+      assert( i!=0 )
+      //val fromV = gcodePoints(steps(i)(0))
+      //val toV = gcodePoints(steps(i)(1))
+      
+      assert(fromV.z - MAGIC_DEPTH_LIMIT <= atDepth )
+      
+      if ( toV.z - MAGIC_DEPTH_LIMIT <= atDepth ) {
+        segment += fromV.sub(0f,0f,atDepth)
+        println("stateFound Added segment point: " + segment(segment.size-1) + " i=" + i+ " depth=" + atDepth)
       } else {
-	      if (gcodePoints(i).intersectsXYPlane(gcodePoints(i-1), atDepth+MAGIC_DEPTH_LIMIT)){
-	        val p = gcodePoints(i).intersectionPoint(gcodePoints(i-1),atDepth+MAGIC_DEPTH_LIMIT)
-	        segment += new Vec3D(p.x, p.y, p.z-atDepth)
+	      if (fromV.intersectsXYPlane(toV, atDepth+MAGIC_DEPTH_LIMIT)){
+	        segment += fromV.sub(0f,0f,atDepth)
+          println("stateFound Added segment point: " + segment(segment.size-1)+ " i=" + i + " depth=" + atDepth)
+	        segment += fromV.intersectionPoint(toV,atDepth+MAGIC_DEPTH_LIMIT).sub(0f,0f,atDepth)
           println("stateFound Added segment point: " + segment(segment.size-1)+ " i=" + i + " depth=" + atDepth)
 	        rv += new GCode(segment.toArray)
 	        segment.clear
@@ -93,17 +112,21 @@ class GCode(val gcodePoints:Array[Vec3D]) {
 
     println("Searching for segments at depth %f".format(atDepth))
     state = stateSearching
-    while ( i < gcodePoints.size ){
-      state()
-      i+=1  
-    }
+    i = 0
+    (0 until gcodePoints.size).sliding(2).foreach(s => {
+      state(gcodePoints(s(0)),gcodePoints(s(1)))
+      i+=1
+    })
+    // One last time, to get the last vertex
+    state(gcodePoints(gcodePoints.size-1),gcodePoints(gcodePoints.size-1))
+
     if (segment.size >0){
       rv += new GCode(segment.toArray)
       segment.clear
     }
     println("Found %d segments at depth %f".format(rv.size, atDepth))
     println(rv.mkString(","))
-    println(rv(0).gcodePoints.mkString(","))
+    if (rv.size > 0) println(rv(0).gcodePoints.mkString(","))
     rv
   }
   
