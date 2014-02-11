@@ -2,6 +2,7 @@ package org.toxicblend.typeconverters
 
 import toxi.geom.mesh.Mesh3D
 import toxi.geom.ReadonlyVec3D
+import toxi.geom.Vec3D
 import toxi.geom.ReadonlyVec2D
 import toxi.geom.Vec2D
 import toxi.geom.mesh.TriangleMesh
@@ -21,8 +22,10 @@ import org.toxicblend.util.VertexToFaceMap
 
 import scala.collection.JavaConversions._
 
-class Mesh3DConverter protected (protected val vertexes:Buffer[ReadonlyVec3D], protected val faces:Buffer[ArrayBuffer[Int]], 
-                                 protected val bounds:AABB, val name:String="") {
+class Mesh3DConverter protected (protected val vertexes:Buffer[ReadonlyVec3D], 
+                                 protected val faces:Buffer[ArrayBuffer[Int]], 
+                                 protected val bounds:AABB, 
+                                 val name:String="") {
   
   val vert2id = new HashMap[ReadonlyVec3D,Int]()
   (0 until vertexes.size).foreach(i => vert2id.put(vertexes(i),i ))
@@ -261,6 +264,19 @@ object Mesh3DConverter {
     apply(pbModel,useWorldCoordinares,1.0f)
   }
   
+  /**
+   * returns the first vertex found in the pbModel
+   */
+  protected def getFirstVertex(pbModel:Model):Option[ReadonlyVec3D] = {
+    val vertexList = pbModel.getVertexesList()
+    if (vertexList.size >0 ) {
+      val firstPBVertex = vertexList(0)
+      Option(new Vec3D(firstPBVertex.getX, firstPBVertex.getY, firstPBVertex.getZ))
+    } else {
+      None
+    }
+  }
+  
   /** 
    * Constructs from a packet buffer model, if there is a world transformation it will be used to calculate the 'real' vertexes
    * @param pbModel the model we are reading from
@@ -268,25 +284,41 @@ object Mesh3DConverter {
    * @param unitScale 'extra' scaling needed to convert from one unit of measure to another (e.g. meter to millimeter)
    */
   def apply(pbModel:Model, useWorldCoordinares:Boolean, unitScale:Float):Mesh3DConverter = {
-    val aabb = new AABB
-    val vbuffer = new Array[ReadonlyVec3D](pbModel.getVertexesList().size).toBuffer
-    val fbuffer = new ArrayBuffer[ArrayBuffer[Int]](pbModel.getFacesList().size)
+    
     val hasWorldTransformation = pbModel.hasWorldOrientation()
     val worldTransformation = if (hasWorldTransformation) Option(Matrix4fConverter(pbModel.getWorldOrientation())) else None
+    val vbuffer = new Array[ReadonlyVec3D](pbModel.getVertexesList().size).toBuffer
+    val fbuffer = new ArrayBuffer[ArrayBuffer[Int]](pbModel.getFacesList().size)
     
-    if (useWorldCoordinares && hasWorldTransformation) {
-      val wtransform = worldTransformation.get.matrix
-      pbModel.getVertexesList().foreach( vertex => {
-        val transformedVector = wtransform.transformOne(new Vec3D(vertex.getX*unitScale, vertex.getY*unitScale, vertex.getZ*unitScale))
-        aabb.growToContainPoint(transformedVector)
-        vbuffer(vertex.getId()) = transformedVector
-      })
-    } else {
-      pbModel.getVertexesList().foreach( vertex => {
-        val v = new Vec3D(vertex.getX*unitScale, vertex.getY*unitScale, vertex.getZ*unitScale)
-        aabb.growToContainPoint(v)
-        vbuffer(vertex.getId()) = v
-      })
+    val aabb = {
+      if (useWorldCoordinares && hasWorldTransformation) {
+        val wtransform = worldTransformation.get.matrix
+        val firstVertexOpt = getFirstVertex(pbModel)
+        val aabb = if (firstVertexOpt.isDefined) {
+          new AABB(wtransform.transformOne(firstVertexOpt.get.scale(unitScale)),0f)
+        } else {
+          new AABB // no vertexes, aabb will have origin at origo
+        }
+        pbModel.getVertexesList().foreach( vertex => {
+          val transformedVector = wtransform.transformOne(new Vec3D(vertex.getX*unitScale, vertex.getY*unitScale, vertex.getZ*unitScale))
+          aabb.growToContainPoint(transformedVector)
+          vbuffer(vertex.getId()) = transformedVector
+        })
+        aabb
+      } else {
+        val firstVertexOpt = getFirstVertex(pbModel)
+        val aabb = if (firstVertexOpt.isDefined) {
+          new AABB(firstVertexOpt.get.scale(unitScale),0f)
+        } else {
+          new AABB // no vertexes, aabb will have origin at origo
+        }
+        pbModel.getVertexesList().foreach( vertex => {
+          val v = new Vec3D(vertex.getX*unitScale, vertex.getY*unitScale, vertex.getZ*unitScale)
+          aabb.growToContainPoint(v)
+          vbuffer(vertex.getId()) = v
+        })
+        aabb
+      }
     }
     
     pbModel.getFacesList().foreach( face => {
@@ -301,7 +333,14 @@ object Mesh3DConverter {
    * Build a segmented line from a sequence of vertexes, each segment will have it's own face structure
    */
   def apply(vertexes:Seq[ReadonlyVec3D], name:String) = {
-    val aabb = new AABB
+    val aabb = {
+      // if possible, use the first vertex when creating the AABB
+      if (vertexes.size >0 ) {
+        val firstVertex = vertexes(0)
+        new AABB(new Vec3D(firstVertex.x, firstVertex.y, firstVertex.z), 0f)
+      } else
+        new AABB
+    }
     val vbuffer = new ArrayBuffer[ReadonlyVec3D](vertexes.size)
     val fbuffer = new ArrayBuffer[ArrayBuffer[Int]](vertexes.size+1)
     vertexes.foreach( v=> {
@@ -341,7 +380,7 @@ object Mesh3DConverter {
   }
   
   /**
-   * removes 3Dvertices that are 'stacked' on the same XY coordinate.  
+   * remove 3Dvertices that are 'stacked' on the same XY coordinate.  
    */
   def removeZDoubles(interiorEdges:Mesh3DConverter):Mesh3DConverter = {
     val undoubled = new Mesh3DConverter(interiorEdges.name)
@@ -382,12 +421,4 @@ object Mesh3DConverter {
     segments.foreach(segment => rv.addMultipleEdges(segment))
     rv
   }
-    
-  /*
-   * Build from a set of edges
-   * /
-  def applyIsThisUsed(edges:IndexedSeq[IndexedSeq[ReadonlyVec3D]], objectName:String ):Mesh3DConverter = {
-    //val interiorEdges = new InteriorEdges(edges)
-    new Mesh3DConverter(objectName)
-  }*/
 }
