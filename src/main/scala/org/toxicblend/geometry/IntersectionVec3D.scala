@@ -29,7 +29,7 @@ class IntersectionVec3D(val wrapped:ReadonlyVec3D) {
   
   def intersectsXYPlane(p1:ReadonlyVec3D, zLimit:Float):Boolean = {
     var rv = intersectsXYPlane_(p1, zLimit)
-    //println("comparing this.z %f that.z %f : %s".format(this.z, p1.z, rv.toString))
+    println("comparing this.z %f that.z %f zLimit=%f: %s".format(wrapped.z, p1.z, zLimit, rv.toString))
     rv
   }
  

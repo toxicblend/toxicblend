@@ -18,53 +18,48 @@ import org.toxicblend.geometry.BoundingBoxDeprecaded
 import org.toxicblend.util.FileOperations
 import org.toxicblend.protobuf.ToxicBlenderProtos.Model
 import org.toxicblend.typeconverters.Mesh3DConverter
+import org.toxicblend.ToxicblendException
 
-object GenerateGCode {
-
-  //val gCodeProperties = Map("SizeX"->300f, "SafeZ"->3f, "SpindleSpeed"->1000f, "G0Feedrate" -> 1000f,"G1PlungeFeedrate" -> 100f,"G1Feedrate"->500f) // "DebugGCode"->1f,
-  val gCodeProperties = Map("simplifyLimit"->0.05f, "StepDown"->1f/*,"SizeZ"->5f*/, "SafeZ"->2f, "SpindleSpeed"->1000f, "G0Feedrate" -> 1000f,"G1PlungeFeedrate" -> 100f,"G1Feedrate"->500f, "DebugGCode"->1f)
-  //val gCodeProperties = Map("SafeZ"->5f, "SpindleSpeed"->1000f, "G0Feedrate" -> 1000f,"G1PlungeFeedrate" -> 100f,"G1Feedrate"->500f)
-
+class GenerateGCode(val gCodeProperties:GCodeSettings) {
+  
   def gHeader():String = {
-  	"G0 Z%s (goto safe z)\n".format(gCodeProperties.get("SafeZ").get.toString)+
-  	"M3 S%s (start splindle)\n".format(gCodeProperties.get("SpindleSpeed").get.toInt.toString) +
-  	"G4 P3  (dwell 3 seconds)\n" +
-  	"G0 F%s (set rapid feedrate)\n".format(gCodeProperties.get("G0Feedrate").get.toInt.toString) + 
-  	"G1 F%s (set normal feedrate)\n".format(gCodeProperties.get("G1Feedrate").get.toInt.toString) +
-  	"G64 P0.02 Q0.02\n"
+  	"G0 Z%s (goto safe z)\n".format(gCodeProperties.safeZAsString) +
+  	"M3 S%s (start splindle)\n".format(gCodeProperties.spindleSpeedAsString) +
+  	"G4 P3  (dwell 3 seconds)\n" +   // TODO make dwell value a property
+  	"G0 F%s (set rapid feedrate)\n".format(gCodeProperties.g0FeedrateAsString) + 
+  	"G1 F%s (set normal feedrate)\n".format(gCodeProperties.g1FeedrateAsString) +
+  	gCodeProperties.g64Command + "\n"
   }
     
   def gFooter():String = {
-  	var rv:String = "G0 Z%s\n".format(gCodeProperties.get("SafeZ").get.toString)  
-  	if (gCodeProperties.get("M101")!=None) rv += "M101\n"
+  	var rv:String = "G0 Z%s\n".format(gCodeProperties.safeZAsString)  
+  	if (gCodeProperties.customEndCommand!="") rv += gCodeProperties.customEndCommand +"\n"
   	rv += "M2\n"
   	rv
   }
     
-  def generateGcode(edges:IndexedSeq[IndexedSeq[Vec2DZ]], bb:AABB, gcodeProperties:Map[String,Float]):IndexedSeq[GCode]= {
-    
-    val debugGCode = gcodeProperties.get("DebugGCode")!=None 
+  def generateGcode(edges:IndexedSeq[IndexedSeq[Vec2DZ]], bb:AABB, gcodeProperties:GCodeSettings):IndexedSeq[GCode]= {
+    //val debugGCode = gcodeProperties.get("DebugGCode")!=None 
     val transform:Matrix4f = {
       val scale = {
         val extent = bb.getExtent
-	      if (gcodeProperties.get("SizeX")!=None){
-	        val sizeX = gcodeProperties.get("SizeX").get
+	      if (gcodeProperties.sizeX.isDefined ){
+	        val sizeX = gcodeProperties.sizeX.get
 	        val scaleX = sizeX / extent.x
 	        new Vec3D(scaleX,scaleX,scaleX)
-	      } else if (gcodeProperties.get("SizeY")!=None){
-	        val sizeY = gcodeProperties.get("SizeY").get
+	      } else if (gcodeProperties.sizeY.isDefined){
+	        val sizeY = gcodeProperties.sizeY.get
 	        val scaleY = sizeY / extent.y 
 	        new Vec3D(scaleY,scaleY,scaleY)
-	      } else if (gcodeProperties.get("SizeZ")!=None){
-	        val sizeZ = gcodeProperties.get("SizeZ").get
+	      } else if (gcodeProperties.sizeZ.isDefined){
+	        val sizeZ = gcodeProperties.sizeZ.get
 	        val scaleZ = sizeZ / extent.z 
 	        new Vec3D(scaleZ,scaleZ,scaleZ)
 	      } else {
 	        new Vec3D(1f, 1f, 1f)
 	      }
 	    }
-      val min = bb.getMin
-	    val offset = new Vec3D(min.x*scale.x,min.y*scale.y,min.z*scale.z)
+	    val offset = new Vec3D(0f,0f,0)  // TODO: fix this transform offset, it's just 0 offset now 
 	    new Matrix4f(offset, scale)
     }
   
@@ -96,9 +91,9 @@ object GenerateGCode {
 	      System.out.println()
 	      */ 
       } else {
-        println("This segment was alreay visited, maybe refresh your map once in a while eh? oid=%d".format(point.objIndex))
+        println("This segment was alreay visited: %d->%d".format(point.objIndex, from.objIndex))
       }
-      // filter out already visited edges, and sort by angle between previous edge and the next. Straight line wins
+      // filter out already visited edges, and sort by angle between previous edge and the next. Straight lines get precedence
       val l:List[Vec2DZ] = point.edges.iterator.filter(p => !visited.contains((point.objIndex, p.objIndex))).toList.sortBy(sx => point.sub(from).angleBetween(sx.sub(point), true))
       //if (l.size > 1)
       //  println(l.map(x=>point.sub(from).angleBetween(x.sub(point), true)).mkString(","))
@@ -175,7 +170,7 @@ object GenerateGCode {
 		  } 
  
 	    val walkpath = walkEdge(startPoint, startPoint, Nil)
-			val gcodePointArray = walkpath.par.map(s => indexListToCoords(s)).map(x => x.map( y=> new Vec3D(transform.transformOne(new Vec3D(y._1, y._2, y._3)) )))
+			val gcodePointArray = walkpath.par.map(s => indexListToCoords(s)).map(x => x.map( y=> transform.transformOne(new Vec3D(y._1, y._2, y._3)) ))
 			gcodePointArray.map(g => new GCode(g.toArray)).toArray
 		}
     
@@ -190,11 +185,11 @@ object GenerateGCode {
     rv 
   }  
       
-   def saveGCode(filename: String, header:()=>String, inPut:Seq[String], footer:()=>String) = {    
+   def saveGCode(filename:String, header:()=>String, inPut:Seq[String], footer:()=>String) = {    
     val writer = new PrintWriter(new File(filename))
     try {
       writer.write(header())
-      inPut.foreach(l2=>writer.write(l2))
+      inPut.foreach(gcodeLine=>writer.write(gcodeLine))
       writer.write(footer())
     } finally {
       writer.close()
@@ -250,27 +245,39 @@ object GenerateGCode {
    * TODO: I simply assume the unit is meter here, - fix it
    */
   def mesh3d2GCode(mesh:Mesh3DConverter):IndexedSeq[GCode] = {
-    val allGCodes = {
+    assert(gCodeProperties.stepDown > 0)
+    
+    val (allUnadjustedGCodes,aabb) = {
       val scaleMToMM = 1000f
       //val simplifyLimit = gCodeProperties.get("simplifyLimit").get  
-      val aabb = mesh.getBounds.scaleSelf(scaleMToMM).asInstanceOf[AABB]
-      println("Bounding Box: %s".format(aabb.toString))
+      //val aabb = mesh.getBounds.scaleSelf(scaleMToMM).asInstanceOf[AABB]
       val segments = mesh.findContinuousLineSegmentsAsVec2DZ(scaleMToMM)
-      generateGcode(segments._2, aabb, gCodeProperties).filter(g => g.gcodePoints.size > 0)
+      if (segments._2.size > 0 && segments._2(0).size > 0) {
+        // recalculate the aabb, with the mm conversion and all
+        val aabb = new AABB(segments._2(0)(0).asVec3D, 0f)
+        segments._2.foreach(segment => segment.foreach(point => aabb.growToContainPoint(point.asVec3D)))
+        println("Bounding Box: %s min:%s max:%S".format(aabb.toString, aabb.getMin().toString(), aabb.getMax().toString() ))
+        (generateGcode(segments._2, aabb, gCodeProperties).filter(g => g.gcodePoints.size > 0),aabb)
+      } else {
+        (new ArrayBuffer[GCode], new AABB)
+      }
     }
-    allGCodes.foreach(g => println(g))
-    val totalGCodes = new ArrayBuffer[GCode]
-    val stepDown = gCodeProperties.get("StepDown").get  
-    var depth = mesh.getBounds.getMin.z 
+    if (aabb.getMax().z > 0) {
+      throw new ToxicblendException("GCode generating edge-meshes must have all vertexed below Z=0")
+    }
+    println("allUnadjustedGCodes:")
+    allUnadjustedGCodes.foreach(g => println(g))
+    val layeredGCodes = new ArrayBuffer[GCode]
+    var depth = aabb.getMin.z + gCodeProperties.stepDown
     while (depth < 0) {
-      val filteredGCodes = heightFilter(allGCodes, depth).toArray
-      totalGCodes ++= sortByStartPoint(filteredGCodes)
-      depth += stepDown
+      val filteredGCodes = heightFilter(allUnadjustedGCodes, depth).toArray
+      layeredGCodes ++= sortByStartPoint(filteredGCodes)
+      depth += gCodeProperties.stepDown
       if (depth > 0f) {
         depth = 0f
       }
     }
-    totalGCodes
+    layeredGCodes ++= allUnadjustedGCodes
   }
   /*
   def main(args: Array[String]): Unit = {
@@ -287,5 +294,5 @@ object GenerateGCode {
     //totalGCodes.foreach(g => println(g))
     saveGCode(outFilename, gHeader, totalGCodes.map(g => g.generateText(gCodeProperties)), gFooter)
     println("done")
-  } */
+  }*/
 }

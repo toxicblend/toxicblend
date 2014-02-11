@@ -19,34 +19,50 @@ class SimpleGcodeGeneratorOperation extends CommandProcessorTrait {
   
   def processInput(inMessage:Message) = {
     val options = OptionConverter(inMessage)
-    val unitScale:Float = options.getOrElse("unitScale", "1.0") match {
+    println(options)
+    val unitScaleProperty:Float = options.getOrElse("unitScale", "1.0") match {
       case Regex.FLOAT_REGEX(limit) => limit.toFloat
       case s:String => System.err.println("SimpleGcodeOperation: unrecognizable 'unitScale' property value: " +  s ); 1f
     }
-    val unitIsMetric = options.getOrElse("unitSystem", "METRIC").toUpperCase() match {
-      case "METRIC" => UnitSystem.Metric
-      case "NONE" => None
-      case "IMPERIAL" => UnitSystem.Imperial
-      case s:String => System.err.println("Unrecognizable 'unitSystem' property value: " +  s ); None
+    val gcodeProperties = {
+      val unitIsMetricProperty = options.getOrElse("unitSystem", "METRIC").toUpperCase() match {
+        case "METRIC" => UnitSystem.Metric
+        case "NONE" => None
+        case "IMPERIAL" => UnitSystem.Imperial
+        case s:String => System.err.println("Unrecognizable 'unitSystem' property value: " +  s ); None
+      }
+      if (unitIsMetricProperty != UnitSystem.Metric) {
+        System.err.println("SimpleGcodeOperation::processInput only metric is supported for now");
+      }
+      
+      val outFilename:String = options.getOrElse("outFilename", "gcode.ngc")
+      val safeZProperty:Float = options.getOrElse("safeZ", "10").toFloat
+      val g0FeedrateProperty:Float = options.getOrElse("g0Feedrate", "10").toFloat
+      val g1FeedrateProperty:Float = options.getOrElse("g1Feedrate", "10f").toFloat
+      val g1PlungeFeedrateProperty:Float = options.getOrElse("g1PlungeFeedrate", "10").toFloat
+      val spindleSpeedProperty:Float = options.getOrElse("spindleSpeed", "10").toFloat
+      val g64CommandProperty:String = options.getOrElse("g64Command", "G64 P0.02 Q0.02")
+      val customEndCommandProperty:String = options.getOrElse("customEndCommand", "M101")      
+      val stepDownProperty:Float = options.getOrElse("stepDown", "1").toFloat
+      
+      new GCodeSettings(outFilename=outFilename, safeZ=safeZProperty,g0Feedrate=g0FeedrateProperty, 
+          g1Feedrate=g1FeedrateProperty,g1PlungeFeedrate=g1PlungeFeedrateProperty,
+          spindleSpeed=spindleSpeedProperty,g64Command=g64CommandProperty,customEndCommand=customEndCommandProperty,stepDown=stepDownProperty)
     }
-    val outFilename:String = options.getOrElse("outFilename", "gcode.ngc")
-    
-    if (unitIsMetric != UnitSystem.Metric) {
-      System.err.println("SimpleGcodeOperation::processInput only metric is supported for now");
+    { 
+      // translate every vertex into world coordinates
+      val models = inMessage.getModelsList().map(inModel => Mesh3DConverter(inModel,true,unitScaleProperty))
+      val gCodeGenerator = new GenerateGCode(gcodeProperties)
+      val totalGCodes = gCodeGenerator.mesh3d2GCode(models(0))  // For now, only process the first model
+      println("totalGCodes: " + totalGCodes)
+      gCodeGenerator.saveGCode(gcodeProperties.outFilename, gCodeGenerator.gHeader, totalGCodes.map(g => g.generateText(gcodeProperties)), gCodeGenerator.gFooter)
     }
-    
-    // translate every vertex into world coordinates
-    val models = inMessage.getModelsList().map(inModel => Mesh3DConverter(inModel,true,unitScale))
-    
-    val totalGCodes = GenerateGCode.mesh3d2GCode(models(0))  // For now, only process the first model
-    GenerateGCode.saveGCode(outFilename, GenerateGCode.gHeader, totalGCodes.map(g => g.generateText(GenerateGCode.gCodeProperties)), GenerateGCode.gFooter)
-    
-    println(options)
+     
     val returnMessageBuilder = Message.newBuilder()
     try {
-      SimpleGcodeParseOperation.readGcodeIntoBuilder(outFilename, options, returnMessageBuilder)
+      SimpleGcodeParseOperation.readGcodeIntoBuilder(gcodeProperties.outFilename, options, returnMessageBuilder)
     } catch {
-      case e: java.io.FileNotFoundException => System.err.println("ParseGcodeOperationNo file not found:\"" + outFilename + "\"")
+      case e: java.io.FileNotFoundException => System.err.println("ParseGcodeOperationNo file not found:\"" + gcodeProperties.outFilename + "\""); throw e
       case e: Exception => throw e
     }
       

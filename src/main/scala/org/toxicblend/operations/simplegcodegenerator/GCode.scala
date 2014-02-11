@@ -8,16 +8,6 @@ import scala.collection.mutable.ArrayBuffer
 import org.toxicblend.geometry.IntersectionVec3DImplicit._
 import scala.collection.TraversableOnce.flattenTraversableOnce
 
-object GCode {
-  
-  def dddsimplify(gcode:Iterator[(Float,Float,Float)],limit:Float):Iterator[(Float,Float,Float)] = {   
-    //val output = simplify3D(gcode.map(x => List(x._1, x._2, x._3) ).flatten, limit);
-    //output.sliding(3,3).map(x => (x(0), x(1), x(2))).toArray
-    val alist = gcode.map(x => List(x._1, x._2, x._3) ).flatten
-    alist.sliding(3,3).map(x => (x(0), x(1), x(2)))
-  }
-}
-
 /**
  * Prints to text
  * TODO: don't print X,Y & Z coordinates if they didn't change from the previous line
@@ -47,6 +37,9 @@ class GCode(val gcodePoints:Array[Vec3D]) {
     val rv = new ArrayBuffer[GCode]
     var i = 0
 
+    /** 
+     * Search for a segment that is below or equal to atDepth
+     */
     def stateSearching() {
      //println("stateSearching at z = %f atDepth = %f i=%d".format(gcodePoints(i).z, atDepth, i))
 
@@ -55,6 +48,7 @@ class GCode(val gcodePoints:Array[Vec3D]) {
           //println("stateSearching at z = %f atDepth = %f i=%d".format(gcodePoints(i).z, atDepth, i))
           val p = gcodePoints(i)
           segment += new Vec3D(p.x, p.y, p.z-atDepth)
+          println("stateSearching Added segment point: " + segment(segment.size-1) + " i=" + i+ " depth=" + atDepth)
           state = stateFound
         }
       } else {
@@ -62,11 +56,15 @@ class GCode(val gcodePoints:Array[Vec3D]) {
           //println("stateSearching at z = %f atDepth = %f i=%d".format(gcodePoints(i).z, atDepth, i))
           val p = gcodePoints(i).intersectionPoint(gcodePoints(i-1),atDepth+MAGIC_DEPTH_LIMIT)
           segment += new Vec3D(p.x, p.y, p.z-atDepth)
+          println("stateSearching Added segment point: " + segment(segment.size-1)+ " i=" + i+ " depth=" + atDepth)
           state = stateFound
         }
       }
     }
     
+    /**
+     * A segment below or equal to atDepth is found, follow it until it ends or intersects the atDepth plane
+     */
     def stateFound() {
       assert(i!=0)
       //println("stateFound at z = %f atDepth = %f i = %d".format(gcodePoints(i).z, atDepth, i))
@@ -81,7 +79,7 @@ class GCode(val gcodePoints:Array[Vec3D]) {
 	      if (gcodePoints(i).intersectsXYPlane(gcodePoints(i-1), atDepth+MAGIC_DEPTH_LIMIT)){
 	        val p = gcodePoints(i).intersectionPoint(gcodePoints(i-1),atDepth+MAGIC_DEPTH_LIMIT)
 	        segment += new Vec3D(p.x, p.y, p.z-atDepth)
-	        //println("stateFound %d point segment at depth %f".format(segment.size, atDepth))
+          println("stateFound Added segment point: " + segment(segment.size-1)+ " i=" + i + " depth=" + atDepth)
 	        rv += new GCode(segment.toArray)
 	        segment.clear
 	        state = stateSearching
@@ -93,7 +91,7 @@ class GCode(val gcodePoints:Array[Vec3D]) {
       }
     }
 
-    //println("Searching for segments at depth %f".format(atDepth))
+    println("Searching for segments at depth %f".format(atDepth))
     state = stateSearching
     while ( i < gcodePoints.size ){
       state()
@@ -103,14 +101,16 @@ class GCode(val gcodePoints:Array[Vec3D]) {
       rv += new GCode(segment.toArray)
       segment.clear
     }
-    //println("Found %d segments at depth %f".format(rv.size, atDepth))
+    println("Found %d segments at depth %f".format(rv.size, atDepth))
+    println(rv.mkString(","))
+    println(rv(0).gcodePoints.mkString(","))
     rv
   }
   
-  def gCodePlunge(p:ReadonlyVec3D, gcodeProperties:Map[String,Float]):String = {
-    val s0 = "G1 X%.5f Y%.5f Z0 F%f".format(p.x, p.y, gcodeProperties.get("G1Feedrate").get).replace(",",".")  // + " ( gCodePlunge " + hashCode.toString + ")"
-    val s1 = "G1 X%.5f Y%.5f Z%.5f F%f".format(p.x, p.y, p.z, gcodeProperties.get("G1PlungeFeedrate").get).replace(",",".")
-    val s2 = "G1 X%.5f Y%.5f Z%.5f F%f".format(p.x, p.y, p.z, gcodeProperties.get("G1Feedrate").get).replace(",",".") 
+  def gCodePlunge(p:ReadonlyVec3D, gcodeProperties:GCodeSettings):String = {
+    val s0 = "G1 X%.5f Y%.5f Z0 F%f".format(p.x, p.y, gcodeProperties.g1Feedrate).replace(",",".")  // + " ( gCodePlunge " + hashCode.toString + ")"
+    val s1 = "G1 X%.5f Y%.5f Z%.5f F%f".format(p.x, p.y, p.z, gcodeProperties.g1PlungeFeedrate).replace(",",".")
+    val s2 = "G1 X%.5f Y%.5f Z%.5f F%f".format(p.x, p.y, p.z, gcodeProperties.g1Feedrate).replace(",",".") 
     /**if (gcodeProperties.get("DebugGCode")!=None) {
    	  s0 + " (%d)\n".format(p.objIndex) + 
   	  s1 + " (%d)\n".format(p.objIndex) + 
@@ -120,27 +120,16 @@ class GCode(val gcodePoints:Array[Vec3D]) {
     //}
   }
   
-  def gCodeFastXY(p:ReadonlyVec3D, gcodeProperties:Map[String,Float]):String = {
+  def gCodeFastXY(p:ReadonlyVec3D, gcodeProperties:GCodeSettings):String = {
     "G0 X%.5f Y%.5f".format(p.x, p.y).replace(",",".") //+ " ( gCodeFastXY " + hashCode.toString + ")"
-    /*if (debugGCode) {
-    	s1 + " (%d)\n".format(p.objIndex)
-    } else {
-    
-    s1 + "\n" 
-    //}*/
   }
   
-  def gCodeFastSafeZ(gcodeProperties:Map[String,Float]):String = {
-  	"G0 Z%f".format(gcodeProperties.get("SafeZ").get).replace(",",".") //  + " ( gCodeFastSafeZ " + hashCode.toString + ")"
+  def gCodeFastSafeZ(gcodeProperties:GCodeSettings):String = {
+  	"G0 Z%s".format(gcodeProperties.safeZAsString) //  + " ( gCodeFastSafeZ " + hashCode.toString + ")"
   }
   
-  def gCodeSlow(p:ReadonlyVec3D, gcodeProperties:Map[String,Float]):String = {
+  def gCodeSlow(p:ReadonlyVec3D, gcodeProperties:GCodeSettings):String = {
   	"G1 X%.5f Y%.5f Z%.5f ".format(p.x, p.y, p.z).replace(",",".") //+ " ( gCodeSlow " + hashCode.toString + ")"
-  	/**if (debugGCode) {
-  	  s1 + " (%s %d)\n".format(traceTxt, p.objIndex)
-  	} else { 
-    s1 + "\n" 
-    //}*/
   }
   
   protected def xyDistance(p1:ReadonlyVec3D, p2:ReadonlyVec3D):Float = {
@@ -155,8 +144,8 @@ class GCode(val gcodePoints:Array[Vec3D]) {
   
   /**
    * Calculates the (comparable) distance in the XY plane
-   * returns true if the shortest distance was to the start point
-   * false if end point was closer
+   * Returns true if the shortest distance was to the start point.
+   * Returns false if end point was closer
    */
   def xyDistanceTo(p:ReadonlyVec3D) : (Float,Boolean) = {
     val endDistance = xyDistance(endPoint,p)
@@ -183,7 +172,7 @@ class GCode(val gcodePoints:Array[Vec3D]) {
     //}
   }
   
-  def generateText(gcodeProperties:Map[String,Float]) : String = {
+  def generateText(gcodeProperties:GCodeSettings) : String = {
 	  val rv = new ListBuffer[String]
 	  //rv += "\n(generated from :" + this.toString + " )"
 	  //rv += gcodePoints.mkString("(",")\n(", ")\n")
@@ -196,10 +185,13 @@ class GCode(val gcodePoints:Array[Vec3D]) {
     rv.mkString("","\n","\n")
   }
 
-  override def toString():String = {
-    
+  /*override*/ def toOldString():String = {
     val avgZ = if (gcodePoints.size>0) gcodePoints.foldLeft(0f)((r,c)=>r+c.z)/gcodePoints.size else 0f
     "(StartPoint:%s endPoint:%s gcode.len:%d avgz:%f)".format(startPoint.toString, endPoint.toString, gcodePoints.size, avgZ) 
+  }
+  
+  override def toString():String = {
+    gcodePoints.map(v => "(%.1f,%.1f,%.1f)".format(v.x,v.y,v.z) ).mkString(",")   
   }
 }
 

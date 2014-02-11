@@ -1,6 +1,8 @@
 package org.toxicblend.geometry
+
 import scala.collection.mutable.HashSet
 import toxi.geom.Vec2D
+import toxi.geom.Vec3D
 import toxi.geom.ReadonlyVec3D
 
 /**
@@ -62,5 +64,12 @@ class Vec2DZ(ẍ:Float, ÿ:Float, var z:Float, var objIndex:Int) extends Vec2D(�
   
   override def toString():String = {
     "{%.4f %.4f %.4f} %d".format(getX,getY,getZ, objIndex)
+  }
+  
+  /**
+   * Copy as Vec3D
+   */
+  def asVec3D : Vec3D = {
+   new Vec3D(x,y,z)
   }
 }

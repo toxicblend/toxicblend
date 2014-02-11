@@ -209,10 +209,10 @@ class VertexToFaceMap {
     val lsrv = new ArrayBuffer[ArrayBuffer[VertexId]]   
    
     val t = intersectionVertexes.size
-    println("There are " + t +" intersection vertexes, does that compute? ")    
-    println("There are " + endVertexes.size +" end vertexes, does that compute? ") 
-    println("There are " + vertex2facesMap.size +" vertexes, does that compute? ")
-    println("There are " + face2vertexMap.size +" faces, does that compute? ")
+    println("There are " + t +" intersection vertexes.")    
+    println("There are " + endVertexes.size +" end vertexes.") 
+    println("There are " + vertex2facesMap.size +" vertexes.")
+    println("There are " + face2vertexMap.size +" faces/edges.")
     
     println("intersection vetexes: " + intersectionVertexes.mkString(",") )
     println("end vetexes: " + endVertexes.mkString(",") )
