@@ -192,11 +192,14 @@ class Mesh3DConverter protected (protected val vertexes:Buffer[ReadonlyVec3D],
       if (finalTransformation.isDefined) modelBuilder.setWorldOrientation(finalTransformation.get.toPBModel)
     }) 
     faces.foreach( face => {
-      val pbface = Face.newBuilder()
-      face.foreach( vertexId => {
-        pbface.addVertexes(vertexId)
-      })
-      modelBuilder.addFaces(pbface)
+      if (face.size==2 && ( face(0) == face(1))) {
+        // TODO: fix the cause of this. Blender will crash if there is an edge between a single vertex (and itself)
+        System.err.println("Mesh3DConverter::toPBModel: Not adding edge between identical vertices: %d %d".format(face(0),face(1)))
+      } else {
+        val pbface = Face.newBuilder()
+        face.foreach( vertexId => pbface.addVertexes(vertexId))
+        modelBuilder.addFaces(pbface)
+      }
     })
     modelBuilder.setName(name)
     modelBuilder
