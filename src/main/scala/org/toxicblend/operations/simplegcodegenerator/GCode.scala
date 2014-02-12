@@ -7,10 +7,15 @@ import scala.collection.Map
 import scala.collection.mutable.ArrayBuffer
 import org.toxicblend.geometry.IntersectionVec3DImplicit._
 import scala.collection.TraversableOnce.flattenTraversableOnce
+import java.text.DecimalFormat
+import java.text.DecimalFormatSymbols
 
 /**
  * Prints to text
+ * I use String.replace(",",".") on the text result, this is because my locale likes to use "," as a decimal point. TODO: fix this in a locale neutral way
+ * 
  * TODO: don't print X,Y & Z coordinates if they didn't change from the previous line
+ * 
  */
 class GCode(val gcodePoints:IndexedSeq[Vec3D]) {
   val MAGIC_DEPTH_LIMIT = 0.2f
@@ -131,20 +136,21 @@ class GCode(val gcodePoints:IndexedSeq[Vec3D]) {
   }
   
   def gCodePlunge(p:ReadonlyVec3D, gcodeProperties:GCodeSettings):String = {
-    val s0 = "G1 X%.5f Y%.5f Z0 F%f".format(p.x, p.y, gcodeProperties.g1Feedrate).replace(",",".")  // + " ( gCodePlunge " + hashCode.toString + ")"
-    val s1 = "G1 X%.5f Y%.5f Z%.5f F%f".format(p.x, p.y, p.z, gcodeProperties.g1PlungeFeedrate).replace(",",".")
-    val s2 = "G1 X%.5f Y%.5f Z%.5f F%f".format(p.x, p.y, p.z, gcodeProperties.g1Feedrate).replace(",",".") 
-    /**if (gcodeProperties.get("DebugGCode")!=None) {
-   	  s0 + " (%d)\n".format(p.objIndex) + 
-  	  s1 + " (%d)\n".format(p.objIndex) + 
-  	  s2 + " (%d)\n".format(p.objIndex)
-    } else { */
-    s0 + "\n" + s1 + "\n" + s2
-    //}
+    val c = GCode.fToString _
+    
+    val s0 = if (p.z <= 0f){
+      "G1 X%s Y%s Z0 F%s".format(c(p.x), c(p.y), c(gcodeProperties.g1Feedrate)) + 
+      "\n   Z%s F%s".format(c(p.z), c(gcodeProperties.g1PlungeFeedrate))
+    } else {
+      "G1 X%s Y%s Z0 F%s".format(c(p.x), c(p.y), c(gcodeProperties.g1Feedrate)) 
+    }
+    val s1 = "   Z%s F%s".format(c(p.z), c(gcodeProperties.g1Feedrate))
+    s0 + "\n" + s1
   }
   
   def gCodeFastXY(p:ReadonlyVec3D, gcodeProperties:GCodeSettings):String = {
-    "G0 X%.5f Y%.5f".format(p.x, p.y).replace(",",".") //+ " ( gCodeFastXY " + hashCode.toString + ")"
+    val c = GCode.fToString _
+    "G0 X%s Y%s".format(c(p.x), c(p.y)) 
   }
   
   def gCodeFastSafeZ(gcodeProperties:GCodeSettings):String = {
@@ -152,7 +158,8 @@ class GCode(val gcodePoints:IndexedSeq[Vec3D]) {
   }
   
   def gCodeSlow(p:ReadonlyVec3D, gcodeProperties:GCodeSettings):String = {
-  	"G1 X%.5f Y%.5f Z%.5f ".format(p.x, p.y, p.z).replace(",",".") //+ " ( gCodeSlow " + hashCode.toString + ")"
+    val c = GCode.fToString _
+  	"G1 X%s Y%s Z%s ".format(c(p.x), c(p.y), c(p.z) )
   }
   
   protected def xyDistance(p1:ReadonlyVec3D, p2:ReadonlyVec3D):Float = {
@@ -214,7 +221,27 @@ class GCode(val gcodePoints:IndexedSeq[Vec3D]) {
   }
   
   override def toString():String = {
-    gcodePoints.map(v => "(%.1f,%.1f,%.1f)".format(v.x,v.y,v.z) ).mkString(",")   
+    gcodePoints.map(v => "(%.1f,%.1f,%.1f)".format(v.x,v.y,v.z).replace(",",".") ).mkString(",")   
   }
 }
 
+object GCode {
+  
+  @inline 
+  def fToString(aFloat:Float):String = {
+    decimalFormat.format(aFloat)  
+  }
+  
+  val decimalFormat = {
+    val df = new DecimalFormat
+    df.setGroupingSize(0)
+    df.setNegativePrefix("-")
+    df.setNegativeSuffix("")
+    df.setMultiplier(1)
+    df.setMaximumFractionDigits(5)
+    val decimalFormatSymbols = new DecimalFormatSymbols
+    decimalFormatSymbols.setDecimalSeparator('.')
+    df.setDecimalFormatSymbols(decimalFormatSymbols)
+    df 
+  }
+}
