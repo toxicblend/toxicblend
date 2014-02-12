@@ -4,7 +4,7 @@ import toxicblend
 import imp # needed when reloading toxicblend site-packages, won't be used in a release version
 
 bl_info = {
-  "name": "SaveObj",
+  "name": "Toxicblend-SaveObj",
   'author': 'EAD Fritz',
   'blender': (2, 69, 0),
   #'api': 35774,
