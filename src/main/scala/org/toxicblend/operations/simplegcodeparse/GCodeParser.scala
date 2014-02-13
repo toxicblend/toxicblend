@@ -6,6 +6,7 @@ import toxi.geom.Vec3D
 import scala.collection.mutable.ArrayBuffer
 import scala.annotation.migration
 import java.io.BufferedReader
+import org.toxicblend.operations.simplegcodegenerator.GCode // for the locale independent string to float convertion
 
 class GcodeParameter(val key:String, val value:Float) {
   override def toString = key+value
@@ -86,7 +87,7 @@ class GCodeParser extends RegexParsers {
    * A float 
    * Accepted forms: 2., -1.0,  12, 1.2E3, -1.2E-3,5e-1    etc etc
    */
-  def gParameterValue: Parser[Float] = """-?\d+(?:\.(?:\d*)?)?(?:[E|e]-?\d+)?""".r ^^ { _.toFloat }
+  def gParameterValue: Parser[Float] = """-?\d+(?:\.(?:\d*)?)?(?:[E|e]-?\d+)?""".r ^^ { GCode.stringToFloat(_) }
   
   
   protected val commentsAndWhitespace = """(?s)(?:[ \t\r\f]+)|(?:\([^\)]*\))""".r
