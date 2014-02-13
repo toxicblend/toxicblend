@@ -100,7 +100,7 @@ class GenerateGCode(val gCodeProperties:GCodeSettings) {
    * this could have been easily done with .sortBy or .sortWith but i'm getting a lot of compiler errors
    * "diverging implicit expansion for type scala.math.Ordering...."
    */
-  def sortByStartPoint(input:Array[GCode]):Array[GCode] ={
+  def sortByStartPoint(input:IndexedSeq[GCode]):IndexedSeq[GCode] ={
     var rv = new Array[GCode](input.size)
     val usedGCodes = new HashSet[Int]
     var lastEndPoint:ReadonlyVec3D = new Vec3D()
@@ -121,8 +121,11 @@ class GenerateGCode(val gCodeProperties:GCodeSettings) {
       assert(bestSoFar != -1)
       usedGCodes.add(bestSoFar)
       rv(i) = {
-        if (reverseSoFar) input(bestSoFar).reverseDirection
-        else input(bestSoFar)
+        if (reverseSoFar) {
+          input(bestSoFar).reverseDirection
+        } else {
+          input(bestSoFar)
+        }
       }
       lastEndPoint = rv(i).endPoint
     }
@@ -165,7 +168,7 @@ class GenerateGCode(val gCodeProperties:GCodeSettings) {
         depth = 0f
       }
     }
-    layeredGCodes ++= allUnadjustedGCodes
+    layeredGCodes ++= sortByStartPoint(allUnadjustedGCodes)
   }
   /*
   def main(args: Array[String]): Unit = {
