@@ -6,13 +6,12 @@ import scala.collection.mutable.ListBuffer
 import scala.collection.Map
 import scala.collection.mutable.ArrayBuffer
 import org.toxicblend.geometry.IntersectionVec3DImplicit._
-import scala.collection.TraversableOnce.flattenTraversableOnce
 import java.text.DecimalFormat
 import java.text.DecimalFormatSymbols
+import java.text.ParsePosition
 
 /**
- * Prints to text
- * I use String.replace(",",".") on the text result, this is because my locale likes to use "," as a decimal point. TODO: fix this in a locale neutral way
+ * Prints to gcode as text
  * 
  * TODO: don't print X,Y & Z coordinates if they didn't change from the previous line
  * 
@@ -63,7 +62,7 @@ class GCode(val gcodePoints:IndexedSeq[Vec3D]) {
         if (fromV.intersectsXYPlane(toV, atDepth+MAGIC_DEPTH_LIMIT)){
           segment += fromV.intersectionPoint(toV,atDepth+MAGIC_DEPTH_LIMIT).sub(0f,0f,atDepth)
           println("stateSearching Added segment point: " + segment(segment.size-1)+ " i=" + i+ " depth=" + atDepth)
-          rv += new GCode(segment.toArray)
+          rv += new GCode(segment)
           segment.clear
           state = stateSearching // we found an intersection, but it ended within this state. So we are still searching
         } else {
@@ -104,7 +103,7 @@ class GCode(val gcodePoints:IndexedSeq[Vec3D]) {
           println("stateFound Added segment point: " + segment(segment.size-1)+ " i=" + i + " depth=" + atDepth)
 	        segment += fromV.intersectionPoint(toV,atDepth+MAGIC_DEPTH_LIMIT).sub(0f,0f,atDepth)
           println("stateFound Added segment point: " + segment(segment.size-1)+ " i=" + i + " depth=" + atDepth)
-	        rv += new GCode(segment.toArray)
+	        rv += new GCode(segment)
 	        segment.clear
 	        state = stateSearching
 	      } else {
@@ -126,7 +125,7 @@ class GCode(val gcodePoints:IndexedSeq[Vec3D]) {
     state(gcodePoints(gcodePoints.size-1),gcodePoints(gcodePoints.size-1))
 
     if (segment.size >0){
-      rv += new GCode(segment.toArray)
+      rv += new GCode(segment)
       segment.clear
     }
     println("Found %d segments at depth %f".format(rv.size, atDepth))
@@ -135,40 +134,59 @@ class GCode(val gcodePoints:IndexedSeq[Vec3D]) {
     rv
   }
   
+  /**
+   * generate G1 gcode text
+   */
   def gCodePlunge(p:ReadonlyVec3D, gcodeProperties:GCodeSettings):String = {
-    val c = GCode.fToString _
+    val c = GCode.floatToString _
     
     val s0 = if (p.z <= 0f){
       "G1 X%s Y%s Z0 F%s".format(c(p.x), c(p.y), c(gcodeProperties.g1Feedrate)) + 
-      "\n   Z%s F%s".format(c(p.z), c(gcodeProperties.g1PlungeFeedrate))
+      "\n\tZ%s F%s".format(c(p.z), c(gcodeProperties.g1PlungeFeedrate))
     } else {
       "G1 X%s Y%s Z0 F%s".format(c(p.x), c(p.y), c(gcodeProperties.g1Feedrate)) 
     }
-    val s1 = "   Z%s F%s".format(c(p.z), c(gcodeProperties.g1Feedrate))
+    val s1 = "\tZ%s F%s".format(c(p.z), c(gcodeProperties.g1Feedrate))
     s0 + "\n" + s1
   }
   
+  /**
+   * generate G0 gcode text
+   */
   def gCodeFastXY(p:ReadonlyVec3D, gcodeProperties:GCodeSettings):String = {
-    val c = GCode.fToString _
+    val c = GCode.floatToString _
     "G0 X%s Y%s".format(c(p.x), c(p.y)) 
   }
   
+  /**
+   * generate G0 gcode text
+   */
   def gCodeFastSafeZ(gcodeProperties:GCodeSettings):String = {
   	"G0 Z%s".format(gcodeProperties.safeZAsString) //  + " ( gCodeFastSafeZ " + hashCode.toString + ")"
   }
   
+  /**
+   * generate G1 gcode text
+   */
   def gCodeSlow(p:ReadonlyVec3D, gcodeProperties:GCodeSettings):String = {
-    val c = GCode.fToString _
+    val c = GCode.floatToString _
   	"G1 X%s Y%s Z%s ".format(c(p.x), c(p.y), c(p.z) )
   }
   
-  protected def xyDistance(p1:ReadonlyVec3D, p2:ReadonlyVec3D):Float = {
-    if (p1 != null && p2 !=null) {
+  /**
+   * returns the comparable distance between two points in the XY plane
+   */
+  @inline protected def xyDistance(p1:ReadonlyVec3D, p2:ReadonlyVec3D):Float = {
+    assert(p1!=null) 
+    assert(p2!=null)
+
+    if (p1 != null && p2 !=null) {  // TODO: remove these tests
       val dx = p1.x - p2.x
       val dy = p1.y - p2.y
       dx * dx + dy * dy
     } else {
-       Float.NaN
+      assert(false) // make sure we never end up here
+      Float.NaN
     }
   }
   
@@ -215,21 +233,34 @@ class GCode(val gcodePoints:IndexedSeq[Vec3D]) {
     rv.mkString("","\n","\n")
   }
 
-  /*override*/ def toOldString():String = {
+  /*override*/ def toStringOldVersion():String = {
     val avgZ = if (gcodePoints.size>0) gcodePoints.foldLeft(0f)((r,c)=>r+c.z)/gcodePoints.size else 0f
     "(StartPoint:%s endPoint:%s gcode.len:%d avgz:%f)".format(startPoint.toString, endPoint.toString, gcodePoints.size, avgZ) 
   }
   
   override def toString():String = {
-    gcodePoints.map(v => "(%.1f,%.1f,%.1f)".format(v.x,v.y,v.z).replace(",",".") ).mkString(",")   
+    def c(aFloat:Float) = "%.1f".format(aFloat).replace(",",".")
+    gcodePoints.map(v => "(%s, %s, %s)".format(c(v.x),c(v.y),c(v.z)) ).mkString(",")   
   }
 }
 
 object GCode {
   
+  /**
+   * Locale independent way of converting floats to string. No more problem with "," instead of "." as decimal etc.etc. 
+   */
   @inline 
-  def fToString(aFloat:Float):String = {
+  def floatToString(aFloat:Float):String = {
     decimalFormat.format(aFloat)  
+  }
+  
+  /**
+   * Locale independent way of converting strings to float. No more problem with "," instead of "." as decimal etc.etc. 
+   */
+  @inline 
+  def stringToFloat(floatAsString:String):Float = {
+    val pos = new ParsePosition(0)
+    decimalFormat.parse(floatAsString, pos).floatValue()  // TODO: totally ignoring the pos, fix it
   }
   
   val decimalFormat = {
