@@ -24,7 +24,6 @@ protected class GCodeState(val cmd:String, val pos:ReadonlyVec3D, val g0Feed:Flo
  */
 class GCode(val gcodePoints:IndexedSeq[Vec3D]) {
   
-  assert(gcodePoints.size > 0)
   val MAGIC_DEPTH_LIMIT = 0.2f
   def startPoint=gcodePoints(0)
   def endPoint=gcodePoints(gcodePoints.size-1)
