@@ -19,6 +19,8 @@ import java.io.RandomAccessFile
 import java.nio.channels.FileChannel
 import java.nio.ByteBuffer
 import java.io.IOException
+import java.io.PrintWriter
+import java.io.File
 
 class SimpleGcodeParseOperation extends CommandProcessorTrait {
     
@@ -44,7 +46,7 @@ class SimpleGcodeParseOperation extends CommandProcessorTrait {
       try {
         SimpleGcodeParseOperation.readGcodeIntoBuilder(filename, options, returnMessageBuilder)
       } catch {
-        case e: java.io.FileNotFoundException => System.err.println("ParseGcodeOperationNo file not found:\"" + filename + "\"")
+        case e: java.io.FileNotFoundException => System.err.println("ParseGcodeOperationNo file not found:\"" + filename + "\""); throw e
         case e: Exception => throw e
       }
     }
@@ -58,16 +60,26 @@ object SimpleGcodeParseOperation {
     val parser = new GCodeParser
     try {      
       val reader = scala.io.Source.fromFile(filename)(scala.io.Codec.UTF8).getLines
-      val filtered = parser.filterOutWhiteSpace(reader) 
+      val filtered = parser.filterOutWhiteSpace(reader)
+      /*println(filtered)
+      val newFilename = filename+".filtered.ngc"
+      val writer = new PrintWriter(new File(newFilename))
+      println("Wrote filtered gcode to " + newFilename)
+      try {
+        writer.write(filtered)
+      } finally {
+        writer.close()
+      }*/
+      
       println("ParseGcodeOperation: filtered file size " + filtered.size)
       val parsed = parser.parseAll(parser.gCode,filtered)
       if (parsed.successful){
         GCodeConverter.writeGCode(parsed.get, options, returnMessageBuilder)
       } else {
-        println("ParseGcodeOperation: failed to parse gcode. Filename: " + filename)
+        System.err.println("ParseGcodeOperation: failed to parse gcode. Filename: " + filename)
       }
     } catch {
-      case exc:IOException => System.err.println(exc)
+      case exc:IOException => System.err.println(exc); exc.printStackTrace; throw exc
     }
   }
 }

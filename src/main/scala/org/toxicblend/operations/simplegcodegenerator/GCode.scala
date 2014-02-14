@@ -11,16 +11,24 @@ import java.text.DecimalFormatSymbols
 import java.text.ParsePosition
 
 /**
+ * A container for the 'last' gcode state written. By keeping this information we can minimize the number of parameters in gcode.
+ * The container should be considered an opaque passed on from one gCode* method to the next
+ */
+protected class GCodeState(val cmd:String, val pos:ReadonlyVec3D, val g0Feed:Float, val g1Feed:Float){}
+
+/**
  * Prints to gcode as text
  * 
  * TODO: don't print X,Y & Z coordinates if they didn't change from the previous line
  * 
  */
 class GCode(val gcodePoints:IndexedSeq[Vec3D]) {
+  
+  assert(gcodePoints.size > 0)
   val MAGIC_DEPTH_LIMIT = 0.2f
   def startPoint=gcodePoints(0)
   def endPoint=gcodePoints(gcodePoints.size-1)
-  def this(input:Array[Float]) = this({input.sliding(3,3).map(x => new Vec3D(x(0), x(1), x(2)) ).toArray})
+  def this(input:Array[Float]) = this(input.sliding(3,3).map(x => new Vec3D(x(0), x(1), x(2)) ).toArray)
   
   /*
   def this(startPoint:(Float,Float,Float), endPoint:(Float,Float,Float), gcodePoints:Array[(Float,Float,Float)] ) = 
@@ -62,8 +70,10 @@ class GCode(val gcodePoints:IndexedSeq[Vec3D]) {
         if (fromV.intersectsXYPlane(toV, atDepth+MAGIC_DEPTH_LIMIT)){
           segment += fromV.intersectionPoint(toV,atDepth+MAGIC_DEPTH_LIMIT).sub(0f,0f,atDepth)
           println("stateSearching Added segment point: " + segment(segment.size-1)+ " i=" + i+ " depth=" + atDepth)
-          rv += new GCode(segment)
-          segment.clear
+          if (segment.size >0 ) {
+            rv += new GCode(segment.clone)
+            segment.clear
+          }
           state = stateSearching // we found an intersection, but it ended within this state. So we are still searching
         } else {
           assert(toV.z - MAGIC_DEPTH_LIMIT <= atDepth)
@@ -103,8 +113,10 @@ class GCode(val gcodePoints:IndexedSeq[Vec3D]) {
           println("stateFound Added segment point: " + segment(segment.size-1)+ " i=" + i + " depth=" + atDepth)
 	        segment += fromV.intersectionPoint(toV,atDepth+MAGIC_DEPTH_LIMIT).sub(0f,0f,atDepth)
           println("stateFound Added segment point: " + segment(segment.size-1)+ " i=" + i + " depth=" + atDepth)
-	        rv += new GCode(segment)
-	        segment.clear
+          if (segment.size >0 ) {
+	          rv += new GCode(segment.clone)
+	          segment.clear
+          }
 	        state = stateSearching
 	      } else {
 	        // Should not happen
@@ -125,52 +137,116 @@ class GCode(val gcodePoints:IndexedSeq[Vec3D]) {
     state(gcodePoints(gcodePoints.size-1),gcodePoints(gcodePoints.size-1))
 
     if (segment.size >0){
-      rv += new GCode(segment)
+      rv += new GCode(segment.clone)
       segment.clear
     }
     println("Found %d segments at depth %f".format(rv.size, atDepth))
     println(rv.mkString(","))
-    if (rv.size > 0) println(rv(0).gcodePoints.mkString(","))
+    rv.foreach(g => assert(g.gcodePoints.size > 0) )
+    //if (rv.size > 0) println(rv(0).gcodePoints.mkString(","))
     rv
   }
   
   /**
    * generate G1 gcode text
    */
-  def gCodePlunge(p:ReadonlyVec3D, gcodeProperties:GCodeSettings):String = {
+  def gCodePlunge(lastState:Option[GCodeState], zPos:Float, gcodeProperties:GCodeSettings):(Option[GCodeState],String) = {
     val c = GCode.floatToString _
-    
-    val s0 = if (p.z <= 0f){
-      "G1 X%s Y%s Z0 F%s".format(c(p.x), c(p.y), c(gcodeProperties.g1Feedrate)) + 
-      "\n\tZ%s F%s".format(c(p.z), c(gcodeProperties.g1PlungeFeedrate))
+    if (lastState.isDefined) {
+      val ls = lastState.get
+      var rs = ""
+      if (ls.pos.z==zPos && ls.g1Feed==gcodeProperties.g1Feedrate){
+        // no need to do anything, we are already at the correct position
+        (lastState,rs)
+      } else {  
+        if (ls.cmd == "G1") rs += "\t" else rs += "G1"
+        if (zPos <= 0f){
+          // plunge in two steps, first to Z=0 with normal speed g1Feedrate. Then to destination Z with g1PlungeFeedrate
+          rs += " Z0"
+          if (ls.g1Feed != gcodeProperties.g1Feedrate) rs += " F%s".format(c(gcodeProperties.g1Feedrate))
+          if (zPos < 0f) rs += "\n\tZ%s F%s".format(c(zPos), c(gcodeProperties.g1PlungeFeedrate))
+          (Option(new GCodeState("G1", new Vec3D(ls.pos.x,ls.pos.y,zPos),ls.g0Feed, gcodeProperties.g1PlungeFeedrate)), rs)
+        } else {
+          if (rs.trim == "G1") {
+            rs = "G1 Z%s F%s".format(c(zPos), c(gcodeProperties.g1Feedrate))
+          } else {
+            rs += "\n\tZ%s F%s".format(c(zPos), c(gcodeProperties.g1Feedrate))
+          }
+          (Option(new GCodeState("G1", new Vec3D(ls.pos.x,ls.pos.y,zPos),ls.g0Feed, gcodeProperties.g1Feedrate)), rs)
+        }
+      }
     } else {
-      "G1 X%s Y%s Z0 F%s".format(c(p.x), c(p.y), c(gcodeProperties.g1Feedrate)) 
+      // we should really never end up here in this state
+      assert(false)
+      (None, "") // g1Feedrate is unknown, by setting it to 0 it will be updated
     }
-    val s1 = "\tZ%s F%s".format(c(p.z), c(gcodeProperties.g1Feedrate))
-    s0 + "\n" + s1
   }
   
   /**
    * generate G0 gcode text
    */
-  def gCodeFastXY(p:ReadonlyVec3D, gcodeProperties:GCodeSettings):String = {
+  def gCodeFastXY(lastState:Option[GCodeState], p:ReadonlyVec3D, gcodeProperties:GCodeSettings):(Option[GCodeState],String) = {
     val c = GCode.floatToString _
-    "G0 X%s Y%s".format(c(p.x), c(p.y)) 
+    if (lastState.isDefined) {
+      val ls = lastState.get
+      var rs = ""
+      if (ls.cmd == "G0") rs += "\t" else rs += "G0"
+      if (ls.pos.x != p.x) rs += " X%s".format(c(p.x))  
+      if (ls.pos.y != p.y) rs += " Y%s".format(c(p.y)) 
+      if (ls.g0Feed != gcodeProperties.g0Feedrate) rs += " F%s".format(gcodeProperties.g0FeedrateAsString)
+      (Option(new GCodeState("G0", new Vec3D(p.x,p.y,ls.pos.z),gcodeProperties.g0Feedrate, ls.g1Feed)), rs)
+    } else {
+      // we don't know last (complete) position, so we can't return a state
+      (None,"G0 X%s Y%s F%s".format(c(p.x), c(p.y), gcodeProperties.g0FeedrateAsString))
+    }
   }
   
   /**
    * generate G0 gcode text
    */
-  def gCodeFastSafeZ(gcodeProperties:GCodeSettings):String = {
-  	"G0 Z%s".format(gcodeProperties.safeZAsString) //  + " ( gCodeFastSafeZ " + hashCode.toString + ")"
+  def gCodeFastSafeZ(lastState:Option[GCodeState], gcodeProperties:GCodeSettings):(Option[GCodeState],String) = {
+    if (lastState.isDefined) {
+      val ls = lastState.get
+      var rs = ""
+      if (ls.cmd == "G0") rs += "\t" else rs += "G0"
+      if (ls.pos.z != gcodeProperties.safeZ) rs += " Z%s".format(gcodeProperties.safeZAsString)
+      if (ls.g0Feed != gcodeProperties.g0Feedrate) 
+        rs += " F%s".format(gcodeProperties.g0FeedrateAsString)
+      if (rs.trim == "G0") {
+        // pointless to just print G0 and nothing more
+        (lastState,"")
+      } else {
+        (Option(new GCodeState("G0", new Vec3D(ls.pos.x,ls.pos.y,gcodeProperties.safeZ), gcodeProperties.g0Feedrate, ls.g1Feed)),  rs)
+      }
+    } else {
+      // we don't know last position, so we can't return a state
+  	  (None,"G0 Z%s".format(gcodeProperties.safeZAsString))
+    }
   }
   
   /**
    * generate G1 gcode text
    */
-  def gCodeSlow(p:ReadonlyVec3D, gcodeProperties:GCodeSettings):String = {
+  def gCodeSlow(lastState:Option[GCodeState], p:ReadonlyVec3D, gcodeProperties:GCodeSettings):(Option[GCodeState],String) = {
     val c = GCode.floatToString _
-  	"G1 X%s Y%s Z%s ".format(c(p.x), c(p.y), c(p.z) )
+    if (lastState.isDefined) {
+      val ls = lastState.get
+      var rs = ""
+      if (ls.cmd == "G1") rs += "\t" else rs += "G1"
+      if (ls.pos.x != p.x) rs += " X%s".format(c(p.x))  
+      if (ls.pos.y != p.y) rs += " Y%s".format(c(p.y))
+      if (ls.pos.z != p.z) rs += " Z%s".format(c(p.z))
+      if (ls.g1Feed != gcodeProperties.g1Feedrate) rs += " F%s".format(gcodeProperties.g1FeedrateAsString)
+      if (rs.trim == "G1") {
+        // pointless to just give a "G1" command and nothing more
+        (lastState,"")
+      } else {
+        (Option(new GCodeState("G1", p, ls.g0Feed, gcodeProperties.g1Feedrate)), rs)
+      }
+    } else {
+      (Option(new GCodeState("G1", p, 0, gcodeProperties.g1Feedrate)), 
+      "G1 X%s Y%s Z%s F%s ".format(c(p.x), c(p.y), c(p.z), c(gcodeProperties.g1Feedrate) ))
+    }
   }
   
   /**
@@ -205,32 +281,40 @@ class GCode(val gcodePoints:IndexedSeq[Vec3D]) {
     }
   }
   
-  def simplify(limit:Float) : GCode = {
-    //val input = new Array[Float](gcodePoints.size*3)
-    //(0 until gcodePoints.size).foreach(i => {
-    //  input(i*3  ) = gcodePoints(i).x
-    //  input(i*3+1) = gcodePoints(i).y
-    //  input(i*3+2) = gcodePoints(i).z
-    //})
-    //val output = simplify3D(gcodePoints, limit)
-    //if (gcodePoints.size >= output.size){
-    //  new GCode // TODO output)
-    //} else {
-      this
-    //}
-  }
-  
-  def generateText(gcodeProperties:GCodeSettings) : String = {
+  def generateText(lastState:Option[GCodeState], gcodeProperties:GCodeSettings) : (Option[GCodeState], String) = {
 	  val rv = new ListBuffer[String]
 	  //rv += "\n(generated from :" + this.toString + " )"
 	  //rv += gcodePoints.mkString("(",")\n(", ")\n")
-	  rv += gCodeFastSafeZ(gcodeProperties) 
-	  rv += gCodeFastXY(startPoint, gcodeProperties)
-	  rv += gCodePlunge(startPoint, gcodeProperties)
-	  gcodePoints.tail.foreach(point => rv += gCodeSlow(point, gcodeProperties))
+	  
+	  var state:Option[GCodeState] = if (lastState.isDefined) {
+      val ls = lastState.get
+	    if (ls.cmd == "G1" && ls.pos.x==startPoint.x && ls.pos.y==startPoint.y && ls.pos.z==startPoint.z && ls.g1Feed==gcodeProperties.g1Feedrate) {
+	      // we are already at startPoint, no need to G0 here
+	      lastState
+	    } else {
+	      val (s1,t1) = gCodeFastSafeZ(lastState, gcodeProperties); rv += t1
+        val (s2,t2) = gCodeFastXY(s1, startPoint, gcodeProperties); rv += t2
+        val (s3,t3) = gCodePlunge(s2, startPoint.z, gcodeProperties); rv += t3
+        s3 
+	    }
+	  } else { 
+  	  val (_,t1) = gCodeFastSafeZ(None, gcodeProperties)
+  	  if (t1.trim != "G0") rv += t1
+  	  val (_,t2) = gCodeFastXY(None, startPoint, gcodeProperties); rv += t2
+  	  if (t2.trim != "G0") rv += t2
+  	  val s2 = Option(new GCodeState("G0", startPoint, -1, -1))
+      val (s3,t3) = gCodePlunge(s2, startPoint.z, gcodeProperties); rv += t3
+      s3
+  	}
+    
+	  gcodePoints.tail.foreach(point => {
+	     val (s4,t4) = gCodeSlow(state, point, gcodeProperties); rv += t4
+	     state = s4
+	  })
+	  
     //println(rv.mkString("","\n","\n"))
     //println("generated from :" + gcodePoints.mkString(","))
-    rv.mkString("","\n","\n")
+    (state, rv.mkString("","\n","\n"))
   }
 
   /*override*/ def toStringOldVersion():String = {
@@ -245,7 +329,7 @@ class GCode(val gcodePoints:IndexedSeq[Vec3D]) {
 }
 
 object GCode {
-  
+    
   /**
    * Locale independent way of converting floats to string. No more problem with "," instead of "." as decimal etc.etc. 
    */

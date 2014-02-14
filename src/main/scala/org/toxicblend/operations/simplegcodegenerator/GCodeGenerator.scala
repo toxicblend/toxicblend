@@ -20,7 +20,10 @@ import org.toxicblend.protobuf.ToxicBlenderProtos.Model
 import org.toxicblend.typeconverters.Mesh3DConverter
 import org.toxicblend.ToxicblendException
 
-class GenerateGCode(val gCodeProperties:GCodeSettings) {
+/**
+ * class that converts a set of edges into gcode.
+ */
+class GCodeGenerator(val gCodeProperties:GCodeSettings) {
   
   def gHeader():String = {
   	"G0 Z%s (goto safe z)\n".format(gCodeProperties.safeZAsString) +
@@ -43,29 +46,29 @@ class GenerateGCode(val gCodeProperties:GCodeSettings) {
     val transform:Matrix4f = {
       val scale = {
         val extent = bb.getExtent
-	      if (gcodeProperties.sizeX.isDefined ){
+	      if (gcodeProperties.sizeX.isDefined ) {
 	        val sizeX = gcodeProperties.sizeX.get
 	        val scaleX = sizeX / extent.x
-	        new Vec3D(scaleX,scaleX,scaleX)
-	      } else if (gcodeProperties.sizeY.isDefined){
+	        new Vec3D(scaleX, scaleX, scaleX)
+	      } else if (gcodeProperties.sizeY.isDefined) {
 	        val sizeY = gcodeProperties.sizeY.get
 	        val scaleY = sizeY / extent.y 
-	        new Vec3D(scaleY,scaleY,scaleY)
-	      } else if (gcodeProperties.sizeZ.isDefined){
-	        val sizeZ = gcodeProperties.sizeZ.get
-	        val scaleZ = sizeZ / extent.z 
-	        new Vec3D(scaleZ,scaleZ,scaleZ)
-	      } else {
+	        new Vec3D(scaleY, scaleY, scaleY)
+	      } else if (gcodeProperties.sizeZ.isDefined) {
+	          val sizeZ = gcodeProperties.sizeZ.get
+	          val scaleZ = sizeZ / extent.z 
+	          new Vec3D(scaleZ, scaleZ, scaleZ)
+	        } else {
 	        new Vec3D(1f, 1f, 1f)
 	      }
 	    }
-	    val offset = new Vec3D(0f,0f,0)  // TODO: fix this transform offset, it's just 0 offset now 
+	    val offset = new Vec3D(0f, 0f, 0)  // TODO: fix this transform offset, it's just 0 offset now 
 	    new Matrix4f(offset, scale)
     }
   
     val rv = edges.map( segment => {
       val pGoints = segment.map(point => {  
-        val tmp = transform.transformOne(new Vec3D(point.x*1000f, point.y*1000f,point.z*1000f))
+        val tmp = transform.transformOne(new Vec3D(point.x*1000f, point.y*1000f, point.z*1000f))
         tmp
       })
       new GCode(pGoints)
@@ -103,12 +106,13 @@ class GenerateGCode(val gCodeProperties:GCodeSettings) {
   def sortByStartPoint(input:IndexedSeq[GCode]):IndexedSeq[GCode] ={
     var rv = new Array[GCode](input.size)
     val usedGCodes = new HashSet[Int]
-    var lastEndPoint:ReadonlyVec3D = new Vec3D()
-    for (i <- 0 until input.size) yield {
+    // The next startpoint will be the one closest to origo
+    var lastEndPoint:ReadonlyVec3D = new Vec3D(0,0,0) 
+    (0 until input.size).foreach( i => {
       var bestSoFar = -1
       var reverseSoFar = false
       var bestDistanceSoFar = Float.PositiveInfinity
-	    for (j:Int <- 0 until input.size) yield {
+	    (0 until input.size).foreach( j => {
 	      if( !usedGCodes.contains(j) ){
 		      val (distance, reverse) = input(j).xyDistanceTo(lastEndPoint)
 		      if (distance < bestDistanceSoFar){
@@ -117,6 +121,9 @@ class GenerateGCode(val gCodeProperties:GCodeSettings) {
 		        bestSoFar = j
 		      }
 	      }
+	    })
+	    if (bestSoFar == -1) {
+	      println("c'est ne pas une break point")
 	    }
       assert(bestSoFar != -1)
       usedGCodes.add(bestSoFar)
@@ -128,7 +135,7 @@ class GenerateGCode(val gCodeProperties:GCodeSettings) {
         }
       }
       lastEndPoint = rv(i).endPoint
-    }
+    })
     rv
   }
   
@@ -138,18 +145,18 @@ class GenerateGCode(val gCodeProperties:GCodeSettings) {
   def mesh3d2GCode(mesh:Mesh3DConverter):IndexedSeq[GCode] = {
     assert(gCodeProperties.stepDown > 0)
     
-    val (allUnadjustedGCodes,aabb) = {
+    val (allUnadjustedGCodes, aabb) = {
       val scaleMToMM = 1000f
       //val simplifyLimit = gCodeProperties.get("simplifyLimit").get  
       //val aabb = mesh.getBounds.scaleSelf(scaleMToMM).asInstanceOf[AABB]
       val segments = mesh.findContinuousLineSegments
       if (segments._2.size > 0 && segments._2(0).size > 0) {
-        // recalculate the aabb, with the mm conversion and all
-        val aabb = new AABB(segments._2(0)(0).scale(1000f), 0f) // meter to mm
-        segments._2.foreach(segment => segment.foreach(point => aabb.growToContainPoint(point.scale(1000f)))) // meter to mm
-        println("Bounding Box: %s min:%s max:%S".format(aabb.toString, aabb.getMin().toString(), aabb.getMax().toString() ))
-        (generateGcode(segments._2, aabb, gCodeProperties).filter(g => g.gcodePoints.size > 0),aabb)
-      } else {
+          // recalculate the aabb, with the mm conversion and all
+          val aabb = new AABB(segments._2(0)(0).scale(1000f), 0f) // meter to mm
+          segments._2.foreach(segment => segment.foreach(point => aabb.growToContainPoint(point.scale(1000f)))) // meter to mm
+          println("Bounding Box: %s min:%s max:%S".format(aabb.toString, aabb.getMin().toString(), aabb.getMax().toString() ))
+          (generateGcode(segments._2, aabb, gCodeProperties).filter(g => g.gcodePoints.size > 0),aabb)
+        } else {
         (new ArrayBuffer[GCode], new AABB)
       }
     }
@@ -162,7 +169,9 @@ class GenerateGCode(val gCodeProperties:GCodeSettings) {
     var depth = aabb.getMin.z + gCodeProperties.stepDown
     while (depth < 0) {
       val filteredGCodes = heightFilter(allUnadjustedGCodes, depth).toArray
-      layeredGCodes ++= sortByStartPoint(filteredGCodes)
+      if (filteredGCodes.size > 1) {   
+        layeredGCodes ++= sortByStartPoint(filteredGCodes) 
+      }
       depth += gCodeProperties.stepDown
       if (depth > 0f) {
         depth = 0f

@@ -56,7 +56,7 @@ class GCodeParser extends RegexParsers {
    * multiline commands (G0 and G1)
    */ 
   def gMultiLineCommand : Parser[GcodeLine] = """(?i)(?:G0?0)|(?:G0?1)""".r ~ gMultiLineParameters ^^ { 
-    case name~parameters => new GcodeMultiCommand(name.capitalize,parameters)
+    case name~parameters => new GcodeMultiCommand(name.capitalize.replace("G01","G1").replace("G0","G0"),parameters)
   }
   
   /** 
@@ -102,6 +102,7 @@ class GCodeParser extends RegexParsers {
     source.foreach(line => {
       val trimmed = commentsAndWhitespace.replaceAllIn(line, "")
       sb.append( emptyLinesAndLineNumbers.replaceAllIn(trimmed, ""))
+      sb.append("\n")
     })
     // meh, do it all over again to fix multiline comments
     filterOutWhiteSpace(sb.result)

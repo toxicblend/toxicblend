@@ -9,8 +9,6 @@ import org.toxicblend.protobuf.ToxicBlenderProtos.Message
 import org.toxicblend.typeconverters.Mesh3DConverter
 import org.toxicblend.typeconverters.OptionConverter
 import org.toxicblend.typeconverters.Matrix4fConverter
-import org.toxicblend.operations.boostmedianaxis.MedianAxisJni.simplify3D
-import org.toxicblend.operations.boostmedianaxis.MedianAxisJni.simplify2D
 import org.toxicblend.operations.simplegcodeparse.SimpleGcodeParseOperation
 
 import scala.collection.JavaConversions._
@@ -52,10 +50,19 @@ class SimpleGcodeGeneratorOperation extends CommandProcessorTrait {
     { 
       // translate every vertex into world coordinates
       val models = inMessage.getModelsList().map(inModel => Mesh3DConverter(inModel,true,unitScaleProperty))
-      val gCodeGenerator = new GenerateGCode(gcodeProperties)
+      val gCodeGenerator = new GCodeGenerator(gcodeProperties)
       val totalGCodes = gCodeGenerator.mesh3d2GCode(models(0))  // For now, only process the first model
       println("totalGCodes: " + totalGCodes)
-      gCodeGenerator.saveGCode(gcodeProperties.outFilename, gCodeGenerator.gHeader, totalGCodes.map(g => g.generateText(gcodeProperties)), gCodeGenerator.gFooter)
+          
+      val gcodeAsText = {
+        var gcodeState:Option[GCodeState] = None
+        totalGCodes.map(g => {
+          val (s,t) = g.generateText(gcodeState, gcodeProperties)
+          gcodeState = s
+          t
+        })  
+      }
+      gCodeGenerator.saveGCode(gcodeProperties.outFilename, gCodeGenerator.gHeader, gcodeAsText, gCodeGenerator.gFooter)
     }
      
     val returnMessageBuilder = Message.newBuilder()

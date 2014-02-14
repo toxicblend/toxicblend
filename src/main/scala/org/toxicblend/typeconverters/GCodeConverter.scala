@@ -23,7 +23,7 @@ object GCodeConverter {
     val splitG0andG1 = true
     
     val g0Model = if (splitG0andG1) new Mesh3DConverter(name="GCODE-G0") else new Mesh3DConverter(name="GCODE")
-    val g1Model = if (splitG0andG1)  new Mesh3DConverter(name="GCODE-G1") else g0Model
+    val g1Model = if (splitG0andG1) new Mesh3DConverter(name="GCODE-G1") else g0Model
     
     segments.foreach(segment => {
       segment.command match {
