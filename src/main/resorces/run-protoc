@@ -2,7 +2,7 @@
 
 if [ -x "${PROTOC}" ]
 then
-  ${PROTOC} --cpp_out=../blender_addon --java_out=../java/ toxicblend.proto
+  ${PROTOC} --python_out=../blender_addon/site-packages --java_out=../java/ toxicblend.proto
 else
   echo "Set the PROTOC env before running this script"
 fi
