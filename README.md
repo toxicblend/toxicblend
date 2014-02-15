@@ -37,7 +37,7 @@ Installation & running
 	./bootstrap.sh --with-python-version=3.3 --with-libraries=system --prefix=/opt/local
 	b2 install
 	export BOOST_HOME=/opt/local/
-	export BOOST_INCLUDEDIR=/opt/local/include
+	export BOOST_ROOT=/opt/local/
 	
 3. Copy the python files found in src/main/blender_addon/site-packages/ to the site-packages directory of blender.
 You will find the location with this command in the blender python console:
@@ -49,8 +49,10 @@ You will find the location with this command in the blender python console:
 
 5. Compile the jni code. 
 	
-	export JAVA_HOME=...path to java...
-	
+	export JAVA_HOME=...path to java.
+        
+        example:export JAVA_HOME=/opt/oracle-jdk-bin-1.7.0.51/
+
 	cd toxicblend/src/cpp/boost/
 	
 	cmake .
@@ -85,7 +87,7 @@ You will find the location with this command in the blender python console:
     
     /opt/icedtea-bin-6.1.12.7/jre/lib/amd64/xawt/libmawt.so
     
-    export LD_LIBRARY_PATH=/opt/oracle-jdk-bin-1.7.0.51/jre/lib/amd64/xawt/
+    export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}/opt/oracle-jdk-bin-1.7.0.51/jre/lib/amd64/xawt/
     
     sbt  
     

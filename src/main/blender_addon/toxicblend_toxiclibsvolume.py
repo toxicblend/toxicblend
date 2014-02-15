@@ -50,6 +50,8 @@ class ToxicLibsVolume(bpy.types.Operator):
 
   def execute(self, context):
     imp.reload(toxicblend)
+    unitSystemProperty = context.scene.unit_settings
+    
     with toxicblend.ByteCommunicator("localhost", 9999) as c: 
       # bpy.context.selected_objects,
       activeObject = context.scene.objects.active
