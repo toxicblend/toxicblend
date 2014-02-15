@@ -5,7 +5,7 @@ import org.toxicblend.protobuf.ToxicBlendProtos.Face
 import toxi.geom.Vec3D
 import toxi.geom.ReadonlyVec2D
 import toxi.geom.Vec2D
-import toxi.geom.Matrix4f
+import toxi.geom.Matrix4x4
 import org.toxicblend.geometry.ProjectionPlane
 import org.toxicblend.geometry.Mesh2D
 import scala.collection.mutable.ArrayBuffer
@@ -20,10 +20,10 @@ import scala.collection.JavaConverters._
 class Mesh2DConverter private (val mesh2d:Mesh2D, val projectionPlane:ProjectionPlane.ProjectionPlane, val name:String="") 
 {
   
-  protected class Vertex3DConverterHelper(val modelBuilder:Model.Builder, val finalTransformation:Option[Matrix4fConverter]) {
+  protected class Vertex3DConverterHelper(val modelBuilder:Model.Builder, val finalTransformation:Option[Matrix4x4Converter]) {
     val inverseFinalTransformation = 
       if (finalTransformation.isDefined) 
-        Option[Matrix4f]({val m=new Matrix4f(finalTransformation.get.matrix); m.invert(); m} )
+        Option[Matrix4x4]({val m=new Matrix4x4(finalTransformation.get.matrix); m.invert(); m} )
       else 
         None
     protected var vertexIndex = 0
@@ -37,7 +37,7 @@ class Mesh2DConverter private (val mesh2d:Mesh2D, val projectionPlane:Projection
         case ProjectionPlane.XY_PLANE => new Vec3D(vertex.x, vertex.y, 0f)
       }
       if (inverseFinalTransformation.isDefined) {
-        inverseFinalTransformation.get.transformOne(vertex3d)
+        inverseFinalTransformation.get.applyToSelf(vertex3d)
       }
       pbvertex.setX(vertex3d.x)
       pbvertex.setY(vertex3d.y)
@@ -86,7 +86,7 @@ class Mesh2DConverter private (val mesh2d:Mesh2D, val projectionPlane:Projection
    * Create a packet buffer model from this Mesh2D.
    * The result will be a list of 2D points with edges between each point (n, n+1)
    */  
-  def toPBModel(noFaceOnlyEdges:Boolean=false, finalTransformation:Option[Matrix4fConverter] ) = {
+  def toPBModel(noFaceOnlyEdges:Boolean=false, finalTransformation:Option[Matrix4x4Converter] ) = {
     val modelBuilder = org.toxicblend.protobuf.ToxicBlendProtos.Model.newBuilder()
     modelBuilder.setName(name)
     val helper = new Vertex3DConverterHelper(modelBuilder, finalTransformation)
@@ -116,12 +116,12 @@ object Mesh2DConverter {
   def apply(pbModel:Model, projectionPlane:ProjectionPlane.ProjectionPlane, applyWorldTransform:Boolean=false):Mesh2DConverter = {
     val vertexList = pbModel.getVerticesList()
     val points2D = new Array[ReadonlyVec2D](vertexList.size).to[ArrayBuffer]
-    val matrixConverter =  Matrix4fConverter(pbModel)
+    val matrixConverter =  Matrix4x4Converter(pbModel)
     
     //println("received " + verticesList.size()  + " vertices")
     vertexList.foreach (pbVertex => {
       val new3dVertex = new Vec3D(pbVertex.getX, pbVertex.getY, pbVertex.getZ)
-      if (applyWorldTransform) matrixConverter.matrix.transformOne(new3dVertex)
+      if (applyWorldTransform) matrixConverter.matrix.applyToSelf(new3dVertex)
          
       points2D(pbVertex.getId()) = projectionPlane match {
         case ProjectionPlane.YZ_PLANE => new Vec2D(new3dVertex.y, new3dVertex.z)

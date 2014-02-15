@@ -6,7 +6,7 @@ import toxi.geom.Vec3D
 import toxi.geom.ReadonlyVec2D
 import toxi.geom.Vec2D
 import toxi.geom.mesh.TriangleMesh
-import toxi.geom.Matrix4f
+import toxi.geom.Matrix4x4
 import toxi.geom.Vec3D
 import toxi.geom.AABB
 import scala.collection.mutable.ArrayBuffer
@@ -150,11 +150,11 @@ class Mesh3DConverter protected (protected val vertices:Buffer[ReadonlyVec3D],
    * @param matrix the transformation matrix
    * @return this (not a copy)
    */  
-  def transformOne(inMatrix:Matrix4f):Mesh3DConverter = {
+  def transformOne(inMatrix:Matrix4x4):Mesh3DConverter = {
     bounds.clearAABB()
     (0 until vertices.size).foreach(i=>{
       val vOld = vertices(i)
-      val vNew =  inMatrix.transformOne(new Vec3D(vOld))
+      val vNew =  inMatrix.applyToSelf(new Vec3D(vOld))
       bounds.growToContainPoint(vNew)
       vertices(i) = vNew
     })
@@ -165,10 +165,10 @@ class Mesh3DConverter protected (protected val vertices:Buffer[ReadonlyVec3D],
    * Create a packet buffer model from this Mesh3D.
    * The result will be a list of triangles due to the design of Mesh3D
    */  
-  def toPBModel(finalTransformation:Option[Matrix4fConverter], projectionPlane:Option[ProjectionPlane.ProjectionPlane]) = {
+  def toPBModel(finalTransformation:Option[Matrix4x4Converter], projectionPlane:Option[ProjectionPlane.ProjectionPlane]) = {
     val modelBuilder = org.toxicblend.protobuf.ToxicBlendProtos.Model.newBuilder()
     val matrix = if (finalTransformation.isDefined) {
-       {val m=new Matrix4f(finalTransformation.get.matrix); m.invert(); Option(m) }
+       {val m=new Matrix4x4(finalTransformation.get.matrix); m.invert(); Option(m) }
     } else None
     
     (0 until vertices.size).foreach(vertexId => {
@@ -181,7 +181,7 @@ class Mesh3DConverter protected (protected val vertices:Buffer[ReadonlyVec3D],
         case _ => new Vec3D(origVertex.x, origVertex.y, origVertex.z)
       } 
       if (matrix.isDefined) {
-        matrix.get.transformOne(vertex)
+        matrix.get.applyToSelf(vertex)
       }
       pbvertex.setX(vertex.x)
       pbvertex.setY(vertex.y)
@@ -289,7 +289,7 @@ object Mesh3DConverter {
   def apply(pbModel:Model, useWorldCoordinares:Boolean, unitScale:Float):Mesh3DConverter = {
     
     val hasWorldTransformation = pbModel.hasWorldOrientation()
-    val worldTransformation = if (hasWorldTransformation) Option(Matrix4fConverter(pbModel.getWorldOrientation())) else None
+    val worldTransformation = if (hasWorldTransformation) Option(Matrix4x4Converter(pbModel.getWorldOrientation())) else None
     val vbuffer = new Array[ReadonlyVec3D](pbModel.getVerticesList().size).toBuffer
     val fbuffer = new ArrayBuffer[ArrayBuffer[Int]](pbModel.getFacesList().size)
     
@@ -298,12 +298,12 @@ object Mesh3DConverter {
         val wtransform = worldTransformation.get.matrix
         val firstVertexOpt = getFirstVertex(pbModel)
         val aabb = if (firstVertexOpt.isDefined) {
-          new AABB(wtransform.transformOne(firstVertexOpt.get.scale(unitScale)),0f)
+          new AABB(wtransform.applyToSelf(firstVertexOpt.get.scale(unitScale)),0f)
         } else {
           new AABB // no vertices, aabb will have origin at origo
         }
         pbModel.getVerticesList().foreach( vertex => {
-          val transformedVector = wtransform.transformOne(new Vec3D(vertex.getX*unitScale, vertex.getY*unitScale, vertex.getZ*unitScale))
+          val transformedVector = wtransform.applyToSelf(new Vec3D(vertex.getX*unitScale, vertex.getY*unitScale, vertex.getZ*unitScale))
           aabb.growToContainPoint(transformedVector)
           vbuffer(vertex.getId()) = transformedVector
         })

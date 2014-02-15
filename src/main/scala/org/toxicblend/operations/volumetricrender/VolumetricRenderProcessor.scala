@@ -9,7 +9,7 @@ import toxi.geom.AABB
 import toxi.volume.{MeshLatticeBuilder,VolumetricSpace, VolumetricBrush, RoundBrush, BoxBrush, HashIsoSurface}
 import toxi.util.datatypes.FloatRange
 import scala.collection.JavaConversions._
-import org.toxicblend.typeconverters.Matrix4fConverter
+import org.toxicblend.typeconverters.Matrix4x4Converter
 import org.toxicblend.typeconverters.LineStripConverter
 import org.toxicblend.typeconverters.Mesh3DConverter
 import org.toxicblend.typeconverters.OptionConverter
@@ -110,7 +110,7 @@ class VolumetricRenderProcessor extends CommandProcessorTrait {
     val pbModel = Mesh3DConverter(mesh).toPBModel(None, None) // TODO: replace None with the real world orientation
     if (inModel.hasWorldOrientation()) {
       // simply copy the world orientation
-      val mConverter = Matrix4fConverter(inModel.getWorldOrientation)
+      val mConverter = Matrix4x4Converter(inModel.getWorldOrientation)
       pbModel.setWorldOrientation(mConverter.toPBModel)
     }
     pbModel.setName("Iso surface")

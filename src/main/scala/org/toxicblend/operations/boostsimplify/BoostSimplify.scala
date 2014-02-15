@@ -9,7 +9,7 @@ import scala.collection.JavaConversions._
 import org.toxicblend.protobuf.ToxicBlendProtos.Message
 import org.toxicblend.typeconverters.Mesh3DConverter
 import org.toxicblend.typeconverters.OptionConverter
-import org.toxicblend.typeconverters.Matrix4fConverter
+import org.toxicblend.typeconverters.Matrix4x4Converter
 import org.toxicblend.operations.boostmedianaxis.MedianAxisJni.simplify3D
 import org.toxicblend.operations.boostmedianaxis.MedianAxisJni.simplify2D
 
@@ -44,12 +44,12 @@ class BoostSimplify extends CommandProcessorTrait {
     println("BoostSimplify::processInput simplifyLimit=" + simplifyLimit)
     
     val returnMessageBuilder = Message.newBuilder()
-    val inverseMatrixes = new ArrayBuffer[Option[Matrix4fConverter]]
+    val inverseMatrixes = new ArrayBuffer[Option[Matrix4x4Converter]]
     
     val models = inMessage.getModelsList().map(inModel => {
       (Mesh3DConverter(inModel,true), // Unit is now [meter]
       if (inModel.hasWorldOrientation()) {
-        Option(Matrix4fConverter(inModel.getWorldOrientation()))
+        Option(Matrix4x4Converter(inModel.getWorldOrientation()))
       } else {
         None
       })

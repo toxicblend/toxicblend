@@ -6,7 +6,7 @@ import toxi.geom.Vec3D
 import org.toxicblend.geometry.ProjectionPlane.YZ_PLANE
 import org.toxicblend.geometry.ProjectionPlane.XZ_PLANE
 import org.toxicblend.geometry.ProjectionPlane.XY_PLANE
-import org.toxicblend.typeconverters.Matrix4fConverter
+import org.toxicblend.typeconverters.Matrix4x4Converter
 import org.toxicblend.typeconverters.Mesh2DConverter
 import org.toxicblend.typeconverters.OptionConverter
 import org.toxicblend.CommandProcessorTrait
@@ -40,7 +40,7 @@ class ProjectionOutlineProcessor extends CommandProcessorTrait {
     Time.time(result.mesh2d.projectionOutline(multiThreadProperty))
     
     val inverseMatrix = if (inModel.hasWorldOrientation()) {
-      Option(Matrix4fConverter(inModel.getWorldOrientation()))
+      Option(Matrix4x4Converter(inModel.getWorldOrientation()))
     } else {
       None
     }

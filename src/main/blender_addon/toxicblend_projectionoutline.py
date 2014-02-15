@@ -14,7 +14,7 @@ bl_info = {
 class NaiveConvexHull(bpy.types.Operator):
   '''Naive implementation of projection outline'''
   bl_idname = "object.toxicblend_projection_outline"
-  bl_label = "Projection outline"
+  bl_label = "Toxicblend Projection outline"
   bl_options = {'REGISTER', 'UNDO'}  # enable undo for the operator.
   
   projectionPlaneProperty = bpy.props.EnumProperty(

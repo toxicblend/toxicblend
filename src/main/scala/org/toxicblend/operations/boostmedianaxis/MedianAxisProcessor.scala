@@ -5,7 +5,7 @@ import org.toxicblend.protobuf.ToxicBlendProtos.Model
 import org.toxicblend.geometry.ProjectionPlane.YZ_PLANE
 import org.toxicblend.geometry.ProjectionPlane.XZ_PLANE
 import org.toxicblend.geometry.ProjectionPlane.XY_PLANE
-import org.toxicblend.typeconverters.Matrix4fConverter
+import org.toxicblend.typeconverters.Matrix4x4Converter
 import org.toxicblend.typeconverters.Rings2DConverter
 import org.toxicblend.typeconverters.Mesh3DConverter
 import org.toxicblend.typeconverters.OptionConverter
@@ -66,7 +66,7 @@ class MedianAxisProcessor extends CommandProcessorTrait {
     val rings2D = Rings2DConverter(inModel, projectionPlane, applyWorldTransform=true)
    
     val worldTransformation = if (inModel.hasWorldOrientation()) {
-      Option(Matrix4fConverter(inModel.getWorldOrientation()))
+      Option(Matrix4x4Converter(inModel.getWorldOrientation()))
     } else {
       None
     }

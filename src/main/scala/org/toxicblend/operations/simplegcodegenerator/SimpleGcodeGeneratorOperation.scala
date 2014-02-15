@@ -8,7 +8,7 @@ import toxi.geom.Vec3D
 import org.toxicblend.protobuf.ToxicBlendProtos.Message
 import org.toxicblend.typeconverters.Mesh3DConverter
 import org.toxicblend.typeconverters.OptionConverter
-import org.toxicblend.typeconverters.Matrix4fConverter
+import org.toxicblend.typeconverters.Matrix4x4Converter
 import org.toxicblend.operations.simplegcodeparse.SimpleGcodeParseOperation
 
 import scala.collection.JavaConversions._

@@ -3,7 +3,7 @@ package org.toxicblend.typeconverters
 import org.toxicblend.protobuf.ToxicBlendProtos.{Model,Face}
 import toxi.geom.Vec2D
 import toxi.geom.Vec3D
-import toxi.geom.Matrix4f
+import toxi.geom.Matrix4x4
 import org.toxicblend.geometry.ProjectionPlane
 import scala.collection.JavaConversions._
 import scala.collection.JavaConverters._
@@ -16,12 +16,12 @@ object Vertex2DPointCloudConverter {
   def apply(pbModel:Model, ignoreAxis:ProjectionPlane.ProjectionPlane, applyWorldTransform:Boolean=false):Vertex2DPointCloudConverter = {
     val vertexList = pbModel.getVerticesList()
     val v = new Array[Vec2D](vertexList.size())
-    val mConverter =  Matrix4fConverter(pbModel)
+    val mConverter =  Matrix4x4Converter(pbModel)
     
     //println("received " + vertexList.size()  + " vertices")
     vertexList.foreach (vertex => {
       val new3dVertex = new Vec3D(vertex.getX, vertex.getY, vertex.getZ)
-      if (applyWorldTransform) mConverter.matrix.transformOne(new3dVertex)
+      if (applyWorldTransform) mConverter.matrix.applyToSelf(new3dVertex)
          
       v(vertex.getId()) = ignoreAxis match {
         case ProjectionPlane.YZ_PLANE => new Vec2D(new3dVertex.y, new3dVertex.z)
@@ -49,10 +49,10 @@ object Vertex2DPointCloudConverter {
 
 class Vertex2DPointCloudConverter private (val points:Array[Vec2D], val ignoreAxis:ProjectionPlane.ProjectionPlane, val name:String="") {
   
-  protected class Vertex2DConverterHelper(val modelBuilder:Model.Builder, val finalTransformation:Option[Matrix4fConverter]) {
+  protected class Vertex2DConverterHelper(val modelBuilder:Model.Builder, val finalTransformation:Option[Matrix4x4Converter]) {
     val inverseFinalTransformation = 
       if (finalTransformation.isDefined) 
-        Option[Matrix4f]({val m=new Matrix4f(finalTransformation.get.matrix); m.invert(); m} )
+        Option[Matrix4x4]({val m=new Matrix4x4(finalTransformation.get.matrix); m.invert(); m} )
       else 
         None
     protected var vertexIndex = 0
@@ -66,7 +66,7 @@ class Vertex2DPointCloudConverter private (val points:Array[Vec2D], val ignoreAx
         case ProjectionPlane.XY_PLANE => new Vec3D(vertex.x, vertex.y, 0f)
       }
       if (inverseFinalTransformation.isDefined) {
-        inverseFinalTransformation.get.transformOne(vertex3d)
+        inverseFinalTransformation.get.applyToSelf(vertex3d)
       }
       pbvertex.setX(vertex3d.x)
       pbvertex.setY(vertex3d.y)
@@ -99,7 +99,7 @@ class Vertex2DPointCloudConverter private (val points:Array[Vec2D], val ignoreAx
    * Create a packet buffer model from this ArrayBuffer[Vec2D].
    * The result will be a list of 2D points with edges between each point (n, n+1)
    */  
-  def toPBModel(buildEdge:Boolean=false, finalTransformation:Option[Matrix4fConverter] ) = {
+  def toPBModel(buildEdge:Boolean=false, finalTransformation:Option[Matrix4x4Converter] ) = {
     val modelBuilder = org.toxicblend.protobuf.ToxicBlendProtos.Model.newBuilder()
     modelBuilder.setName(name)
     val helper = new Vertex2DConverterHelper(modelBuilder, finalTransformation)
