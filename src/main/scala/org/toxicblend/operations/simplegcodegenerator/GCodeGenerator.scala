@@ -163,8 +163,8 @@ class GCodeGenerator(val gCodeProperties:GCodeSettings) {
     if (aabb.getMax().z > 0) {
       throw new ToxicblendException("GCode generating edge-meshes must have all vertexes below Z=0")
     }
-    println("allUnadjustedGCodes:")
-    allUnadjustedGCodes.foreach(g => println(g))
+    //println("allUnadjustedGCodes:")
+    //allUnadjustedGCodes.foreach(g => println(g))
     val layeredGCodes = new ArrayBuffer[GCode]
     var depth = aabb.getMin.z + gCodeProperties.stepDown
     while (depth < 0) {

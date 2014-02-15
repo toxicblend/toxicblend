@@ -17,7 +17,7 @@ class SimpleGcodeGeneratorOperation extends CommandProcessorTrait {
   
   def processInput(inMessage:Message) = {
     val options = OptionConverter(inMessage)
-    println(options)
+    println("SimpleGcodeGeneratorOperation: options=" + options)
     val unitScaleProperty:Float = options.getOrElse("unitScale", "1.0") match {
       case Regex.FLOAT_REGEX(limit) => limit.toFloat
       case s:String => System.err.println("SimpleGcodeOperation: unrecognizable 'unitScale' property value: " +  s ); 1f
@@ -52,7 +52,7 @@ class SimpleGcodeGeneratorOperation extends CommandProcessorTrait {
       val models = inMessage.getModelsList().map(inModel => Mesh3DConverter(inModel,true,unitScaleProperty))
       val gCodeGenerator = new GCodeGenerator(gcodeProperties)
       val totalGCodes = gCodeGenerator.mesh3d2GCode(models(0))  // For now, only process the first model
-      println("totalGCodes: " + totalGCodes)
+      //println("totalGCodes: " + totalGCodes)
           
       val gcodeAsText = {
         var gcodeState:Option[GCodeState] = None

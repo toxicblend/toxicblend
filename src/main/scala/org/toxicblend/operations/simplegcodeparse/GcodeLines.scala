@@ -36,7 +36,7 @@ class GcodeLines(val commands:List[GcodeLine]) {
              state.p0.z = state.p1.z
            })
          }
-       case setting:GcodeSingleCommand => println("ignoring setting" + setting)
+       case setting:GcodeSingleCommand => println("GCode Parser: ignoring setting " + setting)
      })
      rv
   }

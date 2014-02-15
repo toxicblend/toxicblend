@@ -65,10 +65,10 @@ class GCode(val gcodePoints:IndexedSeq[Vec3D]) {
       //val toV = gcodePoints(steps(i)(1))
       if (fromV.z - MAGIC_DEPTH_LIMIT <= atDepth){
         segment += fromV.sub(0f,0f,atDepth)
-        println("stateSearching Added segment point: " + segment(segment.size-1)+ " i=" + i+ " depth=" + atDepth)
+        //println("stateSearching Added segment point: " + segment(segment.size-1)+ " i=" + i+ " depth=" + atDepth)
         if (fromV.intersectsXYPlane(toV, atDepth+MAGIC_DEPTH_LIMIT)){
           segment += fromV.intersectionPoint(toV,atDepth+MAGIC_DEPTH_LIMIT).sub(0f,0f,atDepth)
-          println("stateSearching Added segment point: " + segment(segment.size-1)+ " i=" + i+ " depth=" + atDepth)
+          //println("stateSearching Added segment point: " + segment(segment.size-1)+ " i=" + i+ " depth=" + atDepth)
           if (segment.size >0 ) {
             rv += new GCode(segment.clone)
             segment.clear
@@ -81,7 +81,7 @@ class GCode(val gcodePoints:IndexedSeq[Vec3D]) {
       } else if (fromV.intersectsXYPlane(toV, atDepth+MAGIC_DEPTH_LIMIT)){
         //println("stateSearching at z = %f atDepth = %f i=%d".format(gcodePoints(i).z, atDepth, i))
         segment += fromV.intersectionPoint(toV,atDepth+MAGIC_DEPTH_LIMIT).sub(0f,0f,atDepth)
-        println("stateSearching Added segment point: " + segment(segment.size-1)+ " i=" + i+ " depth=" + atDepth)
+        //println("stateSearching Added segment point: " + segment(segment.size-1)+ " i=" + i+ " depth=" + atDepth)
         state = stateFound
       }
     }
@@ -105,13 +105,13 @@ class GCode(val gcodePoints:IndexedSeq[Vec3D]) {
       
       if ( toV.z - MAGIC_DEPTH_LIMIT <= atDepth ) {
         segment += fromV.sub(0f,0f,atDepth)
-        println("stateFound Added segment point: " + segment(segment.size-1) + " i=" + i+ " depth=" + atDepth)
+        //println("stateFound Added segment point: " + segment(segment.size-1) + " i=" + i+ " depth=" + atDepth)
       } else {
 	      if (fromV.intersectsXYPlane(toV, atDepth+MAGIC_DEPTH_LIMIT)){
 	        segment += fromV.sub(0f,0f,atDepth)
-          println("stateFound Added segment point: " + segment(segment.size-1)+ " i=" + i + " depth=" + atDepth)
+          //println("stateFound Added segment point: " + segment(segment.size-1)+ " i=" + i + " depth=" + atDepth)
 	        segment += fromV.intersectionPoint(toV,atDepth+MAGIC_DEPTH_LIMIT).sub(0f,0f,atDepth)
-          println("stateFound Added segment point: " + segment(segment.size-1)+ " i=" + i + " depth=" + atDepth)
+          //println("stateFound Added segment point: " + segment(segment.size-1)+ " i=" + i + " depth=" + atDepth)
           if (segment.size >0 ) {
 	          rv += new GCode(segment.clone)
 	          segment.clear
@@ -119,13 +119,13 @@ class GCode(val gcodePoints:IndexedSeq[Vec3D]) {
 	        state = stateSearching
 	      } else {
 	        // Should not happen
-	        println("Point z=%f and point z=%f should have crossed the limit %f (%f)".format(gcodePoints(i).z,gcodePoints(i-1).z, atDepth, MAGIC_DEPTH_LIMIT))
+	        System.err.println("Point z=%f and point z=%f should have crossed the limit %f (%f)".format(gcodePoints(i).z,gcodePoints(i-1).z, atDepth, MAGIC_DEPTH_LIMIT))
 	        assert(false)
 	      } 
       }
     }
 
-    println("Searching for segments at depth %f".format(atDepth))
+    //println("Searching for segments at depth %f".format(atDepth))
     state = stateSearching
     i = 0
     (0 until gcodePoints.size).sliding(2).foreach(s => {
@@ -139,8 +139,8 @@ class GCode(val gcodePoints:IndexedSeq[Vec3D]) {
       rv += new GCode(segment.clone)
       segment.clear
     }
-    println("Found %d segments at depth %f".format(rv.size, atDepth))
-    println(rv.mkString(","))
+    //println("Found %d segments at depth %f".format(rv.size, atDepth))
+    //println(rv.mkString(","))
     rv.foreach(g => assert(g.gcodePoints.size > 0) )
     //if (rv.size > 0) println(rv(0).gcodePoints.mkString(","))
     rv
