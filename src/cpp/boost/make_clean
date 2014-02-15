@@ -1,3 +1,3 @@
 #!/bin/sh
 
-rm -rf CMakeCache.txt CMakeFiles *.so *.jar
+rm -rf CMakeCache.txt CMakeFiles libtoxicblendboost.dylib libtoxicblendboost.so toxicblendboost.jar
