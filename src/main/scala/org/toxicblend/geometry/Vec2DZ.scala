@@ -8,7 +8,7 @@ import toxi.geom.ReadonlyVec3D
 /**
  * This is a 2.5D representation of a vertex
  * Distances between points are calculated in 2D while there is an additional Z parameter
- * This object also 'knows' its neighbourhood vertexes
+ * This object also 'knows' its neighbourhood vertices
  * 
  * @param ẍ, ÿ is named this way because of the way scala handles constructor input parameters (non-var or val). 
  *     If the variable is, by accident, referenced anywhere in this class it will be retained as a 'private final' in bytecode

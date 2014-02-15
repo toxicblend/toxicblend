@@ -46,23 +46,23 @@ class VertexToFaceMap {
   } 
   
   @inline def vertexId2faceIds(vertexId:VertexId):IndexedSeq[FaceId] = vertex2facesMap(vertexId)
-  @inline def faceId2vertexes(faceId:FaceId):IndexedSeq[VertexId] = face2vertexMap(faceId)
+  @inline def faceId2vertices(faceId:FaceId):IndexedSeq[VertexId] = face2vertexMap(faceId)
   // not to be used in production, just for testing
   @inline def vertexId2faces(vertexId:Int):IndexedSeq[FaceId] = vertex2facesMap(new VertexId(vertexId))
   // not to be used in production, just for testing
-  @inline def faceId2vertexes(faceId:Int):IndexedSeq[VertexId] = face2vertexMap(new FaceId(faceId))
+  @inline def faceId2vertices(faceId:Int):IndexedSeq[VertexId] = face2vertexMap(new FaceId(faceId))
   
   /**
    * returns a list of every vertex that is only used in one face
    */
-  def endVertexes:Iterable[VertexId]  = {
+  def endVertices:Iterable[VertexId]  = {
     val rv =
     vertex2facesMap.filter(item => item._2.size==1 && face2vertexMap(item._2(0)).size==2).map(item => item._1)
     rv
   }
   
   /**
-   * returns a list of every face that has more than two vertexes (ngons and triangles)
+   * returns a list of every face that has more than two vertices (ngons and triangles)
    */
   def nGons:Iterable[FaceId] = {
     val rv =
@@ -70,7 +70,7 @@ class VertexToFaceMap {
     rv
   }
   
-  def intersectionVertexes:Iterable[VertexId]  = {
+  def intersectionVertices:Iterable[VertexId]  = {
     val rv =
     vertex2facesMap.filter(item => item._2.size > 2).map(item => item._1)
     rv
@@ -165,21 +165,21 @@ class VertexToFaceMap {
   */
   
   /**
-   * remove double faces. i.e. faces that contain the same vertexes, just in another order
+   * remove double faces. i.e. faces that contain the same vertices, just in another order
    */
   def removeDoubleFaces() {
     val facesToBeDeleted = new HashSet[FaceId]
     face2vertexMap.filter(x => x._2.size==2).foreach(item => {
       val faceId = item._1
       if (!facesToBeDeleted.contains(faceId)) {
-        val memberVertexes = item._2
-        val sortedVertexes = memberVertexes.sortBy(i=>i.value)
-        memberVertexes.foreach(vertex => {
+        val memberVertices = item._2
+        val sortedVertices = memberVertices.sortBy(i=>i.value)
+        memberVertices.foreach(vertex => {
           val otherFaces = vertex2facesMap(vertex).filter(x=>x!=faceId && face2vertexMap(x).size==2)
           otherFaces.foreach(otherFace => {
             if (!facesToBeDeleted.contains(otherFace)) {
-              val sortedOtherVertexes = face2vertexMap(otherFace).sortBy(x=>x.value)
-              if (sortedOtherVertexes.sameElements(sortedVertexes)){
+              val sortedOtherVertices = face2vertexMap(otherFace).sortBy(x=>x.value)
+              if (sortedOtherVertices.sameElements(sortedVertices)){
                 facesToBeDeleted += otherFace
               }
             }
@@ -188,8 +188,8 @@ class VertexToFaceMap {
       }
     })
     facesToBeDeleted.foreach(faceId => {
-      val affectedVertexes = face2vertexMap(faceId)
-      //affectedVertexes.foreach(vertex => vertex2facesMap(vertex).re(n))
+      val affectedVertices = face2vertexMap(faceId)
+      //affectedVertices.foreach(vertex => vertex2facesMap(vertex).re(n))
       
     })
   }
@@ -203,19 +203,19 @@ class VertexToFaceMap {
   def findVertexIdLineStrips():(IndexedSeq[IndexedSeq[VertexId]],IndexedSeq[IndexedSeq[VertexId]]) = {
 
     val visitedFaces = new HashSet[FaceId]
-    // ngon return value, contains vertexes that is not part of any line strip
+    // ngon return value, contains vertices that is not part of any line strip
     val ngrv = new ArrayBuffer[ArrayBuffer[VertexId]]
     // line strip return value
     val lsrv = new ArrayBuffer[ArrayBuffer[VertexId]]   
    
-    val t = intersectionVertexes.size
-    println("There are " + t +" intersection vertexes.")    
-    println("There are " + endVertexes.size +" end vertexes.") 
-    println("There are " + vertex2facesMap.size +" vertexes.")
+    val t = intersectionVertices.size
+    println("There are " + t +" intersection vertices.")    
+    println("There are " + endVertices.size +" end vertices.") 
+    println("There are " + vertex2facesMap.size +" vertices.")
     println("There are " + face2vertexMap.size +" faces/edges.")
     
-    println("intersection vetexes: " + intersectionVertexes.mkString(",") )
-    println("end vetexes: " + endVertexes.mkString(",") )
+    println("intersection vertices: " + intersectionVertices.mkString(",") )
+    println("end vertices: " + endVertices.mkString(",") )
     println()
     
     /**
@@ -235,13 +235,13 @@ class VertexToFaceMap {
       } else {
         visitedFaces += moveAlongfaceId
         segment += dstVertexId
-        val nextVertexIds = this.faceId2vertexes(nextFaceIds(0)).filter(v => v!=dstVertexId) 
+        val nextVertexIds = this.faceId2vertices(nextFaceIds(0)).filter(v => v!=dstVertexId) 
         followSegment(dstVertexId, nextVertexIds(0),nextFaceIds(0), segment)
       }
     }
     
     def initiateFollowSegment(startVertexId:VertexId, moveAlongfaceId:FaceId, segment:ArrayBuffer[VertexId] ){
-      val dstVertexIds = faceId2vertexes(moveAlongfaceId).filter( vertex => vertex!=startVertexId)
+      val dstVertexIds = faceId2vertices(moveAlongfaceId).filter( vertex => vertex!=startVertexId)
       if (dstVertexIds.size == 1) {
         segment += startVertexId
         followSegment(startVertexId,dstVertexIds(0),moveAlongfaceId, segment)
@@ -250,7 +250,7 @@ class VertexToFaceMap {
       }
     }
     
-    // loop over every ngon face and store the vertexes in ngrv 
+    // loop over every ngon face and store the vertices in ngrv 
     nGons.foreach( faceId => {
       if (! visitedFaces.contains(faceId) ) {
         ngrv += face2vertexMap(faceId) 
@@ -259,7 +259,7 @@ class VertexToFaceMap {
     })
     
     // loop over every vertex that is connected by a single face
-    endVertexes.foreach(vertexId => {
+    endVertices.foreach(vertexId => {
       val faceIds = this.vertex2facesMap(vertexId)
       assert(1==faceIds.size)
       
@@ -271,7 +271,7 @@ class VertexToFaceMap {
     })
     
     // try to find intersection vertices
-    intersectionVertexes.foreach(vertexId => {
+    intersectionVertices.foreach(vertexId => {
       vertex2facesMap(vertexId).foreach(faceId => {
         if ( !visitedFaces.contains(faceId) ){
           val segment = new ArrayBuffer[VertexId]

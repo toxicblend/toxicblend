@@ -21,10 +21,10 @@ import org.toxicblend.typeconverters.Mesh3DConverter
 class InteriorEdges( val interiorEdges:Mesh3DConverter ) {
   
   val aabb = new AABB
-  interiorEdges.getVertexes.foreach(p => aabb.growToContainPoint(p))
+  interiorEdges.getVertices.foreach(p => aabb.growToContainPoint(p))
     
   @inline
-  def numberOfVertexes():Int = interiorEdges.getVertexes.size
+  def numberOfVertices():Int = interiorEdges.getVertices.size
   
   @inline
   def origin():ReadonlyVec2D = {

@@ -31,8 +31,8 @@ object VertexToFaceMapTest {
      
      t.add(Array(20,21,22),20)
      
-     println("endVertexes:" + t.endVertexes.mkString(","))
-     //println("intersectionVertexes:" + t.intersectionVertexes.mkString(","))
+     println("endVertices:" + t.endVertices.mkString(","))
+     //println("intersectionVertices:" + t.intersectionVertices.mkString(","))
      
      println("facesOfVertex(0):" + t.vertexId2faces(0).mkString(","))
      println("facesOfVertex(4):" + t.vertexId2faces(4).mkString(","))
@@ -41,11 +41,11 @@ object VertexToFaceMapTest {
      println("facesOfVertex(16):" + t.vertexId2faces(16).mkString(","))
      println("facesOfVertex(21):" + t.vertexId2faces(21).mkString(","))
 
-     println("vertexOfFace(10):" + t.faceId2vertexes(10).mkString(","))
-     println("vertexOfFace(1):"  + t.faceId2vertexes(1).mkString(","))
-     println("vertexOfFace(13):" + t.faceId2vertexes(13).mkString(","))
-     println("vertexOfFace(11):" + t.faceId2vertexes(11).mkString(","))
-     println("vertexOfFace(19):" + t.faceId2vertexes(19).mkString(","))
+     println("vertexOfFace(10):" + t.faceId2vertices(10).mkString(","))
+     println("vertexOfFace(1):"  + t.faceId2vertices(1).mkString(","))
+     println("vertexOfFace(13):" + t.faceId2vertices(13).mkString(","))
+     println("vertexOfFace(11):" + t.faceId2vertices(11).mkString(","))
+     println("vertexOfFace(19):" + t.faceId2vertices(19).mkString(","))
      
      val ls1 = t.findVertexIdLineStrips._1
      val ls2 = t.findVertexIdLineStrips._2

@@ -34,7 +34,7 @@ class Mesh3DConverter protected (protected val vertices:Buffer[ReadonlyVec3D],
     this(new ArrayBuffer[ReadonlyVec3D], new ArrayBuffer[ArrayBuffer[Int]], new AABB, name)  
   }
   
-  def getVertexes:Seq[ReadonlyVec3D] = vertices
+  def getVertices:Seq[ReadonlyVec3D] = vertices
   def getFaces:Seq[Seq[Int]] = faces
   def getBounds = bounds
   
@@ -219,11 +219,11 @@ class Mesh3DConverter protected (protected val vertices:Buffer[ReadonlyVec3D],
   /**
    * Adds edges between a list of vertices (line segment). 
    */
-  def addMultipleEdges (inVertexes:IndexedSeq[ReadonlyVec3D]) = {
-    if ( 1 == inVertexes.size ) {
+  def addMultipleEdges (inVertices:IndexedSeq[ReadonlyVec3D]) = {
+    if ( 1 == inVertices.size ) {
       System.err.println("addEdges: One single vertex does not build an edge: Debug me")
     }
-    inVertexes.sliding(2,1).foreach(edge => {
+    inVertices.sliding(2,1).foreach(edge => {
       val v1 = edge(0)
       val v1index = addVertex(v1)
       val v2 = edge(1)
@@ -238,12 +238,12 @@ class Mesh3DConverter protected (protected val vertices:Buffer[ReadonlyVec3D],
   /**
    * Adds one face using specified vertices. 
    */
-  def addFace (inVertexes:IndexedSeq[ReadonlyVec3D]) = {
-    if ( 1 == inVertexes.size ) {
+  def addFace (inVertices:IndexedSeq[ReadonlyVec3D]) = {
+    if ( 1 == inVertices.size ) {
       System.err.println("addFace: One single vertex does not build an edge: Debug me")
     }
-    val newFace = new ArrayBuffer[Int](inVertexes.size)
-    inVertexes.foreach(v => {
+    val newFace = new ArrayBuffer[Int](inVertices.size)
+    inVertices.foreach(v => {
       val vIndex = addVertex(v)
       newFace += vIndex
     })

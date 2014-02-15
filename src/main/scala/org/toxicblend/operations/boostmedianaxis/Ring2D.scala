@@ -45,7 +45,7 @@ class Ring2D( val ma:MedianAxisJni, val name:String, ïnVerts:IndexedSeq[Readonl
   }
   
   /**
-   * returns true if the vertexes of 'that' ring are inside 'this' ring
+   * returns true if the vertices of 'that' ring are inside 'this' ring
    * calls completelyWithinBB first 
    */
   def complatelyContains(that: Ring2D):Boolean = {

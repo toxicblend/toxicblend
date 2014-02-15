@@ -90,7 +90,7 @@ class Mesh2DConverter private (val mesh2d:Mesh2D, val projectionPlane:Projection
     val modelBuilder = org.toxicblend.protobuf.ToxicBlendProtos.Model.newBuilder()
     modelBuilder.setName(name)
     val helper = new Vertex3DConverterHelper(modelBuilder, finalTransformation)
-    mesh2d.vertexes.foreach(v => helper.addVertex(v)) 
+    mesh2d.vertices.foreach(v => helper.addVertex(v)) 
     if (noFaceOnlyEdges)
       mesh2d.faces.foreach(f => {
         f.sliding(2).foreach(e => 
@@ -114,12 +114,12 @@ object Mesh2DConverter {
    * Constructs from a packet buffer model
    */
   def apply(pbModel:Model, projectionPlane:ProjectionPlane.ProjectionPlane, applyWorldTransform:Boolean=false):Mesh2DConverter = {
-    val vertexesList = pbModel.getVerticesList()
-    val points2D = new Array[ReadonlyVec2D](vertexesList.size).to[ArrayBuffer]
+    val verticesList = pbModel.getVerticesList()
+    val points2D = new Array[ReadonlyVec2D](verticesList.size).to[ArrayBuffer]
     val matrixConverter =  Matrix4fConverter(pbModel)
     
-    //println("received " + vertexesList.size()  + " vertices")
-    vertexesList.foreach (pbVertex => {
+    //println("received " + verticesList.size()  + " vertices")
+    verticesList.foreach (pbVertex => {
       val new3dVertex = new Vec3D(pbVertex.getX, pbVertex.getY, pbVertex.getZ)
       if (applyWorldTransform) matrixConverter.matrix.transformOne(new3dVertex)
          

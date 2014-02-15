@@ -10,7 +10,7 @@ import scala.collection.mutable.ArrayBuffer
  * 
 class FaceFuser {
    * Awkward implementation of a "merge-faces-with-adjacent-edges" class. Work in progress
-  class FaceFuser (val vertexes:ArrayBuffer[ReadonlyVec2D], val inFaces:ArrayBuffer[ArrayBuffer[Int]]) {
+  class FaceFuser (val vertices:ArrayBuffer[ReadonlyVec2D], val inFaces:ArrayBuffer[ArrayBuffer[Int]]) {
     protected val processedFaces = new HashSet[Int] // a set of those faces we are already done with
     protected val removedFaces = new HashSet[Int]   // a set of those faces that got merged in the process
     protected val edges2faces = new MultiHash()
@@ -48,7 +48,7 @@ class FaceFuser {
           if (inFaces(faceId) contains p){
             return true
           }
-          if (polygon.containsPoint(vertexes(p) )) {
+          if (polygon.containsPoint(vertices(p) )) {
             return true
           }
         }
@@ -65,7 +65,7 @@ class FaceFuser {
         if (face2Polygon2D contains faceId) 
           face2Polygon2D(faceId)
         else {
-          val p = new Polygon2D(currentFace.map(v => vertexes(v)))
+          val p = new Polygon2D(currentFace.map(v => vertices(v)))
           face2Polygon2D(faceId) = p
           p
         }
@@ -90,7 +90,7 @@ class FaceFuser {
                 edges2faces.remove(f)
                 edges2faces.remove(faceId)
                 currentFace.sliding(2).foreach(currentEdge => edges2faces.add(currentEdge, faceId))
-                currentFacePolygon = new Polygon2D(currentFace.map(v => vertexes(v)))
+                currentFacePolygon = new Polygon2D(currentFace.map(v => vertices(v)))
                 changesMadeToThisFace = true
               }
             }
@@ -103,8 +103,8 @@ class FaceFuser {
   }
   
    * repeatedly merge faces that share one edge
-  protected def fuseFaces(vertexes:ArrayBuffer[ReadonlyVec2D], inFaces:ArrayBuffer[ArrayBuffer[Int]]) = {
-    val ff = new FaceFuser(vertexes, inFaces)
+  protected def fuseFaces(vertices:ArrayBuffer[ReadonlyVec2D], inFaces:ArrayBuffer[ArrayBuffer[Int]]) = {
+    val ff = new FaceFuser(vertices, inFaces)
     ff.fuseFaces
   }
     def fuseFaces() = {

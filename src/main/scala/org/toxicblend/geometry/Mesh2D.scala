@@ -20,11 +20,11 @@ import java.awt.geom.Area
 /**
  * A container for a 2D half-edge structure. 
  * It contains :
- *  2D Vertexes indexed by Int.
+ *  2D vertices indexed by Int.
  *  Faces indexed by Int, containing lists of vertex indexes
  * The faces are implicitly closed, e.g. the face loop [0,1,2,0] is represented as [0,1,2]
  */
-class Mesh2D protected ( val vertexes:ArrayBuffer[ReadonlyVec2D], val faces:ArrayBuffer[ArrayBuffer[Int]]){
+class Mesh2D protected ( val vertices:ArrayBuffer[ReadonlyVec2D], val faces:ArrayBuffer[ArrayBuffer[Int]]){
   
   def this( f:(ArrayBuffer[ReadonlyVec2D],ArrayBuffer[ArrayBuffer[Int]]) ) = {
     this(f._1,f._2)
@@ -43,15 +43,15 @@ class Mesh2D protected ( val vertexes:ArrayBuffer[ReadonlyVec2D], val faces:Arra
   }
   
   /** 
-   * Removes duplicated vertexes and recalculates the faces
+   * Removes duplicated vertices and recalculates the faces
    */
   protected def removeDoubles:Mesh2D = {
     val uniquePoints = new HashMap[ReadonlyVec2D, Int]
     // translationTable(oldIndex) == newIndex (or -1 if unassigned)
-    val translationTable = (0 until vertexes.size).map( _ => -1).toArray 
+    val translationTable = (0 until vertices.size).map( _ => -1).toArray 
     var pNewIndex=0
-    (0 until vertexes.size).foreach(pOldIndex => {
-      val p = vertexes(pOldIndex)
+    (0 until vertices.size).foreach(pOldIndex => {
+      val p = vertices(pOldIndex)
       if (uniquePoints contains p) {
         // p is already known so it is not unique
         pNewIndex = uniquePoints(p)
@@ -61,28 +61,28 @@ class Mesh2D protected ( val vertexes:ArrayBuffer[ReadonlyVec2D], val faces:Arra
       }
       translationTable(pOldIndex) = pNewIndex
     })
-    val newVertexes = new Array[ReadonlyVec2D](uniquePoints.size).to[ArrayBuffer]
-    (0 until vertexes.size).foreach(pOldIndex => {
-      newVertexes(translationTable(pOldIndex)) = vertexes(pOldIndex)
+    val newVertices = new Array[ReadonlyVec2D](uniquePoints.size).to[ArrayBuffer]
+    (0 until vertices.size).foreach(pOldIndex => {
+      newVertices(translationTable(pOldIndex)) = vertices(pOldIndex)
     })
     val newFaces = faces.map( f => uniqueConsecutivePoints(f.map(p => translationTable(p)))).filter(x => x.size>1)
     /*
     println("removeDoubles:")
-    println("  newVertexes:" + newVertexes.mkString("{",",","}"))
+    println("  newVertices:" + newVertices.mkString("{",",","}"))
     println("  newFaces   :" + newFaces.map(x => x.mkString("(",", ",")")).mkString(", ")) 
     println()
-    //(newVertexes,fuseFaces(newFaces))
+    //(newVertices,fuseFaces(newFaces))
     */ 
-    setState(newVertexes,newFaces)
+    setState(newVertices,newFaces)
     this
   }
   
   /**
-   * override the internal state with new vertexes and faces
+   * override the internal state with new vertices and faces
    */
   protected def setState(vs:ArrayBuffer[ReadonlyVec2D],fs:ArrayBuffer[ArrayBuffer[Int]]) {
-    vertexes.clear
-    vs.foreach( v => vertexes += v)
+    vertices.clear
+    vs.foreach( v => vertices += v)
     faces.clear
     fs.foreach( f => faces += f)
   }
@@ -96,7 +96,7 @@ class Mesh2D protected ( val vertexes:ArrayBuffer[ReadonlyVec2D], val faces:Arra
     faces.foreach(facePoints => {
       val path=new Polygon2D() //Path2D.Float(PathIterator.WIND_NON_ZERO, facePoints.size)
       facePoints.foreach(pointIndex => {
-        val point = vertexes(pointIndex)
+        val point = vertices(pointIndex)
         path.add(point.x, point.y)
       })
       builder.addShape(path)
@@ -105,14 +105,14 @@ class Mesh2D protected ( val vertexes:ArrayBuffer[ReadonlyVec2D], val faces:Arra
   }
   
   protected def buildFromPolygons(unionPolygons:java.util.List[Polygon2D]):Mesh2D = { 
-    val rvVertexes = new ArrayBuffer[ReadonlyVec2D]()
+    val rvVertices = new ArrayBuffer[ReadonlyVec2D]()
     val rvFaces = new ArrayBuffer[ArrayBuffer[Int]]()
     unionPolygons.foreach(polygon => {
       if (polygon.size>1) {
-        var index = rvVertexes.size
+        var index = rvVertices.size
         val tmpFaces = new ArrayBuffer[Int]
         polygon.foreach(v => { 
-          rvVertexes.append(v) 
+          rvVertices.append(v) 
           tmpFaces.append(index)
           index += 1
         })
@@ -120,7 +120,7 @@ class Mesh2D protected ( val vertexes:ArrayBuffer[ReadonlyVec2D], val faces:Arra
       }
     })
     
-    setState(rvVertexes, rvFaces)
+    setState(rvVertices, rvFaces)
     this
   }
   
@@ -129,11 +129,11 @@ class Mesh2D protected ( val vertexes:ArrayBuffer[ReadonlyVec2D], val faces:Arra
    */
   protected def poly2Area(index:Int):Area = {
     val thisFace = faces(index)
-    val firstVertex = vertexes(thisFace(0))
+    val firstVertex = vertices(thisFace(0))
     val gp = new GeneralPath(Path2D.WIND_EVEN_ODD,thisFace.size)
     gp.moveTo(firstVertex.x, firstVertex.y)
     thisFace.foreach(vi => {
-      val v = vertexes(vi)
+      val v = vertices(vi)
       gp.lineTo(v.x, v.y)
     })
     gp.closePath
@@ -184,7 +184,7 @@ class Mesh2D protected ( val vertexes:ArrayBuffer[ReadonlyVec2D], val faces:Arra
 }
 
 object Mesh2D {
-  def apply( vertexes:ArrayBuffer[ReadonlyVec2D], faces:ArrayBuffer[ArrayBuffer[Int]]) = {
-    new Mesh2D(vertexes, faces)
+  def apply( vertices:ArrayBuffer[ReadonlyVec2D], faces:ArrayBuffer[ArrayBuffer[Int]]) = {
+    new Mesh2D(vertices, faces)
   } 
 }

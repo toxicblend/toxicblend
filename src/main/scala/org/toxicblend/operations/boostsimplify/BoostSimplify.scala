@@ -56,7 +56,7 @@ class BoostSimplify extends CommandProcessorTrait {
     })
        
     val result = models.map(model =>{
-      //println("vertexes=" + model._1.getVertexes.mkString(","))
+      //println("vertices=" + model._1.getVertices.mkString(","))
       //println("faces=" + model._1.getFaces.map(x=>x.mkString("(",",",")")).mkString(","))
       println("BoostSimplify::processInput bounds=" + model._1.getBounds)
       if (model._2.isDefined) {

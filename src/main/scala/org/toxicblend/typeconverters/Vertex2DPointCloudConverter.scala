@@ -14,12 +14,12 @@ object Vertex2DPointCloudConverter {
    * Constructs from a packet buffer model
    */
   def apply(pbModel:Model, ignoreAxis:ProjectionPlane.ProjectionPlane, applyWorldTransform:Boolean=false):Vertex2DPointCloudConverter = {
-    val vertexesList = pbModel.getVerticesList()
-    val v = new Array[Vec2D](vertexesList.size())
+    val vertexList = pbModel.getVerticesList()
+    val v = new Array[Vec2D](vertexList.size())
     val mConverter =  Matrix4fConverter(pbModel)
     
-    //println("received " + vertexesList.size()  + " vertices")
-    vertexesList.foreach (vertex => {
+    //println("received " + vertexList.size()  + " vertices")
+    vertexList.foreach (vertex => {
       val new3dVertex = new Vec3D(vertex.getX, vertex.getY, vertex.getZ)
       if (applyWorldTransform) mConverter.matrix.transformOne(new3dVertex)
          

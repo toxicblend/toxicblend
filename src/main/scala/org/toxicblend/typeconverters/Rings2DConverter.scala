@@ -93,7 +93,7 @@ class Rings2DConverter private (val mesh2d:Rings2D, val projectionPlane:Projecti
     val modelBuilder = org.toxicblend.protobuf.ToxicBlendProtos.Model.newBuilder()
     modelBuilder.setName(name)
     val helper = new Vertex3DConverterHelper(modelBuilder, finalTransformation)
-    mesh2d.vertexes.foreach(v => helper.addVertex(v)) 
+    mesh2d.vertices.foreach(v => helper.addVertex(v)) 
     if (noFaceOnlyEdges)
       mesh2d.faces.foreach(f => {
         f.sliding(2).foreach(e => 
@@ -118,13 +118,13 @@ object Rings2DConverter {
    */
   def apply(pbModel:Model, projectionPlane:ProjectionPlane.ProjectionPlane, applyWorldTransform:Boolean=false) = {
     
-    val vertexesList = pbModel.getVerticesList()
-    val points2D = new Array[ReadonlyVec2D](vertexesList.size).to[ArrayBuffer] // buffer initiated and filled
+    val verticesList = pbModel.getVerticesList()
+    val points2D = new Array[ReadonlyVec2D](verticesList.size).to[ArrayBuffer] // buffer initiated and filled
     val matrixConverter =  Matrix4fConverter(pbModel)
     
-    println("Rings2DConverter received " + vertexesList.size()  + " vertices")
+    println("Rings2DConverter received " + verticesList.size()  + " vertices")
     val aabb = new Rect
-    vertexesList.foreach (pbVertex => {
+    verticesList.foreach (pbVertex => {
       val new3dVertex = new Vec3D(pbVertex.getX, pbVertex.getY, pbVertex.getZ)
       if (applyWorldTransform) matrixConverter.matrix.transformOne(new3dVertex)
          

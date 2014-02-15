@@ -33,7 +33,7 @@ object Test2 {
      
     val (v,f) = mTestData
     val mc = Mesh2D(v,f)
-    println(mc.vertexes.mkString(","))
+    println(mc.vertices.mkString(","))
     println(mc.faces.map(x => x.mkString(",")).mkString(" : "))
     //SeqShift.rotate(mc.faces(1), -2)
     //println(mc.faces.map(x => x.mkString(",")).mkString(" : "))

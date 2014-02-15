@@ -7,9 +7,9 @@ import toxi.geom.ReadonlyVec2D
 import scala.annotation.tailrec
 
 /**
- * A container of 2D vertexes that only has two neighbours
+ * A container of 2D vertices that only has two neighbours
  */
-class Rings2D(vertexes:ArrayBuffer[ReadonlyVec2D], edges:ArrayBuffer[ArrayBuffer[Int]]) extends Mesh2D(vertexes,edges) {
+class Rings2D(vertices:ArrayBuffer[ReadonlyVec2D], edges:ArrayBuffer[ArrayBuffer[Int]]) extends Mesh2D(vertices,edges) {
   
   val rings:ArrayBuffer[ArrayBuffer[Int]] = {
     val vertNeighbours = new HashMap[Int,Array[Int]];
@@ -63,14 +63,14 @@ class Rings2D(vertexes:ArrayBuffer[ReadonlyVec2D], edges:ArrayBuffer[ArrayBuffer
       }
     }
     
-    (0 until vertexes.size).foreach(nextVertex => {
+    (0 until vertices.size).foreach(nextVertex => {
       if ( ! (alreadyVisited contains nextVertex) ) {
         val ring = new ArrayBuffer[Int] += nextVertex
         assignRing(nextVertex,ring)
         if (ring.size > 1) { // ignore rings with zero or just one vertex in it
           rv += ring
         } else {
-          System.err.println("Rings2D: Some of the vertexes is not part of any ring. Vertex id:" + nextVertex)
+          System.err.println("Rings2D: Some of the vertices is not part of any ring. Vertex id:" + nextVertex)
         }
       }
     })
@@ -79,7 +79,7 @@ class Rings2D(vertexes:ArrayBuffer[ReadonlyVec2D], edges:ArrayBuffer[ArrayBuffer
   }
   
   override
-  def toString = "vertexes:" + vertexes.mkString("(",",",")") + " rings: " + rings.map(r => r.mkString("{",",","}")).mkString("(",",",")")
+  def toString = "vertices:" + vertices.mkString("(",",",")") + " rings: " + rings.map(r => r.mkString("{",",","}")).mkString("(",",",")")
     
 }
 
@@ -88,14 +88,14 @@ object Rings2D {
    * Deep copy ?
    */
   def apply(oldRings2D:Rings2D) = {
-    //val newVertexes = new ArrayBuffer[ReadonlyVec2D](oldRings2D.vertexes.size)
+    //val newVertices = new ArrayBuffer[ReadonlyVec2D](oldRings2D.vertices.size)
     //val newFaces = new ArrayBuffer[ArrayBuffer[Int]](oldRings2D.faces.size)
-    //oldRings2D.vertexes.foreach(v => newVertexes += v.copy )
+    //oldRings2D.vertices.foreach(v => newVertices += v.copy )
     //oldRings2D.faces.foreach( f => newFaces += f.clone )
-    new Rings2D(oldRings2D.vertexes.map(v => v), oldRings2D.faces.map( f => f.map( v => v)))
+    new Rings2D(oldRings2D.vertices.map(v => v), oldRings2D.faces.map( f => f.map( v => v)))
   }
   
-  def apply( vertexes:ArrayBuffer[ReadonlyVec2D], faces:ArrayBuffer[ArrayBuffer[Int]]) = {
-    new Rings2D(vertexes, faces)
+  def apply( vertices:ArrayBuffer[ReadonlyVec2D], faces:ArrayBuffer[ArrayBuffer[Int]]) = {
+    new Rings2D(vertices, faces)
   } 
 }

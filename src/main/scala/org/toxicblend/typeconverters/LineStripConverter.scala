@@ -86,10 +86,10 @@ class LineStripConverter private (val lineStrips:Seq[LineStrip3D], val bounds:AA
   /**
    * TODO: fix the imperative:ness 
    */  
-  def toPBModel(uniqueVertexes:Boolean=true) = {
+  def toPBModel(uniqueVertices:Boolean=true) = {
     val modelBuilder = org.toxicblend.protobuf.ToxicBlendProtos.Model.newBuilder()
     val vertices = new ArrayBuffer[Vec3D]
-    if (uniqueVertexes) {
+    if (uniqueVertices) {
       val vmap = new collection.mutable.HashMap[Vec3D,Int]()
       lineStrips.foreach(linestrip=>{
       
@@ -139,7 +139,7 @@ object LineStripConverter {
     for (f<-pbModel.getFacesList()) {
       val lineStrip = new LineStrip3D()
       f.getVerticesList().foreach(v => lineStrip.add(vertices(v)))
-      //lineStrip.add(vertices(f.getVertexes(0)))
+      //lineStrip.add(vertices(f.addVertices(0)))
       lineStrips.append(lineStrip)
     }
     new LineStripConverter(lineStrips, bounds, pbModel.getName)

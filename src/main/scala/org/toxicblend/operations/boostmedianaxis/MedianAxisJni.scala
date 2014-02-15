@@ -33,7 +33,7 @@ class MedianAxisJni private {
   def loadRings2D(rings2D:Rings2D, simplifyLimit:Float, objectName:String):Array[Ring2D] = {
     val foundRings = new Array[Ring2D]( rings2D.rings.size)
     (0 until rings2D.rings.size) foreach( i => {
-      val ringVertSequence = rings2D.rings(i).map(x=>rings2D.vertexes(x))
+      val ringVertSequence = rings2D.rings(i).map(x=>rings2D.vertices(x))
       foundRings(i) = new Ring2D(this, objectName, ringVertSequence, new Array[Ring2D](0), simplifyLimit)
     })    
     foundRings
@@ -273,7 +273,7 @@ object MedianAxisJni {
     
     val foundSegments = new Array[Ring2D]( rings2D.rings.size)
     (0 until rings2D.rings.size) foreach( i => {
-      val flattenedVerts = rings2D.rings(i).map(x=>Array(rings2D.vertexes(x))).toArray.flatten
+      val flattenedVerts = rings2D.rings(i).map(x=>Array(rings2D.vertices(x))).toArray.flatten
       foundSegments(i) = new Ring2D(ma, objectName, flattenedVerts, new Array[Ring2D](0), simplifyLimit)
     })    
     foundSegments.toArray
