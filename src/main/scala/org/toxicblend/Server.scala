@@ -8,8 +8,8 @@ import java.net.SocketException
 import java.nio.charset.Charset
 import java.nio.ByteBuffer
 import com.google.protobuf.{CodedInputStream,CodedOutputStream}
-import org.toxicblend.protobuf.ToxicBlenderProtos.Message
-import org.toxicblend.protobuf.ToxicBlenderProtos.Model
+import org.toxicblend.protobuf.ToxicBlendProtos.Message
+import org.toxicblend.protobuf.ToxicBlendProtos.Model
 
 object Server {
   

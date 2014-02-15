@@ -4,7 +4,7 @@ import org.toxicblend.CommandProcessorTrait
 import scala.collection.mutable.ArrayBuffer
 import toxi.geom.{Vec3D,LineStrip3D}
 import scala.collection.JavaConversions._
-import org.toxicblend.protobuf.ToxicBlenderProtos.Message
+import org.toxicblend.protobuf.ToxicBlendProtos.Message
 import org.toxicblend.typeconverters.LineStripConverter
 import org.toxicblend.typeconverters.OptionConverter
 import org.toxicblend.util.Regex

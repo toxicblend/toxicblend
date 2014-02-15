@@ -1,6 +1,6 @@
 package org.toxicblend.typeconverters
 
-import org.toxicblend.protobuf.ToxicBlenderProtos.{Model,Face}
+import org.toxicblend.protobuf.ToxicBlendProtos.{Model,Face}
 import toxi.geom.{Vec3D,LineStrip3D,AABB, Line3D}
 import scala.collection.JavaConversions._
 import scala.collection.mutable.ArrayBuffer
@@ -11,12 +11,12 @@ class LineStripConverter private (val lineStrips:Seq[LineStrip3D], val bounds:AA
   protected class LineStripModelBuilder(val modelBuilder:Model.Builder) {
     var vertexIndex = 0
     def addVertex(vertex:Vec3D) = {
-      val pbvertex = org.toxicblend.protobuf.ToxicBlenderProtos.Vertex.newBuilder()
+      val pbvertex = org.toxicblend.protobuf.ToxicBlendProtos.Vertex.newBuilder()
       pbvertex.setId(vertexIndex)
       pbvertex.setX(vertex.x())
       pbvertex.setY(vertex.y())
       pbvertex.setZ(vertex.z())
-      modelBuilder.addVertexes(pbvertex)
+      modelBuilder.addVertices(pbvertex)
       vertexIndex += 1
       vertexIndex
     }
@@ -24,14 +24,14 @@ class LineStripConverter private (val lineStrips:Seq[LineStrip3D], val bounds:AA
     def addVertexAndEdgeToPrevious(vertex:Vec3D) = {
       addVertex(vertex)
       val face = Face.newBuilder()
-      face.addVertexes(vertexIndex -1) // vertexIndex -1 = this vertex
-      face.addVertexes(vertexIndex -2) // vertexIndex -2 = previous vertex
+      face.addVertices(vertexIndex -1) // vertexIndex -1 = this vertex
+      face.addVertices(vertexIndex -2) // vertexIndex -2 = previous vertex
       modelBuilder.addFaces(face)
     }
   }
     
   /**
-   * Adds unique vertexes to the vertex list of the model builder, also updates the faces
+   * Adds unique vertices to the vertex list of the model builder, also updates the faces
    * TODO: fix the imperative:ness 
    */
   protected def addVertex(model:Model.Builder,face:Face.Builder,vmap:HashMap[Vec3D,Int], vertex:Vec3D) = {
@@ -39,38 +39,38 @@ class LineStripConverter private (val lineStrips:Seq[LineStrip3D], val bounds:AA
       val index = vmap.size
       vmap(vertex) = index
    
-      val pbvertex = org.toxicblend.protobuf.ToxicBlenderProtos.Vertex.newBuilder()
+      val pbvertex = org.toxicblend.protobuf.ToxicBlendProtos.Vertex.newBuilder()
       pbvertex.setId(index)
       pbvertex.setX(vertex.x())
       pbvertex.setY(vertex.y())
       pbvertex.setZ(vertex.z())
-      model.addVertexes(pbvertex)
+      model.addVertices(pbvertex)
     }
     val index = vmap(vertex)
-    face.addVertexes(index)
+    face.addVertices(index)
   }
   
   /**
-   * Adds unique vertexes to the vertex list of the model builder, also updates the faces
+   * Adds unique vertices to the vertex list of the model builder, also updates the faces
    * TODO: fix the imperative:ness 
    */
   protected def addEdgeNonUniqueVertex(model:Model.Builder,face:Face.Builder, line:Line3D, vIndex:Int) = {
      var index = vIndex
-     val pbvertex = org.toxicblend.protobuf.ToxicBlenderProtos.Vertex.newBuilder()
+     val pbvertex = org.toxicblend.protobuf.ToxicBlendProtos.Vertex.newBuilder()
      pbvertex.setId(index)
      pbvertex.setX(line.a.x())
      pbvertex.setY(line.a.y())
      pbvertex.setZ(line.a.z())
-     model.addVertexes(pbvertex)
-     face.addVertexes(index)
+     model.addVertices(pbvertex)
+     face.addVertices(index)
      
      index += 1
      pbvertex.setId(index)
      pbvertex.setX(line.b.x())
      pbvertex.setY(line.b.y())
      pbvertex.setZ(line.b.z())
-     model.addVertexes(pbvertex)
-     face.addVertexes(index)
+     model.addVertices(pbvertex)
+     face.addVertices(index)
      index += 1
      index
   }
@@ -87,8 +87,8 @@ class LineStripConverter private (val lineStrips:Seq[LineStrip3D], val bounds:AA
    * TODO: fix the imperative:ness 
    */  
   def toPBModel(uniqueVertexes:Boolean=true) = {
-    val modelBuilder = org.toxicblend.protobuf.ToxicBlenderProtos.Model.newBuilder()
-    val vertexes = new ArrayBuffer[Vec3D]
+    val modelBuilder = org.toxicblend.protobuf.ToxicBlendProtos.Model.newBuilder()
+    val vertices = new ArrayBuffer[Vec3D]
     if (uniqueVertexes) {
       val vmap = new collection.mutable.HashMap[Vec3D,Int]()
       lineStrips.foreach(linestrip=>{
@@ -127,19 +127,19 @@ object LineStripConverter {
    * Constructs from a packet buffer model
    */
   def apply(pbModel:Model):LineStripConverter = {
-    val vertexes = new Array[Vec3D](pbModel.getVertexesList().size())
+    val vertices = new Array[Vec3D](pbModel.getVerticesList().size())
     val bounds = new AABB()
-    for (v<-pbModel.getVertexesList()) {
+    for (v<-pbModel.getVerticesList()) {
       val vector = new Vec3D(v.getX,v.getY,v.getZ)
-      vertexes(v.getId()) = vector
+      vertices(v.getId()) = vector
       bounds.growToContainPoint(vector)
     }
     
     val lineStrips = new ArrayBuffer[LineStrip3D]
     for (f<-pbModel.getFacesList()) {
       val lineStrip = new LineStrip3D()
-      f.getVertexesList().foreach(v => lineStrip.add(vertexes(v)))
-      //lineStrip.add(vertexes(f.getVertexes(0)))
+      f.getVerticesList().foreach(v => lineStrip.add(vertices(v)))
+      //lineStrip.add(vertices(f.getVertexes(0)))
       lineStrips.append(lineStrip)
     }
     new LineStripConverter(lineStrips, bounds, pbModel.getName)

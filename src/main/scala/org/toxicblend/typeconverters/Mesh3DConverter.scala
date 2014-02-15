@@ -16,30 +16,30 @@ import scala.collection.mutable.HashMap
 import scala.collection.Map
 import org.toxicblend.geometry.ProjectionPlane
 import org.toxicblend.geometry.Vec2DZ
-import org.toxicblend.protobuf.ToxicBlenderProtos.{Model,Face}
+import org.toxicblend.protobuf.ToxicBlendProtos.{Model,Face}
 import org.toxicblend.operations.boostmedianaxis.InteriorEdges
 import org.toxicblend.util.VertexToFaceMap
 
 import scala.collection.JavaConversions._
 
-class Mesh3DConverter protected (protected val vertexes:Buffer[ReadonlyVec3D], 
+class Mesh3DConverter protected (protected val vertices:Buffer[ReadonlyVec3D], 
                                  protected val faces:Buffer[ArrayBuffer[Int]], 
                                  protected val bounds:AABB, 
                                  val name:String="") {
   
   val vert2id = new HashMap[ReadonlyVec3D,Int]()
-  (0 until vertexes.size).foreach(i => vert2id.put(vertexes(i),i ))
+  (0 until vertices.size).foreach(i => vert2id.put(vertices(i),i ))
   
   def this(name:String="mesh3d") = {
     this(new ArrayBuffer[ReadonlyVec3D], new ArrayBuffer[ArrayBuffer[Int]], new AABB, name)  
   }
   
-  def getVertexes:Seq[ReadonlyVec3D] = vertexes
+  def getVertexes:Seq[ReadonlyVec3D] = vertices
   def getFaces:Seq[Seq[Int]] = faces
   def getBounds = bounds
   
   /**
-   * Returns the edges of the faces with only 2 vertexes
+   * Returns the edges of the faces with only 2 vertices
    * @param scale is needed when converting to mm from meter (for example)
    */
   def getEdgesAsVec2DZ(scale:Float=1f):Map[Int,Vec2DZ] = {
@@ -49,7 +49,7 @@ class Mesh3DConverter protected (protected val vertexes:Buffer[ReadonlyVec3D],
       if (mapId2vec2dz.contains(objectId)) {
         mapId2vec2dz.get(objectId).get
       } else {
-        val aVec2DZ = new Vec2DZ(vertexes(objectId).scale(scale),objectId)
+        val aVec2DZ = new Vec2DZ(vertices(objectId).scale(scale),objectId)
         mapId2vec2dz.put(objectId, aVec2DZ)
         aVec2DZ
       }
@@ -59,7 +59,7 @@ class Mesh3DConverter protected (protected val vertexes:Buffer[ReadonlyVec3D],
     //val rv = new ArrayBuffer[Vec2DZ]
     trueEdges.foreach(face => {
       if (face.size ==1) {
-        //rv += new Vec2DZ(vertexes(face(0)),face(0))
+        //rv += new Vec2DZ(vertices(face(0)),face(0))
         getOrAddVec2d(face(0))
       } else if (face.size ==2) { // must be size == 2
         val v1 = getOrAddVec2d(face(0))
@@ -75,22 +75,22 @@ class Mesh3DConverter protected (protected val vertexes:Buffer[ReadonlyVec3D],
   }
   
   /**
-   * Adds a unique vertex to the vertexes list. If a the vertex is already found the vertex id is returned 
+   * Adds a unique vertex to the vertices list. If a the vertex is already found the vertex id is returned 
    */
   @inline
   protected def addVertex(v:ReadonlyVec3D):Int = {
     if (vert2id.contains(v)) {
       vert2id(v)
     } else {
-      val rv = vertexes.size
-      vertexes += v
+      val rv = vertices.size
+      vertices += v
       vert2id.put(v,rv)
       rv
     }
   }
   
   /**
-   * finds continuous segments of edges as vertexes (by int id)
+   * finds continuous segments of edges as vertices (by int id)
    * returns a tuple containing _1 = ngons (faces with 3 or more vertices)
    *                            _2 = line segments of vertices
    */
@@ -98,16 +98,16 @@ class Mesh3DConverter protected (protected val vertexes:Buffer[ReadonlyVec3D],
     val map = new VertexToFaceMap()
     val lineStrings = new ArrayBuffer[ArrayBuffer[ReadonlyVec3D]]
     (0 until faces.size).foreach(faceId => {
-      val vertexes = faces(faceId)
-      val distincts = vertexes.distinct
-      if (distincts.size != vertexes.size) {
+      val vertices = faces(faceId)
+      val distincts = vertices.distinct
+      if (distincts.size != vertices.size) {
         if (distincts.size>1) {
-          println("findLineSegments:: This is terrible wrong, i know. But i just took the unique vertexes of a face and added them to the result set.") // TODO: fix it
-          println("" + vertexes.mkString("{",",","}") + " => " + distincts.mkString("{",",","}"))
+          println("findLineSegments:: This is terrible wrong, i know. But i just took the unique vertices of a face and added them to the result set.") // TODO: fix it
+          println("" + vertices.mkString("{",",","}") + " => " + distincts.mkString("{",",","}"))
           map.add(distincts, faceId)
         }
       } else {
-        map.add(vertexes, faceId)
+        map.add(vertices, faceId)
       }
     })
     val result = map.findVertexIdLineStrips
@@ -137,8 +137,8 @@ class Mesh3DConverter protected (protected val vertexes:Buffer[ReadonlyVec3D],
    */
   def findContinuousLineSegments():(IndexedSeq[IndexedSeq[ReadonlyVec3D]],IndexedSeq[IndexedSeq[ReadonlyVec3D]]) = {
     val result = findContinuousLineSegmentsAsId
-    val ngons = result._1.map(vertexList => vertexList.map(vertexId => this.vertexes(vertexId)))
-    val lineSegments = result._2.map(vertexList => vertexList.map(vertexId => this.vertexes(vertexId)))
+    val ngons = result._1.map(vertexList => vertexList.map(vertexId => this.vertices(vertexId)))
+    val lineSegments = result._2.map(vertexList => vertexList.map(vertexId => this.vertices(vertexId)))
     (ngons,lineSegments)
   }
   
@@ -152,11 +152,11 @@ class Mesh3DConverter protected (protected val vertexes:Buffer[ReadonlyVec3D],
    */  
   def transformOne(inMatrix:Matrix4f):Mesh3DConverter = {
     bounds.clearAABB()
-    (0 until vertexes.size).foreach(i=>{
-      val vOld = vertexes(i)
+    (0 until vertices.size).foreach(i=>{
+      val vOld = vertices(i)
       val vNew =  inMatrix.transformOne(new Vec3D(vOld))
       bounds.growToContainPoint(vNew)
-      vertexes(i) = vNew
+      vertices(i) = vNew
     })
     this
   }
@@ -166,14 +166,14 @@ class Mesh3DConverter protected (protected val vertexes:Buffer[ReadonlyVec3D],
    * The result will be a list of triangles due to the design of Mesh3D
    */  
   def toPBModel(finalTransformation:Option[Matrix4fConverter], projectionPlane:Option[ProjectionPlane.ProjectionPlane]) = {
-    val modelBuilder = org.toxicblend.protobuf.ToxicBlenderProtos.Model.newBuilder()
+    val modelBuilder = org.toxicblend.protobuf.ToxicBlendProtos.Model.newBuilder()
     val matrix = if (finalTransformation.isDefined) {
        {val m=new Matrix4f(finalTransformation.get.matrix); m.invert(); Option(m) }
     } else None
     
-    (0 until vertexes.size).foreach(vertexId => {
-      val pbvertex = org.toxicblend.protobuf.ToxicBlenderProtos.Vertex.newBuilder()
-      val origVertex = vertexes(vertexId)
+    (0 until vertices.size).foreach(vertexId => {
+      val pbvertex = org.toxicblend.protobuf.ToxicBlendProtos.Vertex.newBuilder()
+      val origVertex = vertices(vertexId)
       val vertex = projectionPlane match {
         case Some(ProjectionPlane.YZ_PLANE) => new Vec3D(origVertex.z, origVertex.x, origVertex.y)
         case Some(ProjectionPlane.XZ_PLANE) => new Vec3D(origVertex.x, origVertex.z, origVertex.y)
@@ -187,7 +187,7 @@ class Mesh3DConverter protected (protected val vertexes:Buffer[ReadonlyVec3D],
       pbvertex.setY(vertex.y)
       pbvertex.setZ(vertex.z)
       pbvertex.setId(vertexId) 
-      modelBuilder.addVertexes(pbvertex)
+      modelBuilder.addVertices(pbvertex)
       
       if (finalTransformation.isDefined) modelBuilder.setWorldOrientation(finalTransformation.get.toPBModel)
     }) 
@@ -197,7 +197,7 @@ class Mesh3DConverter protected (protected val vertexes:Buffer[ReadonlyVec3D],
         System.err.println("Mesh3DConverter::toPBModel: Not adding edge between identical vertices: %d %d".format(face(0),face(1)))
       } else {
         val pbface = Face.newBuilder()
-        face.foreach( vertexId => pbface.addVertexes(vertexId))
+        face.foreach( vertexId => pbface.addVertices(vertexId))
         modelBuilder.addFaces(pbface)
       }
     })
@@ -206,7 +206,7 @@ class Mesh3DConverter protected (protected val vertexes:Buffer[ReadonlyVec3D],
   } 
   
   /**
-   * Adds an edge between two vertexes. 
+   * Adds an edge between two vertices. 
    */
   def addEdges (v1:ReadonlyVec3D, v2:ReadonlyVec3D) = {
     val v1index = addVertex(v1)
@@ -217,7 +217,7 @@ class Mesh3DConverter protected (protected val vertexes:Buffer[ReadonlyVec3D],
   }
   
   /**
-   * Adds edges between a list of vertexes (line segment). 
+   * Adds edges between a list of vertices (line segment). 
    */
   def addMultipleEdges (inVertexes:IndexedSeq[ReadonlyVec3D]) = {
     if ( 1 == inVertexes.size ) {
@@ -236,7 +236,7 @@ class Mesh3DConverter protected (protected val vertexes:Buffer[ReadonlyVec3D],
   }
   
   /**
-   * Adds one face using specified vertexes. 
+   * Adds one face using specified vertices. 
    */
   def addFace (inVertexes:IndexedSeq[ReadonlyVec3D]) = {
     if ( 1 == inVertexes.size ) {
@@ -271,7 +271,7 @@ object Mesh3DConverter {
    * returns the first vertex found in the pbModel
    */
   protected def getFirstVertex(pbModel:Model):Option[ReadonlyVec3D] = {
-    val vertexList = pbModel.getVertexesList()
+    val vertexList = pbModel.getVerticesList()
     if (vertexList.size >0 ) {
       val firstPBVertex = vertexList(0)
       Option(new Vec3D(firstPBVertex.getX, firstPBVertex.getY, firstPBVertex.getZ))
@@ -281,7 +281,7 @@ object Mesh3DConverter {
   }
   
   /** 
-   * Constructs from a packet buffer model, if there is a world transformation it will be used to calculate the 'real' vertexes
+   * Constructs from a packet buffer model, if there is a world transformation it will be used to calculate the 'real' vertices
    * @param pbModel the model we are reading from
    * @param useWorldCoordinares convert coordinates in the pbModel into world coordinates (apply world transformation)
    * @param unitScale 'extra' scaling needed to convert from one unit of measure to another (e.g. meter to millimeter)
@@ -290,7 +290,7 @@ object Mesh3DConverter {
     
     val hasWorldTransformation = pbModel.hasWorldOrientation()
     val worldTransformation = if (hasWorldTransformation) Option(Matrix4fConverter(pbModel.getWorldOrientation())) else None
-    val vbuffer = new Array[ReadonlyVec3D](pbModel.getVertexesList().size).toBuffer
+    val vbuffer = new Array[ReadonlyVec3D](pbModel.getVerticesList().size).toBuffer
     val fbuffer = new ArrayBuffer[ArrayBuffer[Int]](pbModel.getFacesList().size)
     
     val aabb = {
@@ -300,9 +300,9 @@ object Mesh3DConverter {
         val aabb = if (firstVertexOpt.isDefined) {
           new AABB(wtransform.transformOne(firstVertexOpt.get.scale(unitScale)),0f)
         } else {
-          new AABB // no vertexes, aabb will have origin at origo
+          new AABB // no vertices, aabb will have origin at origo
         }
-        pbModel.getVertexesList().foreach( vertex => {
+        pbModel.getVerticesList().foreach( vertex => {
           val transformedVector = wtransform.transformOne(new Vec3D(vertex.getX*unitScale, vertex.getY*unitScale, vertex.getZ*unitScale))
           aabb.growToContainPoint(transformedVector)
           vbuffer(vertex.getId()) = transformedVector
@@ -313,9 +313,9 @@ object Mesh3DConverter {
         val aabb = if (firstVertexOpt.isDefined) {
           new AABB(firstVertexOpt.get.scale(unitScale),0f)
         } else {
-          new AABB // no vertexes, aabb will have origin at origo
+          new AABB // no vertices, aabb will have origin at origo
         }
-        pbModel.getVertexesList().foreach( vertex => {
+        pbModel.getVerticesList().foreach( vertex => {
           val v = new Vec3D(vertex.getX*unitScale, vertex.getY*unitScale, vertex.getZ*unitScale)
           aabb.growToContainPoint(v)
           vbuffer(vertex.getId()) = v
@@ -325,32 +325,32 @@ object Mesh3DConverter {
     }
     
     pbModel.getFacesList().foreach( face => {
-      val eBuffer = new ArrayBuffer[Int](face.getVertexesList().size())
-      face.getVertexesList().foreach( v => eBuffer += v )
+      val eBuffer = new ArrayBuffer[Int](face.getVerticesList().size())
+      face.getVerticesList().foreach( v => eBuffer += v )
       fbuffer += eBuffer
     })
     new Mesh3DConverter(vbuffer, fbuffer, aabb, pbModel.getName)
   }
   
   /** 
-   * Build a segmented line from a sequence of vertexes, each segment will have it's own face structure
+   * Build a segmented line from a sequence of vertices, each segment will have it's own face structure
    */
-  def apply(vertexes:Seq[ReadonlyVec3D], name:String) = {
+  def apply(vertices:Seq[ReadonlyVec3D], name:String) = {
     val aabb = {
       // if possible, use the first vertex when creating the AABB
-      if (vertexes.size >0 ) {
-        val firstVertex = vertexes(0)
+      if (vertices.size >0 ) {
+        val firstVertex = vertices(0)
         new AABB(new Vec3D(firstVertex.x, firstVertex.y, firstVertex.z), 0f)
       } else
         new AABB
     }
-    val vbuffer = new ArrayBuffer[ReadonlyVec3D](vertexes.size)
-    val fbuffer = new ArrayBuffer[ArrayBuffer[Int]](vertexes.size+1)
-    vertexes.foreach( v=> {
+    val vbuffer = new ArrayBuffer[ReadonlyVec3D](vertices.size)
+    val fbuffer = new ArrayBuffer[ArrayBuffer[Int]](vertices.size+1)
+    vertices.foreach( v=> {
       vbuffer+=new Vec3D(v) 
       aabb.growToContainPoint(v)
     })
-    (0 until vertexes.size).sliding(2,1).foreach( v => {
+    (0 until vertices.size).sliding(2,1).foreach( v => {
       val edge = new ArrayBuffer[Int](2)
       edge += v(0)
       edge += v(1)
@@ -390,7 +390,7 @@ object Mesh3DConverter {
     // group every Vec3D that occupy the same Vec2D coordinate into arrays
     // map1={ReadonlyVec2D => [ReadonlyVec3D..]}
     val map1 = new HashMap[ReadonlyVec2D, Array[ReadonlyVec3D]]
-    interiorEdges.vertexes.foreach (p => {
+    interiorEdges.vertices.foreach (p => {
       val p2d = new Vec2D(p.x, p.y)
       if (map1.contains(p2d)) {
         val tmp = map1(p2d).to[ArrayBuffer] += p
@@ -411,8 +411,8 @@ object Mesh3DConverter {
     )
     map1.clear
     interiorEdges.faces.foreach(segment => segment.sliding(2,1).foreach( edge => {
-      val v1 = interiorEdges.vertexes(edge(0))
-      val v2 = interiorEdges.vertexes(edge(1))
+      val v1 = interiorEdges.vertices(edge(0))
+      val v2 = interiorEdges.vertices(edge(1))
       val v1as2D = new Vec2D(v1.x, v1.y)
       val v2as2D = new Vec2D(v2.x, v2.y)
       val v1as3Dmedian = map2(v1as2D)

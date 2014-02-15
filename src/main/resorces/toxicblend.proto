@@ -11,7 +11,7 @@ message Vertex {
 }
 
 message Face {
-   repeated int32 vertexes = 1;
+   repeated int32 vertices = 1;
 }
 
 message Matrix4x4 {
@@ -39,7 +39,7 @@ message Matrix4x4 {
 message Model {
   required string name = 1;
   optional Matrix4x4 worldOrientation = 2;
-  repeated Vertex vertexes = 3;
+  repeated Vertex vertices = 3;
   repeated Face faces = 4;
 }
 

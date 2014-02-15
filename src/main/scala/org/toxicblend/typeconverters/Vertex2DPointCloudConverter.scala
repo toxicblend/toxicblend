@@ -1,6 +1,6 @@
 package org.toxicblend.typeconverters
 
-import org.toxicblend.protobuf.ToxicBlenderProtos.{Model,Face}
+import org.toxicblend.protobuf.ToxicBlendProtos.{Model,Face}
 import toxi.geom.Vec2D
 import toxi.geom.Vec3D
 import toxi.geom.Matrix4f
@@ -14,7 +14,7 @@ object Vertex2DPointCloudConverter {
    * Constructs from a packet buffer model
    */
   def apply(pbModel:Model, ignoreAxis:ProjectionPlane.ProjectionPlane, applyWorldTransform:Boolean=false):Vertex2DPointCloudConverter = {
-    val vertexesList = pbModel.getVertexesList()
+    val vertexesList = pbModel.getVerticesList()
     val v = new Array[Vec2D](vertexesList.size())
     val mConverter =  Matrix4fConverter(pbModel)
     
@@ -58,7 +58,7 @@ class Vertex2DPointCloudConverter private (val points:Array[Vec2D], val ignoreAx
     protected var vertexIndex = 0
     
     def addVertex(vertex:Vec2D) = {
-      val pbvertex = org.toxicblend.protobuf.ToxicBlenderProtos.Vertex.newBuilder()
+      val pbvertex = org.toxicblend.protobuf.ToxicBlendProtos.Vertex.newBuilder()
       pbvertex.setId(vertexIndex)
       val vertex3d = ignoreAxis match {
         case ProjectionPlane.YZ_PLANE => new Vec3D(0f,vertex.x, vertex.y)
@@ -71,7 +71,7 @@ class Vertex2DPointCloudConverter private (val points:Array[Vec2D], val ignoreAx
       pbvertex.setX(vertex3d.x)
       pbvertex.setY(vertex3d.y)
       pbvertex.setZ(vertex3d.z)
-      modelBuilder.addVertexes(pbvertex)
+      modelBuilder.addVertices(pbvertex)
       vertexIndex += 1
       vertexIndex
     }
@@ -79,8 +79,8 @@ class Vertex2DPointCloudConverter private (val points:Array[Vec2D], val ignoreAx
     def addVertexAndEdgeToPrevious(vertex:Vec2D) = {
       if (addVertex(vertex) > 1) {
         val face = Face.newBuilder()
-        face.addVertexes(vertexIndex-2) // vertexIndex -1 = this vertex
-        face.addVertexes(vertexIndex-1) // vertexIndex -2 = previous vertex
+        face.addVertices(vertexIndex-2) // vertexIndex -1 = this vertex
+        face.addVertices(vertexIndex-1) // vertexIndex -2 = previous vertex
         modelBuilder.addFaces(face)
       }
     }
@@ -88,8 +88,8 @@ class Vertex2DPointCloudConverter private (val points:Array[Vec2D], val ignoreAx
     def closeLoop() = {
       if (vertexIndex > 1) {
         val face = Face.newBuilder()
-        face.addVertexes(vertexIndex -1) // vertexIndex -1 = last vertex used
-        face.addVertexes(0) // first one
+        face.addVertices(vertexIndex -1) // vertexIndex -1 = last vertex used
+        face.addVertices(0) // first one
         modelBuilder.addFaces(face)
       }
     }
@@ -100,7 +100,7 @@ class Vertex2DPointCloudConverter private (val points:Array[Vec2D], val ignoreAx
    * The result will be a list of 2D points with edges between each point (n, n+1)
    */  
   def toPBModel(buildEdge:Boolean=false, finalTransformation:Option[Matrix4fConverter] ) = {
-    val modelBuilder = org.toxicblend.protobuf.ToxicBlenderProtos.Model.newBuilder()
+    val modelBuilder = org.toxicblend.protobuf.ToxicBlendProtos.Model.newBuilder()
     modelBuilder.setName(name)
     val helper = new Vertex2DConverterHelper(modelBuilder, finalTransformation)
     if (buildEdge) {

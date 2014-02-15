@@ -5,8 +5,8 @@ import org.toxicblend.UnitSystem
 import org.toxicblend.util.Regex
 import scala.collection.mutable.ArrayBuffer
 import toxi.geom.Vec3D
-import org.toxicblend.protobuf.ToxicBlenderProtos.Message
-import org.toxicblend.protobuf.ToxicBlenderProtos.Message.Builder
+import org.toxicblend.protobuf.ToxicBlendProtos.Message
+import org.toxicblend.protobuf.ToxicBlendProtos.Message.Builder
 
 import org.toxicblend.typeconverters.Mesh3DConverter
 import org.toxicblend.typeconverters.OptionConverter

@@ -1,7 +1,7 @@
 package org.toxicblend.operations.saveobj
 
 import org.toxicblend.CommandProcessorTrait
-import org.toxicblend.protobuf.ToxicBlenderProtos.Message
+import org.toxicblend.protobuf.ToxicBlendProtos.Message
 import org.toxicblend.typeconverters.OptionConverter
 import org.toxicblend.util.FileOperations
 

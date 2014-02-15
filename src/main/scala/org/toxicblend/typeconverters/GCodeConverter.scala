@@ -1,6 +1,7 @@
 package org.toxicblend.typeconverters
+
 import org.toxicblend.operations.simplegcodeparse.GcodeLines
-import org.toxicblend.protobuf.ToxicBlenderProtos.Message.Builder
+import org.toxicblend.protobuf.ToxicBlendProtos.Message.Builder
 import org.toxicblend.util.Regex
 import org.toxicblend.UnitSystem
 

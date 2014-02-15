@@ -5,10 +5,10 @@ import java.net.{InetAddress,ServerSocket,Socket,SocketException}
 import java.util.Random
 import java.io.{DataOutputStream,DataInputStream,EOFException,IOException}
 
-import org.toxicblend.protobuf.ToxicBlenderProtos.Message
-import org.toxicblend.protobuf.ToxicBlenderProtos.{Option => MessageOption}
+import org.toxicblend.protobuf.ToxicBlendProtos.Message
+import org.toxicblend.protobuf.ToxicBlendProtos.{Option => MessageOption}
+import org.toxicblend.protobuf.ToxicBlendProtos.Model
 import org.toxicblend.typeconverters.OptionConverter
-import org.toxicblend.protobuf.ToxicBlenderProtos.Model
 import org.toxicblend.operations.volumetricrender.VolumetricRenderProcessor
 import org.toxicblend.operations.projectionoutline.ProjectionOutlineProcessor
 import org.toxicblend.operations.boostmedianaxis.MedianAxisProcessor

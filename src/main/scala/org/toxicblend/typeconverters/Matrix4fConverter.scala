@@ -1,15 +1,15 @@
 package org.toxicblend.typeconverters
 
 import toxi.geom.Matrix4f
-import org.toxicblend.protobuf.ToxicBlenderProtos.Matrix4x4
-import org.toxicblend.protobuf.ToxicBlenderProtos
+import org.toxicblend.protobuf.ToxicBlendProtos.Matrix4x4
+import org.toxicblend.protobuf.ToxicBlendProtos
 
 class Matrix4fConverter (val matrix:Matrix4f) {
   /**
    * Create a packet buffer matrix from this Matrix4f.
    */  
   def toPBModel = {
-    val matrixBuilder = ToxicBlenderProtos.Matrix4x4.newBuilder()
+    val matrixBuilder = ToxicBlendProtos.Matrix4x4.newBuilder()
     matrixBuilder.setM00(matrix.getM00())
     matrixBuilder.setM01(matrix.getM01())
     matrixBuilder.setM02(matrix.getM02())
@@ -49,7 +49,7 @@ object Matrix4fConverter {
   /** 
    * Constructs from a packet buffer model
    */
-  def apply(pbmodel:org.toxicblend.protobuf.ToxicBlenderProtos.Model):Matrix4fConverter = {
+  def apply(pbmodel:org.toxicblend.protobuf.ToxicBlendProtos.Model):Matrix4fConverter = {
     if (pbmodel.hasWorldOrientation()) {
       Matrix4fConverter(pbmodel.getWorldOrientation)
     } else {

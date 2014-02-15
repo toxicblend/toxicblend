@@ -1,12 +1,12 @@
 package org.toxicblend.tests
 
 import java.util.Random
-import org.toxicblend.protobuf.ToxicBlenderProtos.Message
-import org.toxicblend.protobuf.ToxicBlenderProtos.Model
-import org.toxicblend.protobuf.ToxicBlenderProtos.Option
-import org.toxicblend.protobuf.ToxicBlenderProtos.Vertex
-import org.toxicblend.protobuf.ToxicBlenderProtos.Face
-import org.toxicblend.protobuf.ToxicBlenderProtos.Matrix4x4
+import org.toxicblend.protobuf.ToxicBlendProtos.Message
+import org.toxicblend.protobuf.ToxicBlendProtos.Model
+import org.toxicblend.protobuf.ToxicBlendProtos.Option
+import org.toxicblend.protobuf.ToxicBlendProtos.Vertex
+import org.toxicblend.protobuf.ToxicBlendProtos.Face
+import org.toxicblend.protobuf.ToxicBlendProtos.Matrix4x4
 import toxi.geom.Matrix4f
 import toxi.geom.Vec3D
 
@@ -32,10 +32,10 @@ object Test1 {
   
   def randomFace(rnd:Random) = {
      val faceBuilder = Face.newBuilder()
-     faceBuilder.addVertexes(rand.nextInt(100))
-     faceBuilder.addVertexes(rand.nextInt(100))
-     faceBuilder.addVertexes(rand.nextInt(100))
-     faceBuilder.addVertexes(rand.nextInt(100))
+     faceBuilder.addVertices(rand.nextInt(100))
+     faceBuilder.addVertices(rand.nextInt(100))
+     faceBuilder.addVertices(rand.nextInt(100))
+     faceBuilder.addVertices(rand.nextInt(100))
      faceBuilder
   }
   
@@ -68,12 +68,12 @@ object Test1 {
     
     objBuilder.setName(name+rand.nextInt(100))
     objBuilder.setWorldOrientation(randomWorldOrientation(rnd))
-    objBuilder.addVertexes(randomVertex(rnd))
-    objBuilder.addVertexes(randomVertex(rnd))
-    objBuilder.addVertexes(randomVertex(rnd))
-    objBuilder.addVertexes(randomVertex(rnd))
-    objBuilder.addVertexes(randomVertex(rnd))
-    objBuilder.addVertexes(randomVertex(rnd))
+    objBuilder.addVertices(randomVertex(rnd))
+    objBuilder.addVertices(randomVertex(rnd))
+    objBuilder.addVertices(randomVertex(rnd))
+    objBuilder.addVertices(randomVertex(rnd))
+    objBuilder.addVertices(randomVertex(rnd))
+    objBuilder.addVertices(randomVertex(rnd))
 
     objBuilder.addFaces(randomFace(rnd))
     objBuilder.addFaces(randomFace(rnd))

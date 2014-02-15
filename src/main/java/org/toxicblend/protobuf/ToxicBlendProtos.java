@@ -714,19 +714,19 @@ public final class ToxicBlendProtos {
   public interface FaceOrBuilder
       extends com.google.protobuf.MessageOrBuilder {
 
-    // repeated int32 vertexes = 1;
+    // repeated int32 vertices = 1;
     /**
-     * <code>repeated int32 vertexes = 1;</code>
+     * <code>repeated int32 vertices = 1;</code>
      */
-    java.util.List<java.lang.Integer> getVertexesList();
+    java.util.List<java.lang.Integer> getVerticesList();
     /**
-     * <code>repeated int32 vertexes = 1;</code>
+     * <code>repeated int32 vertices = 1;</code>
      */
-    int getVertexesCount();
+    int getVerticesCount();
     /**
-     * <code>repeated int32 vertexes = 1;</code>
+     * <code>repeated int32 vertices = 1;</code>
      */
-    int getVertexes(int index);
+    int getVertices(int index);
   }
   /**
    * Protobuf type {@code toxicblend.Face}
@@ -781,21 +781,21 @@ public final class ToxicBlendProtos {
             }
             case 8: {
               if (!((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
-                vertexes_ = new java.util.ArrayList<java.lang.Integer>();
+                vertices_ = new java.util.ArrayList<java.lang.Integer>();
                 mutable_bitField0_ |= 0x00000001;
               }
-              vertexes_.add(input.readInt32());
+              vertices_.add(input.readInt32());
               break;
             }
             case 10: {
               int length = input.readRawVarint32();
               int limit = input.pushLimit(length);
               if (!((mutable_bitField0_ & 0x00000001) == 0x00000001) && input.getBytesUntilLimit() > 0) {
-                vertexes_ = new java.util.ArrayList<java.lang.Integer>();
+                vertices_ = new java.util.ArrayList<java.lang.Integer>();
                 mutable_bitField0_ |= 0x00000001;
               }
               while (input.getBytesUntilLimit() > 0) {
-                vertexes_.add(input.readInt32());
+                vertices_.add(input.readInt32());
               }
               input.popLimit(limit);
               break;
@@ -809,7 +809,7 @@ public final class ToxicBlendProtos {
             e.getMessage()).setUnfinishedMessage(this);
       } finally {
         if (((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
-          vertexes_ = java.util.Collections.unmodifiableList(vertexes_);
+          vertices_ = java.util.Collections.unmodifiableList(vertices_);
         }
         this.unknownFields = unknownFields.build();
         makeExtensionsImmutable();
@@ -842,31 +842,31 @@ public final class ToxicBlendProtos {
       return PARSER;
     }
 
-    // repeated int32 vertexes = 1;
-    public static final int VERTEXES_FIELD_NUMBER = 1;
-    private java.util.List<java.lang.Integer> vertexes_;
+    // repeated int32 vertices = 1;
+    public static final int VERTICES_FIELD_NUMBER = 1;
+    private java.util.List<java.lang.Integer> vertices_;
     /**
-     * <code>repeated int32 vertexes = 1;</code>
+     * <code>repeated int32 vertices = 1;</code>
      */
     public java.util.List<java.lang.Integer>
-        getVertexesList() {
-      return vertexes_;
+        getVerticesList() {
+      return vertices_;
     }
     /**
-     * <code>repeated int32 vertexes = 1;</code>
+     * <code>repeated int32 vertices = 1;</code>
      */
-    public int getVertexesCount() {
-      return vertexes_.size();
+    public int getVerticesCount() {
+      return vertices_.size();
     }
     /**
-     * <code>repeated int32 vertexes = 1;</code>
+     * <code>repeated int32 vertices = 1;</code>
      */
-    public int getVertexes(int index) {
-      return vertexes_.get(index);
+    public int getVertices(int index) {
+      return vertices_.get(index);
     }
 
     private void initFields() {
-      vertexes_ = java.util.Collections.emptyList();
+      vertices_ = java.util.Collections.emptyList();
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -880,8 +880,8 @@ public final class ToxicBlendProtos {
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       getSerializedSize();
-      for (int i = 0; i < vertexes_.size(); i++) {
-        output.writeInt32(1, vertexes_.get(i));
+      for (int i = 0; i < vertices_.size(); i++) {
+        output.writeInt32(1, vertices_.get(i));
       }
       getUnknownFields().writeTo(output);
     }
@@ -894,12 +894,12 @@ public final class ToxicBlendProtos {
       size = 0;
       {
         int dataSize = 0;
-        for (int i = 0; i < vertexes_.size(); i++) {
+        for (int i = 0; i < vertices_.size(); i++) {
           dataSize += com.google.protobuf.CodedOutputStream
-            .computeInt32SizeNoTag(vertexes_.get(i));
+            .computeInt32SizeNoTag(vertices_.get(i));
         }
         size += dataSize;
-        size += 1 * getVertexesList().size();
+        size += 1 * getVerticesList().size();
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -1017,7 +1017,7 @@ public final class ToxicBlendProtos {
 
       public Builder clear() {
         super.clear();
-        vertexes_ = java.util.Collections.emptyList();
+        vertices_ = java.util.Collections.emptyList();
         bitField0_ = (bitField0_ & ~0x00000001);
         return this;
       }
@@ -1047,10 +1047,10 @@ public final class ToxicBlendProtos {
         org.toxicblend.protobuf.ToxicBlendProtos.Face result = new org.toxicblend.protobuf.ToxicBlendProtos.Face(this);
         int from_bitField0_ = bitField0_;
         if (((bitField0_ & 0x00000001) == 0x00000001)) {
-          vertexes_ = java.util.Collections.unmodifiableList(vertexes_);
+          vertices_ = java.util.Collections.unmodifiableList(vertices_);
           bitField0_ = (bitField0_ & ~0x00000001);
         }
-        result.vertexes_ = vertexes_;
+        result.vertices_ = vertices_;
         onBuilt();
         return result;
       }
@@ -1066,13 +1066,13 @@ public final class ToxicBlendProtos {
 
       public Builder mergeFrom(org.toxicblend.protobuf.ToxicBlendProtos.Face other) {
         if (other == org.toxicblend.protobuf.ToxicBlendProtos.Face.getDefaultInstance()) return this;
-        if (!other.vertexes_.isEmpty()) {
-          if (vertexes_.isEmpty()) {
-            vertexes_ = other.vertexes_;
+        if (!other.vertices_.isEmpty()) {
+          if (vertices_.isEmpty()) {
+            vertices_ = other.vertices_;
             bitField0_ = (bitField0_ & ~0x00000001);
           } else {
-            ensureVertexesIsMutable();
-            vertexes_.addAll(other.vertexes_);
+            ensureVerticesIsMutable();
+            vertices_.addAll(other.vertices_);
           }
           onChanged();
         }
@@ -1103,67 +1103,67 @@ public final class ToxicBlendProtos {
       }
       private int bitField0_;
 
-      // repeated int32 vertexes = 1;
-      private java.util.List<java.lang.Integer> vertexes_ = java.util.Collections.emptyList();
-      private void ensureVertexesIsMutable() {
+      // repeated int32 vertices = 1;
+      private java.util.List<java.lang.Integer> vertices_ = java.util.Collections.emptyList();
+      private void ensureVerticesIsMutable() {
         if (!((bitField0_ & 0x00000001) == 0x00000001)) {
-          vertexes_ = new java.util.ArrayList<java.lang.Integer>(vertexes_);
+          vertices_ = new java.util.ArrayList<java.lang.Integer>(vertices_);
           bitField0_ |= 0x00000001;
          }
       }
       /**
-       * <code>repeated int32 vertexes = 1;</code>
+       * <code>repeated int32 vertices = 1;</code>
        */
       public java.util.List<java.lang.Integer>
-          getVertexesList() {
-        return java.util.Collections.unmodifiableList(vertexes_);
+          getVerticesList() {
+        return java.util.Collections.unmodifiableList(vertices_);
       }
       /**
-       * <code>repeated int32 vertexes = 1;</code>
+       * <code>repeated int32 vertices = 1;</code>
        */
-      public int getVertexesCount() {
-        return vertexes_.size();
+      public int getVerticesCount() {
+        return vertices_.size();
       }
       /**
-       * <code>repeated int32 vertexes = 1;</code>
+       * <code>repeated int32 vertices = 1;</code>
        */
-      public int getVertexes(int index) {
-        return vertexes_.get(index);
+      public int getVertices(int index) {
+        return vertices_.get(index);
       }
       /**
-       * <code>repeated int32 vertexes = 1;</code>
+       * <code>repeated int32 vertices = 1;</code>
        */
-      public Builder setVertexes(
+      public Builder setVertices(
           int index, int value) {
-        ensureVertexesIsMutable();
-        vertexes_.set(index, value);
+        ensureVerticesIsMutable();
+        vertices_.set(index, value);
         onChanged();
         return this;
       }
       /**
-       * <code>repeated int32 vertexes = 1;</code>
+       * <code>repeated int32 vertices = 1;</code>
        */
-      public Builder addVertexes(int value) {
-        ensureVertexesIsMutable();
-        vertexes_.add(value);
+      public Builder addVertices(int value) {
+        ensureVerticesIsMutable();
+        vertices_.add(value);
         onChanged();
         return this;
       }
       /**
-       * <code>repeated int32 vertexes = 1;</code>
+       * <code>repeated int32 vertices = 1;</code>
        */
-      public Builder addAllVertexes(
+      public Builder addAllVertices(
           java.lang.Iterable<? extends java.lang.Integer> values) {
-        ensureVertexesIsMutable();
-        super.addAll(values, vertexes_);
+        ensureVerticesIsMutable();
+        super.addAll(values, vertices_);
         onChanged();
         return this;
       }
       /**
-       * <code>repeated int32 vertexes = 1;</code>
+       * <code>repeated int32 vertices = 1;</code>
        */
-      public Builder clearVertexes() {
-        vertexes_ = java.util.Collections.emptyList();
+      public Builder clearVertices() {
+        vertices_ = java.util.Collections.emptyList();
         bitField0_ = (bitField0_ & ~0x00000001);
         onChanged();
         return this;
@@ -2951,29 +2951,29 @@ public final class ToxicBlendProtos {
      */
     org.toxicblend.protobuf.ToxicBlendProtos.Matrix4x4OrBuilder getWorldOrientationOrBuilder();
 
-    // repeated .toxicblend.Vertex vertexes = 3;
+    // repeated .toxicblend.Vertex vertices = 3;
     /**
-     * <code>repeated .toxicblend.Vertex vertexes = 3;</code>
+     * <code>repeated .toxicblend.Vertex vertices = 3;</code>
      */
     java.util.List<org.toxicblend.protobuf.ToxicBlendProtos.Vertex> 
-        getVertexesList();
+        getVerticesList();
     /**
-     * <code>repeated .toxicblend.Vertex vertexes = 3;</code>
+     * <code>repeated .toxicblend.Vertex vertices = 3;</code>
      */
-    org.toxicblend.protobuf.ToxicBlendProtos.Vertex getVertexes(int index);
+    org.toxicblend.protobuf.ToxicBlendProtos.Vertex getVertices(int index);
     /**
-     * <code>repeated .toxicblend.Vertex vertexes = 3;</code>
+     * <code>repeated .toxicblend.Vertex vertices = 3;</code>
      */
-    int getVertexesCount();
+    int getVerticesCount();
     /**
-     * <code>repeated .toxicblend.Vertex vertexes = 3;</code>
+     * <code>repeated .toxicblend.Vertex vertices = 3;</code>
      */
     java.util.List<? extends org.toxicblend.protobuf.ToxicBlendProtos.VertexOrBuilder> 
-        getVertexesOrBuilderList();
+        getVerticesOrBuilderList();
     /**
-     * <code>repeated .toxicblend.Vertex vertexes = 3;</code>
+     * <code>repeated .toxicblend.Vertex vertices = 3;</code>
      */
-    org.toxicblend.protobuf.ToxicBlendProtos.VertexOrBuilder getVertexesOrBuilder(
+    org.toxicblend.protobuf.ToxicBlendProtos.VertexOrBuilder getVerticesOrBuilder(
         int index);
 
     // repeated .toxicblend.Face faces = 4;
@@ -3072,10 +3072,10 @@ public final class ToxicBlendProtos {
             }
             case 26: {
               if (!((mutable_bitField0_ & 0x00000004) == 0x00000004)) {
-                vertexes_ = new java.util.ArrayList<org.toxicblend.protobuf.ToxicBlendProtos.Vertex>();
+                vertices_ = new java.util.ArrayList<org.toxicblend.protobuf.ToxicBlendProtos.Vertex>();
                 mutable_bitField0_ |= 0x00000004;
               }
-              vertexes_.add(input.readMessage(org.toxicblend.protobuf.ToxicBlendProtos.Vertex.PARSER, extensionRegistry));
+              vertices_.add(input.readMessage(org.toxicblend.protobuf.ToxicBlendProtos.Vertex.PARSER, extensionRegistry));
               break;
             }
             case 34: {
@@ -3095,7 +3095,7 @@ public final class ToxicBlendProtos {
             e.getMessage()).setUnfinishedMessage(this);
       } finally {
         if (((mutable_bitField0_ & 0x00000004) == 0x00000004)) {
-          vertexes_ = java.util.Collections.unmodifiableList(vertexes_);
+          vertices_ = java.util.Collections.unmodifiableList(vertices_);
         }
         if (((mutable_bitField0_ & 0x00000008) == 0x00000008)) {
           faces_ = java.util.Collections.unmodifiableList(faces_);
@@ -3197,40 +3197,40 @@ public final class ToxicBlendProtos {
       return worldOrientation_;
     }
 
-    // repeated .toxicblend.Vertex vertexes = 3;
-    public static final int VERTEXES_FIELD_NUMBER = 3;
-    private java.util.List<org.toxicblend.protobuf.ToxicBlendProtos.Vertex> vertexes_;
+    // repeated .toxicblend.Vertex vertices = 3;
+    public static final int VERTICES_FIELD_NUMBER = 3;
+    private java.util.List<org.toxicblend.protobuf.ToxicBlendProtos.Vertex> vertices_;
     /**
-     * <code>repeated .toxicblend.Vertex vertexes = 3;</code>
+     * <code>repeated .toxicblend.Vertex vertices = 3;</code>
      */
-    public java.util.List<org.toxicblend.protobuf.ToxicBlendProtos.Vertex> getVertexesList() {
-      return vertexes_;
+    public java.util.List<org.toxicblend.protobuf.ToxicBlendProtos.Vertex> getVerticesList() {
+      return vertices_;
     }
     /**
-     * <code>repeated .toxicblend.Vertex vertexes = 3;</code>
+     * <code>repeated .toxicblend.Vertex vertices = 3;</code>
      */
     public java.util.List<? extends org.toxicblend.protobuf.ToxicBlendProtos.VertexOrBuilder> 
-        getVertexesOrBuilderList() {
-      return vertexes_;
+        getVerticesOrBuilderList() {
+      return vertices_;
     }
     /**
-     * <code>repeated .toxicblend.Vertex vertexes = 3;</code>
+     * <code>repeated .toxicblend.Vertex vertices = 3;</code>
      */
-    public int getVertexesCount() {
-      return vertexes_.size();
+    public int getVerticesCount() {
+      return vertices_.size();
     }
     /**
-     * <code>repeated .toxicblend.Vertex vertexes = 3;</code>
+     * <code>repeated .toxicblend.Vertex vertices = 3;</code>
      */
-    public org.toxicblend.protobuf.ToxicBlendProtos.Vertex getVertexes(int index) {
-      return vertexes_.get(index);
+    public org.toxicblend.protobuf.ToxicBlendProtos.Vertex getVertices(int index) {
+      return vertices_.get(index);
     }
     /**
-     * <code>repeated .toxicblend.Vertex vertexes = 3;</code>
+     * <code>repeated .toxicblend.Vertex vertices = 3;</code>
      */
-    public org.toxicblend.protobuf.ToxicBlendProtos.VertexOrBuilder getVertexesOrBuilder(
+    public org.toxicblend.protobuf.ToxicBlendProtos.VertexOrBuilder getVerticesOrBuilder(
         int index) {
-      return vertexes_.get(index);
+      return vertices_.get(index);
     }
 
     // repeated .toxicblend.Face faces = 4;
@@ -3272,7 +3272,7 @@ public final class ToxicBlendProtos {
     private void initFields() {
       name_ = "";
       worldOrientation_ = org.toxicblend.protobuf.ToxicBlendProtos.Matrix4x4.getDefaultInstance();
-      vertexes_ = java.util.Collections.emptyList();
+      vertices_ = java.util.Collections.emptyList();
       faces_ = java.util.Collections.emptyList();
     }
     private byte memoizedIsInitialized = -1;
@@ -3290,8 +3290,8 @@ public final class ToxicBlendProtos {
           return false;
         }
       }
-      for (int i = 0; i < getVertexesCount(); i++) {
-        if (!getVertexes(i).isInitialized()) {
+      for (int i = 0; i < getVerticesCount(); i++) {
+        if (!getVertices(i).isInitialized()) {
           memoizedIsInitialized = 0;
           return false;
         }
@@ -3309,8 +3309,8 @@ public final class ToxicBlendProtos {
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
         output.writeMessage(2, worldOrientation_);
       }
-      for (int i = 0; i < vertexes_.size(); i++) {
-        output.writeMessage(3, vertexes_.get(i));
+      for (int i = 0; i < vertices_.size(); i++) {
+        output.writeMessage(3, vertices_.get(i));
       }
       for (int i = 0; i < faces_.size(); i++) {
         output.writeMessage(4, faces_.get(i));
@@ -3332,9 +3332,9 @@ public final class ToxicBlendProtos {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(2, worldOrientation_);
       }
-      for (int i = 0; i < vertexes_.size(); i++) {
+      for (int i = 0; i < vertices_.size(); i++) {
         size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(3, vertexes_.get(i));
+          .computeMessageSize(3, vertices_.get(i));
       }
       for (int i = 0; i < faces_.size(); i++) {
         size += com.google.protobuf.CodedOutputStream
@@ -3449,7 +3449,7 @@ public final class ToxicBlendProtos {
       private void maybeForceBuilderInitialization() {
         if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
           getWorldOrientationFieldBuilder();
-          getVertexesFieldBuilder();
+          getVerticesFieldBuilder();
           getFacesFieldBuilder();
         }
       }
@@ -3467,11 +3467,11 @@ public final class ToxicBlendProtos {
           worldOrientationBuilder_.clear();
         }
         bitField0_ = (bitField0_ & ~0x00000002);
-        if (vertexesBuilder_ == null) {
-          vertexes_ = java.util.Collections.emptyList();
+        if (verticesBuilder_ == null) {
+          vertices_ = java.util.Collections.emptyList();
           bitField0_ = (bitField0_ & ~0x00000004);
         } else {
-          vertexesBuilder_.clear();
+          verticesBuilder_.clear();
         }
         if (facesBuilder_ == null) {
           faces_ = java.util.Collections.emptyList();
@@ -3519,14 +3519,14 @@ public final class ToxicBlendProtos {
         } else {
           result.worldOrientation_ = worldOrientationBuilder_.build();
         }
-        if (vertexesBuilder_ == null) {
+        if (verticesBuilder_ == null) {
           if (((bitField0_ & 0x00000004) == 0x00000004)) {
-            vertexes_ = java.util.Collections.unmodifiableList(vertexes_);
+            vertices_ = java.util.Collections.unmodifiableList(vertices_);
             bitField0_ = (bitField0_ & ~0x00000004);
           }
-          result.vertexes_ = vertexes_;
+          result.vertices_ = vertices_;
         } else {
-          result.vertexes_ = vertexesBuilder_.build();
+          result.vertices_ = verticesBuilder_.build();
         }
         if (facesBuilder_ == null) {
           if (((bitField0_ & 0x00000008) == 0x00000008)) {
@@ -3561,29 +3561,29 @@ public final class ToxicBlendProtos {
         if (other.hasWorldOrientation()) {
           mergeWorldOrientation(other.getWorldOrientation());
         }
-        if (vertexesBuilder_ == null) {
-          if (!other.vertexes_.isEmpty()) {
-            if (vertexes_.isEmpty()) {
-              vertexes_ = other.vertexes_;
+        if (verticesBuilder_ == null) {
+          if (!other.vertices_.isEmpty()) {
+            if (vertices_.isEmpty()) {
+              vertices_ = other.vertices_;
               bitField0_ = (bitField0_ & ~0x00000004);
             } else {
-              ensureVertexesIsMutable();
-              vertexes_.addAll(other.vertexes_);
+              ensureVerticesIsMutable();
+              vertices_.addAll(other.vertices_);
             }
             onChanged();
           }
         } else {
-          if (!other.vertexes_.isEmpty()) {
-            if (vertexesBuilder_.isEmpty()) {
-              vertexesBuilder_.dispose();
-              vertexesBuilder_ = null;
-              vertexes_ = other.vertexes_;
+          if (!other.vertices_.isEmpty()) {
+            if (verticesBuilder_.isEmpty()) {
+              verticesBuilder_.dispose();
+              verticesBuilder_ = null;
+              vertices_ = other.vertices_;
               bitField0_ = (bitField0_ & ~0x00000004);
-              vertexesBuilder_ = 
+              verticesBuilder_ = 
                 com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders ?
-                   getVertexesFieldBuilder() : null;
+                   getVerticesFieldBuilder() : null;
             } else {
-              vertexesBuilder_.addAllMessages(other.vertexes_);
+              verticesBuilder_.addAllMessages(other.vertices_);
             }
           }
         }
@@ -3628,8 +3628,8 @@ public final class ToxicBlendProtos {
             return false;
           }
         }
-        for (int i = 0; i < getVertexesCount(); i++) {
-          if (!getVertexes(i).isInitialized()) {
+        for (int i = 0; i < getVerticesCount(); i++) {
+          if (!getVertices(i).isInitialized()) {
             
             return false;
           }
@@ -3847,244 +3847,244 @@ public final class ToxicBlendProtos {
         return worldOrientationBuilder_;
       }
 
-      // repeated .toxicblend.Vertex vertexes = 3;
-      private java.util.List<org.toxicblend.protobuf.ToxicBlendProtos.Vertex> vertexes_ =
+      // repeated .toxicblend.Vertex vertices = 3;
+      private java.util.List<org.toxicblend.protobuf.ToxicBlendProtos.Vertex> vertices_ =
         java.util.Collections.emptyList();
-      private void ensureVertexesIsMutable() {
+      private void ensureVerticesIsMutable() {
         if (!((bitField0_ & 0x00000004) == 0x00000004)) {
-          vertexes_ = new java.util.ArrayList<org.toxicblend.protobuf.ToxicBlendProtos.Vertex>(vertexes_);
+          vertices_ = new java.util.ArrayList<org.toxicblend.protobuf.ToxicBlendProtos.Vertex>(vertices_);
           bitField0_ |= 0x00000004;
          }
       }
 
       private com.google.protobuf.RepeatedFieldBuilder<
-          org.toxicblend.protobuf.ToxicBlendProtos.Vertex, org.toxicblend.protobuf.ToxicBlendProtos.Vertex.Builder, org.toxicblend.protobuf.ToxicBlendProtos.VertexOrBuilder> vertexesBuilder_;
+          org.toxicblend.protobuf.ToxicBlendProtos.Vertex, org.toxicblend.protobuf.ToxicBlendProtos.Vertex.Builder, org.toxicblend.protobuf.ToxicBlendProtos.VertexOrBuilder> verticesBuilder_;
 
       /**
-       * <code>repeated .toxicblend.Vertex vertexes = 3;</code>
+       * <code>repeated .toxicblend.Vertex vertices = 3;</code>
        */
-      public java.util.List<org.toxicblend.protobuf.ToxicBlendProtos.Vertex> getVertexesList() {
-        if (vertexesBuilder_ == null) {
-          return java.util.Collections.unmodifiableList(vertexes_);
+      public java.util.List<org.toxicblend.protobuf.ToxicBlendProtos.Vertex> getVerticesList() {
+        if (verticesBuilder_ == null) {
+          return java.util.Collections.unmodifiableList(vertices_);
         } else {
-          return vertexesBuilder_.getMessageList();
+          return verticesBuilder_.getMessageList();
         }
       }
       /**
-       * <code>repeated .toxicblend.Vertex vertexes = 3;</code>
+       * <code>repeated .toxicblend.Vertex vertices = 3;</code>
        */
-      public int getVertexesCount() {
-        if (vertexesBuilder_ == null) {
-          return vertexes_.size();
+      public int getVerticesCount() {
+        if (verticesBuilder_ == null) {
+          return vertices_.size();
         } else {
-          return vertexesBuilder_.getCount();
+          return verticesBuilder_.getCount();
         }
       }
       /**
-       * <code>repeated .toxicblend.Vertex vertexes = 3;</code>
+       * <code>repeated .toxicblend.Vertex vertices = 3;</code>
        */
-      public org.toxicblend.protobuf.ToxicBlendProtos.Vertex getVertexes(int index) {
-        if (vertexesBuilder_ == null) {
-          return vertexes_.get(index);
+      public org.toxicblend.protobuf.ToxicBlendProtos.Vertex getVertices(int index) {
+        if (verticesBuilder_ == null) {
+          return vertices_.get(index);
         } else {
-          return vertexesBuilder_.getMessage(index);
+          return verticesBuilder_.getMessage(index);
         }
       }
       /**
-       * <code>repeated .toxicblend.Vertex vertexes = 3;</code>
+       * <code>repeated .toxicblend.Vertex vertices = 3;</code>
        */
-      public Builder setVertexes(
+      public Builder setVertices(
           int index, org.toxicblend.protobuf.ToxicBlendProtos.Vertex value) {
-        if (vertexesBuilder_ == null) {
+        if (verticesBuilder_ == null) {
           if (value == null) {
             throw new NullPointerException();
           }
-          ensureVertexesIsMutable();
-          vertexes_.set(index, value);
+          ensureVerticesIsMutable();
+          vertices_.set(index, value);
           onChanged();
         } else {
-          vertexesBuilder_.setMessage(index, value);
+          verticesBuilder_.setMessage(index, value);
         }
         return this;
       }
       /**
-       * <code>repeated .toxicblend.Vertex vertexes = 3;</code>
+       * <code>repeated .toxicblend.Vertex vertices = 3;</code>
        */
-      public Builder setVertexes(
+      public Builder setVertices(
           int index, org.toxicblend.protobuf.ToxicBlendProtos.Vertex.Builder builderForValue) {
-        if (vertexesBuilder_ == null) {
-          ensureVertexesIsMutable();
-          vertexes_.set(index, builderForValue.build());
+        if (verticesBuilder_ == null) {
+          ensureVerticesIsMutable();
+          vertices_.set(index, builderForValue.build());
           onChanged();
         } else {
-          vertexesBuilder_.setMessage(index, builderForValue.build());
+          verticesBuilder_.setMessage(index, builderForValue.build());
         }
         return this;
       }
       /**
-       * <code>repeated .toxicblend.Vertex vertexes = 3;</code>
+       * <code>repeated .toxicblend.Vertex vertices = 3;</code>
        */
-      public Builder addVertexes(org.toxicblend.protobuf.ToxicBlendProtos.Vertex value) {
-        if (vertexesBuilder_ == null) {
+      public Builder addVertices(org.toxicblend.protobuf.ToxicBlendProtos.Vertex value) {
+        if (verticesBuilder_ == null) {
           if (value == null) {
             throw new NullPointerException();
           }
-          ensureVertexesIsMutable();
-          vertexes_.add(value);
+          ensureVerticesIsMutable();
+          vertices_.add(value);
           onChanged();
         } else {
-          vertexesBuilder_.addMessage(value);
+          verticesBuilder_.addMessage(value);
         }
         return this;
       }
       /**
-       * <code>repeated .toxicblend.Vertex vertexes = 3;</code>
+       * <code>repeated .toxicblend.Vertex vertices = 3;</code>
        */
-      public Builder addVertexes(
+      public Builder addVertices(
           int index, org.toxicblend.protobuf.ToxicBlendProtos.Vertex value) {
-        if (vertexesBuilder_ == null) {
+        if (verticesBuilder_ == null) {
           if (value == null) {
             throw new NullPointerException();
           }
-          ensureVertexesIsMutable();
-          vertexes_.add(index, value);
+          ensureVerticesIsMutable();
+          vertices_.add(index, value);
           onChanged();
         } else {
-          vertexesBuilder_.addMessage(index, value);
+          verticesBuilder_.addMessage(index, value);
         }
         return this;
       }
       /**
-       * <code>repeated .toxicblend.Vertex vertexes = 3;</code>
+       * <code>repeated .toxicblend.Vertex vertices = 3;</code>
        */
-      public Builder addVertexes(
+      public Builder addVertices(
           org.toxicblend.protobuf.ToxicBlendProtos.Vertex.Builder builderForValue) {
-        if (vertexesBuilder_ == null) {
-          ensureVertexesIsMutable();
-          vertexes_.add(builderForValue.build());
+        if (verticesBuilder_ == null) {
+          ensureVerticesIsMutable();
+          vertices_.add(builderForValue.build());
           onChanged();
         } else {
-          vertexesBuilder_.addMessage(builderForValue.build());
+          verticesBuilder_.addMessage(builderForValue.build());
         }
         return this;
       }
       /**
-       * <code>repeated .toxicblend.Vertex vertexes = 3;</code>
+       * <code>repeated .toxicblend.Vertex vertices = 3;</code>
        */
-      public Builder addVertexes(
+      public Builder addVertices(
           int index, org.toxicblend.protobuf.ToxicBlendProtos.Vertex.Builder builderForValue) {
-        if (vertexesBuilder_ == null) {
-          ensureVertexesIsMutable();
-          vertexes_.add(index, builderForValue.build());
+        if (verticesBuilder_ == null) {
+          ensureVerticesIsMutable();
+          vertices_.add(index, builderForValue.build());
           onChanged();
         } else {
-          vertexesBuilder_.addMessage(index, builderForValue.build());
+          verticesBuilder_.addMessage(index, builderForValue.build());
         }
         return this;
       }
       /**
-       * <code>repeated .toxicblend.Vertex vertexes = 3;</code>
+       * <code>repeated .toxicblend.Vertex vertices = 3;</code>
        */
-      public Builder addAllVertexes(
+      public Builder addAllVertices(
           java.lang.Iterable<? extends org.toxicblend.protobuf.ToxicBlendProtos.Vertex> values) {
-        if (vertexesBuilder_ == null) {
-          ensureVertexesIsMutable();
-          super.addAll(values, vertexes_);
+        if (verticesBuilder_ == null) {
+          ensureVerticesIsMutable();
+          super.addAll(values, vertices_);
           onChanged();
         } else {
-          vertexesBuilder_.addAllMessages(values);
+          verticesBuilder_.addAllMessages(values);
         }
         return this;
       }
       /**
-       * <code>repeated .toxicblend.Vertex vertexes = 3;</code>
+       * <code>repeated .toxicblend.Vertex vertices = 3;</code>
        */
-      public Builder clearVertexes() {
-        if (vertexesBuilder_ == null) {
-          vertexes_ = java.util.Collections.emptyList();
+      public Builder clearVertices() {
+        if (verticesBuilder_ == null) {
+          vertices_ = java.util.Collections.emptyList();
           bitField0_ = (bitField0_ & ~0x00000004);
           onChanged();
         } else {
-          vertexesBuilder_.clear();
+          verticesBuilder_.clear();
         }
         return this;
       }
       /**
-       * <code>repeated .toxicblend.Vertex vertexes = 3;</code>
+       * <code>repeated .toxicblend.Vertex vertices = 3;</code>
        */
-      public Builder removeVertexes(int index) {
-        if (vertexesBuilder_ == null) {
-          ensureVertexesIsMutable();
-          vertexes_.remove(index);
+      public Builder removeVertices(int index) {
+        if (verticesBuilder_ == null) {
+          ensureVerticesIsMutable();
+          vertices_.remove(index);
           onChanged();
         } else {
-          vertexesBuilder_.remove(index);
+          verticesBuilder_.remove(index);
         }
         return this;
       }
       /**
-       * <code>repeated .toxicblend.Vertex vertexes = 3;</code>
+       * <code>repeated .toxicblend.Vertex vertices = 3;</code>
        */
-      public org.toxicblend.protobuf.ToxicBlendProtos.Vertex.Builder getVertexesBuilder(
+      public org.toxicblend.protobuf.ToxicBlendProtos.Vertex.Builder getVerticesBuilder(
           int index) {
-        return getVertexesFieldBuilder().getBuilder(index);
+        return getVerticesFieldBuilder().getBuilder(index);
       }
       /**
-       * <code>repeated .toxicblend.Vertex vertexes = 3;</code>
+       * <code>repeated .toxicblend.Vertex vertices = 3;</code>
        */
-      public org.toxicblend.protobuf.ToxicBlendProtos.VertexOrBuilder getVertexesOrBuilder(
+      public org.toxicblend.protobuf.ToxicBlendProtos.VertexOrBuilder getVerticesOrBuilder(
           int index) {
-        if (vertexesBuilder_ == null) {
-          return vertexes_.get(index);  } else {
-          return vertexesBuilder_.getMessageOrBuilder(index);
+        if (verticesBuilder_ == null) {
+          return vertices_.get(index);  } else {
+          return verticesBuilder_.getMessageOrBuilder(index);
         }
       }
       /**
-       * <code>repeated .toxicblend.Vertex vertexes = 3;</code>
+       * <code>repeated .toxicblend.Vertex vertices = 3;</code>
        */
       public java.util.List<? extends org.toxicblend.protobuf.ToxicBlendProtos.VertexOrBuilder> 
-           getVertexesOrBuilderList() {
-        if (vertexesBuilder_ != null) {
-          return vertexesBuilder_.getMessageOrBuilderList();
+           getVerticesOrBuilderList() {
+        if (verticesBuilder_ != null) {
+          return verticesBuilder_.getMessageOrBuilderList();
         } else {
-          return java.util.Collections.unmodifiableList(vertexes_);
+          return java.util.Collections.unmodifiableList(vertices_);
         }
       }
       /**
-       * <code>repeated .toxicblend.Vertex vertexes = 3;</code>
+       * <code>repeated .toxicblend.Vertex vertices = 3;</code>
        */
-      public org.toxicblend.protobuf.ToxicBlendProtos.Vertex.Builder addVertexesBuilder() {
-        return getVertexesFieldBuilder().addBuilder(
+      public org.toxicblend.protobuf.ToxicBlendProtos.Vertex.Builder addVerticesBuilder() {
+        return getVerticesFieldBuilder().addBuilder(
             org.toxicblend.protobuf.ToxicBlendProtos.Vertex.getDefaultInstance());
       }
       /**
-       * <code>repeated .toxicblend.Vertex vertexes = 3;</code>
+       * <code>repeated .toxicblend.Vertex vertices = 3;</code>
        */
-      public org.toxicblend.protobuf.ToxicBlendProtos.Vertex.Builder addVertexesBuilder(
+      public org.toxicblend.protobuf.ToxicBlendProtos.Vertex.Builder addVerticesBuilder(
           int index) {
-        return getVertexesFieldBuilder().addBuilder(
+        return getVerticesFieldBuilder().addBuilder(
             index, org.toxicblend.protobuf.ToxicBlendProtos.Vertex.getDefaultInstance());
       }
       /**
-       * <code>repeated .toxicblend.Vertex vertexes = 3;</code>
+       * <code>repeated .toxicblend.Vertex vertices = 3;</code>
        */
       public java.util.List<org.toxicblend.protobuf.ToxicBlendProtos.Vertex.Builder> 
-           getVertexesBuilderList() {
-        return getVertexesFieldBuilder().getBuilderList();
+           getVerticesBuilderList() {
+        return getVerticesFieldBuilder().getBuilderList();
       }
       private com.google.protobuf.RepeatedFieldBuilder<
           org.toxicblend.protobuf.ToxicBlendProtos.Vertex, org.toxicblend.protobuf.ToxicBlendProtos.Vertex.Builder, org.toxicblend.protobuf.ToxicBlendProtos.VertexOrBuilder> 
-          getVertexesFieldBuilder() {
-        if (vertexesBuilder_ == null) {
-          vertexesBuilder_ = new com.google.protobuf.RepeatedFieldBuilder<
+          getVerticesFieldBuilder() {
+        if (verticesBuilder_ == null) {
+          verticesBuilder_ = new com.google.protobuf.RepeatedFieldBuilder<
               org.toxicblend.protobuf.ToxicBlendProtos.Vertex, org.toxicblend.protobuf.ToxicBlendProtos.Vertex.Builder, org.toxicblend.protobuf.ToxicBlendProtos.VertexOrBuilder>(
-                  vertexes_,
+                  vertices_,
                   ((bitField0_ & 0x00000004) == 0x00000004),
                   getParentForChildren(),
                   isClean());
-          vertexes_ = null;
+          vertices_ = null;
         }
-        return vertexesBuilder_;
+        return verticesBuilder_;
       }
 
       // repeated .toxicblend.Face faces = 4;
@@ -6249,7 +6249,7 @@ public final class ToxicBlendProtos {
     java.lang.String[] descriptorData = {
       "\n\020toxicblend.proto\022\ntoxicblend\"5\n\006Vertex" +
       "\022\n\n\002id\030\001 \002(\005\022\t\n\001x\030\002 \002(\002\022\t\n\001y\030\003 \002(\002\022\t\n\001z\030" +
-      "\004 \002(\002\"\030\n\004Face\022\020\n\010vertexes\030\001 \003(\005\"\333\001\n\tMatr" +
+      "\004 \002(\002\"\030\n\004Face\022\020\n\010vertices\030\001 \003(\005\"\333\001\n\tMatr" +
       "ix4x4\022\013\n\003m00\030\001 \002(\002\022\013\n\003m01\030\002 \002(\002\022\013\n\003m02\030\003" +
       " \002(\002\022\013\n\003m03\030\004 \002(\002\022\013\n\003m10\030\005 \002(\002\022\013\n\003m11\030\006 " +
       "\002(\002\022\013\n\003m12\030\007 \002(\002\022\013\n\003m13\030\010 \002(\002\022\013\n\003m20\030\t \002" +
@@ -6257,7 +6257,7 @@ public final class ToxicBlendProtos {
       "\002\022\013\n\003m30\030\r \002(\002\022\013\n\003m31\030\016 \002(\002\022\013\n\003m32\030\017 \002(\002" +
       "\022\013\n\003m33\030\020 \002(\002\"\215\001\n\005Model\022\014\n\004name\030\001 \002(\t\022/\n" +
       "\020worldOrientation\030\002 \001(\0132\025.toxicblend.Mat",
-      "rix4x4\022$\n\010vertexes\030\003 \003(\0132\022.toxicblend.Ve" +
+      "rix4x4\022$\n\010vertices\030\003 \003(\0132\022.toxicblend.Ve" +
       "rtex\022\037\n\005faces\030\004 \003(\0132\020.toxicblend.Face\"$\n" +
       "\006Option\022\013\n\003key\030\001 \002(\t\022\r\n\005value\030\002 \002(\t\"b\n\007M" +
       "essage\022\017\n\007command\030\001 \002(\t\022#\n\007options\030\002 \003(\013" +
@@ -6281,7 +6281,7 @@ public final class ToxicBlendProtos {
           internal_static_toxicblend_Face_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_toxicblend_Face_descriptor,
-              new java.lang.String[] { "Vertexes", });
+              new java.lang.String[] { "Vertices", });
           internal_static_toxicblend_Matrix4x4_descriptor =
             getDescriptor().getMessageTypes().get(2);
           internal_static_toxicblend_Matrix4x4_fieldAccessorTable = new
@@ -6293,7 +6293,7 @@ public final class ToxicBlendProtos {
           internal_static_toxicblend_Model_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_toxicblend_Model_descriptor,
-              new java.lang.String[] { "Name", "WorldOrientation", "Vertexes", "Faces", });
+              new java.lang.String[] { "Name", "WorldOrientation", "Vertices", "Faces", });
           internal_static_toxicblend_Option_descriptor =
             getDescriptor().getMessageTypes().get(4);
           internal_static_toxicblend_Option_fieldAccessorTable = new

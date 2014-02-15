@@ -1,6 +1,6 @@
 package org.toxicblend
 
-import org.toxicblend.protobuf.ToxicBlenderProtos.Message
+import org.toxicblend.protobuf.ToxicBlendProtos.Message
 
 class EchoProcessor extends CommandProcessorTrait {
   

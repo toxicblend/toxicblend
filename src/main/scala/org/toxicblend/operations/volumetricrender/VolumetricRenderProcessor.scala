@@ -1,8 +1,8 @@
 package org.toxicblend.operations.volumetricrender
 
 import org.toxicblend.CommandProcessorTrait
-import org.toxicblend.protobuf.ToxicBlenderProtos.Message
-import org.toxicblend.protobuf.ToxicBlenderProtos.Model
+import org.toxicblend.protobuf.ToxicBlendProtos.Message
+import org.toxicblend.protobuf.ToxicBlendProtos.Model
 import toxi.geom.mesh.WETriangleMesh
 import toxi.geom.Vec3D
 import toxi.geom.AABB

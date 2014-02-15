@@ -1,7 +1,7 @@
 package org.toxicblend.operations.boostmedianaxis
 
-import org.toxicblend.protobuf.ToxicBlenderProtos.Message
-import org.toxicblend.protobuf.ToxicBlenderProtos.Model
+import org.toxicblend.protobuf.ToxicBlendProtos.Message
+import org.toxicblend.protobuf.ToxicBlendProtos.Model
 import org.toxicblend.geometry.ProjectionPlane.YZ_PLANE
 import org.toxicblend.geometry.ProjectionPlane.XZ_PLANE
 import org.toxicblend.geometry.ProjectionPlane.XY_PLANE

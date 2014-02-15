@@ -1,7 +1,7 @@
 package org.toxicblend.typeconverters
 
-import org.toxicblend.protobuf.ToxicBlenderProtos.Option
-import org.toxicblend.protobuf.ToxicBlenderProtos.Message
+import org.toxicblend.protobuf.ToxicBlendProtos.Option
+import org.toxicblend.protobuf.ToxicBlendProtos.Message
 import scala.collection.JavaConversions._
 import collection.mutable.HashMap
 

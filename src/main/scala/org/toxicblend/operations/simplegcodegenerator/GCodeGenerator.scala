@@ -16,7 +16,7 @@ import org.toxicblend.geometry.Vec2DZ
 import org.toxicblend.geometry.IntersectionVec3D
 import org.toxicblend.geometry.BoundingBoxDeprecaded
 import org.toxicblend.util.FileOperations
-import org.toxicblend.protobuf.ToxicBlenderProtos.Model
+import org.toxicblend.protobuf.ToxicBlendProtos.Model
 import org.toxicblend.typeconverters.Mesh3DConverter
 import org.toxicblend.ToxicblendException
 

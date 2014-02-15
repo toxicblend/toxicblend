@@ -7,8 +7,8 @@ import java.net.{InetAddress,Socket,SocketException}
 import java.util.Random
 import java.nio.charset.Charset
 import com.google.protobuf.{CodedInputStream,CodedOutputStream}
-import org.toxicblend.protobuf.ToxicBlenderProtos.Message
-import org.toxicblend.protobuf.ToxicBlenderProtos.Model
+import org.toxicblend.protobuf.ToxicBlendProtos.Message
+import org.toxicblend.protobuf.ToxicBlendProtos.Model
 import org.toxicblend.tests.Test1
 
 /** 
