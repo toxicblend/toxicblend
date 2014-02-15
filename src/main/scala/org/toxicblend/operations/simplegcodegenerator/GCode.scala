@@ -193,7 +193,7 @@ class GCode(val gcodePoints:IndexedSeq[Vec3D]) {
       if (ls.pos.x != p.x) rs += " X%s".format(c(p.x))  
       if (ls.pos.y != p.y) rs += " Y%s".format(c(p.y)) 
       if (ls.g0Feed != gcodeProperties.g0Feedrate) rs += " F%s".format(gcodeProperties.g0FeedrateAsString)
-      (Option(new GCodeState("G0", new Vec3D(p.x,p.y,ls.pos.z),gcodeProperties.g0Feedrate, ls.g1Feed)), rs)
+      (Option(new GCodeState("G0", new Vec3D(p.x,p.y,ls.pos.z),gcodeProperties.g0Feedrate, ls.g1Feed)), rs.replace("\t ", "\t"))
     } else {
       // we don't know last (complete) position, so we can't return a state
       (None,"G0 X%s Y%s F%s".format(c(p.x), c(p.y), gcodeProperties.g0FeedrateAsString))
@@ -215,7 +215,7 @@ class GCode(val gcodePoints:IndexedSeq[Vec3D]) {
         // pointless to just print G0 and nothing more
         (lastState,"")
       } else {
-        (Option(new GCodeState("G0", new Vec3D(ls.pos.x,ls.pos.y,gcodeProperties.safeZ), gcodeProperties.g0Feedrate, ls.g1Feed)),  rs)
+        (Option(new GCodeState("G0", new Vec3D(ls.pos.x,ls.pos.y,gcodeProperties.safeZ), gcodeProperties.g0Feedrate, ls.g1Feed)),  rs.replace("\t ", "\t"))
       }
     } else {
       // we don't know last position, so we can't return a state
@@ -240,11 +240,11 @@ class GCode(val gcodePoints:IndexedSeq[Vec3D]) {
         // pointless to just give a "G1" command and nothing more
         (lastState,"")
       } else {
-        (Option(new GCodeState("G1", p, ls.g0Feed, gcodeProperties.g1Feedrate)), rs)
+        (Option(new GCodeState("G1", p, ls.g0Feed, gcodeProperties.g1Feedrate)), rs.replace("\t ", "\t"))
       }
     } else {
       (Option(new GCodeState("G1", p, 0, gcodeProperties.g1Feedrate)), 
-      "G1 X%s Y%s Z%s F%s ".format(c(p.x), c(p.y), c(p.z), c(gcodeProperties.g1Feedrate) ))
+      "G1 X%s Y%s Z%s F%s".format(c(p.x), c(p.y), c(p.z), c(gcodeProperties.g1Feedrate) ))
     }
   }
   
