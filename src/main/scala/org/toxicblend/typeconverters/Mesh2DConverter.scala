@@ -114,12 +114,12 @@ object Mesh2DConverter {
    * Constructs from a packet buffer model
    */
   def apply(pbModel:Model, projectionPlane:ProjectionPlane.ProjectionPlane, applyWorldTransform:Boolean=false):Mesh2DConverter = {
-    val verticesList = pbModel.getVerticesList()
-    val points2D = new Array[ReadonlyVec2D](verticesList.size).to[ArrayBuffer]
+    val vertexList = pbModel.getVerticesList()
+    val points2D = new Array[ReadonlyVec2D](vertexList.size).to[ArrayBuffer]
     val matrixConverter =  Matrix4fConverter(pbModel)
     
     //println("received " + verticesList.size()  + " vertices")
-    verticesList.foreach (pbVertex => {
+    vertexList.foreach (pbVertex => {
       val new3dVertex = new Vec3D(pbVertex.getX, pbVertex.getY, pbVertex.getZ)
       if (applyWorldTransform) matrixConverter.matrix.transformOne(new3dVertex)
          

@@ -118,13 +118,13 @@ object Rings2DConverter {
    */
   def apply(pbModel:Model, projectionPlane:ProjectionPlane.ProjectionPlane, applyWorldTransform:Boolean=false) = {
     
-    val verticesList = pbModel.getVerticesList()
-    val points2D = new Array[ReadonlyVec2D](verticesList.size).to[ArrayBuffer] // buffer initiated and filled
+    val vertexList = pbModel.getVerticesList()
+    val points2D = new Array[ReadonlyVec2D](vertexList.size).to[ArrayBuffer] // buffer initiated and filled
     val matrixConverter =  Matrix4fConverter(pbModel)
     
-    println("Rings2DConverter received " + verticesList.size()  + " vertices")
+    println("Rings2DConverter received " + vertexList.size()  + " vertices")
     val aabb = new Rect
-    verticesList.foreach (pbVertex => {
+    vertexList.foreach (pbVertex => {
       val new3dVertex = new Vec3D(pbVertex.getX, pbVertex.getY, pbVertex.getZ)
       if (applyWorldTransform) matrixConverter.matrix.transformOne(new3dVertex)
          
