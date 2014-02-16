@@ -17,6 +17,7 @@ import org.toxicblend.operations.boostsimplify.BoostSimplify
 import org.toxicblend.operations.simplegcodegenerator.SimpleGcodeGeneratorOperation
 import org.toxicblend.operations.simplegcodeparse.SimpleGcodeParseOperation
 import org.toxicblend.operations.saveobj.SaveObjOperation
+import org.toxicblend.operations.zadjust.jbullet.ZAdjustOperation
 
 import com.google.protobuf.{CodedInputStream,CodedOutputStream}
 import toxi.geom.AABB
@@ -62,12 +63,13 @@ case class ServerThread(socket: Socket) extends Thread("ServerThread") {
               case "OBJECT_OT_toxicblend_simplegcodegenerator" => new SimpleGcodeGeneratorOperation     
               case "OBJECT_OT_toxicblend_simplegcodeviewer" => new SimpleGcodeParseOperation
               case "OBJECT_OT_toxicblend_saveobj" => new SaveObjOperation
+              case "OBJECT_OT_toxicblend_zadjust" => new ZAdjustOperation
               case s:String => System.err.println("Unknown command: " + s); new EchoProcessor
             }
             try {
               processor.processInput(inMessage)
             } catch {
-              case e:Exception => {
+              case e:Throwable => {
                 val message = Message.newBuilder()
                 val optionBuilder = MessageOption.newBuilder()
                 optionBuilder.setKey("ERROR")
