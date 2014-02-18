@@ -12,7 +12,9 @@ import toxi.geom.AABB
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.Buffer
 import scala.collection.IndexedSeqLike
+import scala.collection.LinearSeq
 import scala.collection.mutable.HashMap
+import scala.collection.mutable.MutableList
 import scala.collection.Map
 import org.toxicblend.geometry.ProjectionPlane
 import org.toxicblend.geometry.Vec2DZ
@@ -335,7 +337,7 @@ object Mesh3DConverter {
   /** 
    * Build a segmented line from a sequence of vertices, each segment will have it's own face structure
    */
-  def apply(vertices:Array[ReadonlyVec3D], name:String) = {
+  def apply(vertices:IndexedSeq[ReadonlyVec3D], name:String) = {
     val aabb = {
       // if possible, use the first vertex when creating the AABB
       if (vertices.size >0 ) {
@@ -360,35 +362,44 @@ object Mesh3DConverter {
   }
   
   /** 
-   * Build a segmented line from a sequence of vertices, each segment will have it's own face structure
+   * Build a segmented line from a sequence of vertices, each segment will have it's own face structure.
+   * The LinearSeq[IndexedSeq[ReadonlyVec3D]] signature is chosen because of type erasure problems.
    */
-  def apply(vertices:Array[Array[ReadonlyVec3D]], name:String) = {
+  def apply(sequences:LinearSeq[IndexedSeq[ReadonlyVec3D]], name:String) = {
     val aabb = {
       // if possible, use the first vertex when creating the AABB
-      if (vertices.size >0 && vertices(0).size >0) {
-        val firstVertex = vertices(0)(0)
-        new AABB(new Vec3D(firstVertex.x, firstVertex.y, firstVertex.z), 0f)
+      val filtered = sequences.filter(s => s.size>0 )
+      if (filtered.size >0 && filtered(0).size >0) {
+        val firstVertex = filtered(0)(0)
+        new AABB(firstVertex, 0f)
       } else
         new AABB
     }
     val vbuffer = new ArrayBuffer[ReadonlyVec3D]
     val fbuffer = new ArrayBuffer[ArrayBuffer[Int]]
     val vMap = new HashMap[ReadonlyVec3D,Int]
-    vertices.foreach( sequence => {
+    var index = 0
+    sequences.foreach( sequence => {
         sequence.foreach(v => {
           if (vMap.contains(v)) {
-              
+            
           } else {
-            vbuffer+=new Vec3D(v) 
+            val vCopy:ReadonlyVec3D = v.copy() 
+            vMap.update(vCopy,index)
+            index += 1
+            vbuffer += vCopy
             aabb.growToContainPoint(v)  
           }
       })
     })
-    (0 until vertices.size).sliding(2,1).foreach( v => {
-      val edge = new ArrayBuffer[Int](2)
-      edge += v(0)
-      edge += v(1)
-      fbuffer += edge
+    sequences.foreach(sequence => {
+      sequence.sliding(2,1).foreach( v => {
+        val edge = new ArrayBuffer[Int](2)
+        // The vertices were all added to the map in the previous loop
+        edge += vMap(v(0))
+        edge += vMap(v(1))
+        fbuffer += edge
+      })
     })
     new Mesh3DConverter(vbuffer, fbuffer, aabb, name)
   }

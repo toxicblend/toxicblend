@@ -6,6 +6,7 @@ import org.toxicblend.typeconverters.OptionConverter
 import org.toxicblend.typeconverters.Mesh3DConverter
 import org.toxicblend.ToxicblendException
 import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.MutableList
 import toxi.geom.ReadonlyVec3D
 
 class ZAdjustOperation extends CommandProcessorTrait {
@@ -17,14 +18,14 @@ class ZAdjustOperation extends CommandProcessorTrait {
     if (segments._1.size > 0) throw new ToxicblendException("First object should only contain edges")
     val models = (1 until inMessage.getModelsCount()).map(i=>Mesh3DConverter(inMessage.getModels(i),true))
     val jbc = new JBulletCollision(segments._2, models) 
-    val result = new ArrayBuffer[Array[ReadonlyVec3D]]
+    val result = new MutableList[IndexedSeq[ReadonlyVec3D]]
     segments._2.foreach(segment => {
-      result += jbc.doRayTests(segment).toArray
+      result += jbc.doRayTests(segment)
     })
     
     jbc.cleanup
     val returnMessageBuilder = Message.newBuilder()
-    val returnMeshConverter = Mesh3DConverter(result.toArray,"raytests")
+    val returnMeshConverter = Mesh3DConverter(result.toList,"raytests")
     returnMessageBuilder.addModels(returnMeshConverter.toPBModel(None, None))
     returnMessageBuilder
   }

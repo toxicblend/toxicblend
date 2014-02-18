@@ -30,8 +30,9 @@ import toxi.geom.Vec3D
 import toxi.geom.ReadonlyVec3D
 import toxi.geom.Plane
 import toxi.geom.Ray3D
+import toxi.geom.AABB
 
-class SpecialRayCallback(val rayFromWorld:Vector3f, val rayToWorld:Vector3f) extends RayResultCallback {
+class SpecialRayCallback(var rayFromWorld:Vector3f, var rayToWorld:Vector3f) extends RayResultCallback {
   val hitPointWorld = new Vector3f
   var triangleIndex:Int = -1
   
@@ -150,29 +151,69 @@ object CollisionObjectWrapper {
 
 class JBulletCollision(val segments:IndexedSeq[IndexedSeq[ReadonlyVec3D]], val models:IndexedSeq[Mesh3DConverter]) {
    val collisionWrapper = new CollisionObjectWrapper(segments,models)
-   
-   def doRayTests(segment:IndexedSeq[ReadonlyVec3D]):IndexedSeq[ReadonlyVec3D] = {
+   val aabbAllModels = {
+     if (models.size > 0){
+       var aabb = models(0).getBounds.copy
+       (1 until models.size).foreach(b => aabb.union(models(b).getBounds))
+       aabb
+     }else{
+       new AABB
+     }
+   }
+   val zMin = aabbAllModels.getMin.z
+   val zMax = aabbAllModels.getMax.z
+     
+   def doRayTests(segments:IndexedSeq[ReadonlyVec3D]):IndexedSeq[ReadonlyVec3D] = {
      //println(collisionWrapper.collisionWorld)
      //println(collisionWrapper.groundShape)
      //val cs = collisionWrapper.addVCutter(2f,1f)
      //println(cs)
-     println("BB min:" + models(0).getBounds.getMin + " max: " + models(0).getBounds.getMax )
+     val aabb =  models(0).getBounds.copy()
+     val deltaStep = 0.01f;
+     models.foreach(model => aabb.union(model.getBounds))
+     
+     println("BB min:" + aabbAllModels.getMin + " max: " + aabbAllModels.getMax + " zMin=" + zMin + " zMax=" + zMax)
      val rayResult = new ArrayBuffer[Vec3D]
      val resultCallback = new SpecialRayCallback(new Vector3f(1, 1, models(0).getBounds.getMax.z), new Vector3f(1, 1, models(0).getBounds.getMin.z))
      val resolution = 0.01f
-     (0 until 500).foreach(i => {
-       resultCallback.rayFromWorld.x -= resolution
-       resultCallback.rayToWorld.x -= resolution
-       resultCallback.rayFromWorld.y -= resolution
-       resultCallback.rayToWorld.y -= resolution
-       collisionWrapper.collisionWorld.rayTest(resultCallback.rayFromWorld, resultCallback.rayToWorld, resultCallback)
-       if (resultCallback.closestHitFraction != 1f) {
-         val triangle = models(0).getFaces(resultCallback.triangleIndex).map(i =>  models(0).getVertices(i))
-         println("" + resultCallback.rayFromWorld + " -> " + resultCallback.hitPointWorld + " " + resultCallback.triangleIndex + ":" + triangle)
-         resultCallback.closestHitFraction = 1f
-         rayResult.append(JBulletUtil.convertVector3fToVec3D(resultCallback.hitPointWorld))
-       } 
+         
+     segments.sliding(2,1).foreach(segment => {
+       val fromV = segment(0)
+       val toV = segment(1)
+       val steps = (.5f + fromV.distanceTo(toV)/deltaStep).intValue
+       val direction = {
+         val d = toV.sub(fromV)
+         d.z = 0
+         d.normalize().scaleSelf(deltaStep)
+       }
+       
+       resultCallback.rayFromWorld = JBulletUtil.convertVec3DToVector3f(fromV)
+       resultCallback.rayFromWorld.z = zMax
+       resultCallback.rayToWorld = new Vector3f(resultCallback.rayFromWorld)
+       resultCallback.rayToWorld.z = zMin
+       resultCallback.closestHitFraction = 1f
+       (0 until steps).foreach(i => {
+         resultCallback.rayFromWorld.x += direction.x
+         resultCallback.rayFromWorld.y += direction.y
+         resultCallback.rayToWorld.x = resultCallback.rayFromWorld.x
+         resultCallback.rayToWorld.y = resultCallback.rayFromWorld.y
+         collisionWrapper.collisionWorld.rayTest(resultCallback.rayFromWorld, resultCallback.rayToWorld, resultCallback)
+         if (resultCallback.closestHitFraction != 1f) {
+           val triangle = models(0).getFaces(resultCallback.triangleIndex).map(i =>  models(0).getVertices(i))
+           println("" + resultCallback.rayFromWorld + " -> " + resultCallback.hitPointWorld + " " + resultCallback.triangleIndex + ":" + triangle)
+           resultCallback.closestHitFraction = 1f
+           rayResult.append(JBulletUtil.convertVector3fToVec3D(resultCallback.hitPointWorld))
+         } else {
+           if (rayResult.size>0) 
+             if (rayResult.last.z != zMin){
+               rayResult.append(JBulletUtil.convertVector3fToVec3D(resultCallback.rayToWorld))
+             } else {
+               rayResult.append(JBulletUtil.convertVector3fToVec3D(resultCallback.rayToWorld))
+             }
+         }
+       })
      })
+
      rayResult
    }
    

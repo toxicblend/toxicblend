@@ -25,13 +25,14 @@ class ToxicBlend_ZAdjust(bpy.types.Operator):
   def execute(self, context):
     imp.reload(toxicblend) # needed when reloading toxicblend site-packages, won't be used in a release version
     with toxicblend.ByteCommunicator("localhost", 9999) as c: 
-      # bpy.context.selected_objects,
+
       activeObject = context.scene.objects.active
       unitSystemProperty = context.scene.unit_settings
       
       properties = {'unitSystem'            : str(unitSystemProperty.system), 
                     'unitScale'             : str(unitSystemProperty.scale_length) }
-      c.sendSingleBlenderObject(activeObject, self.bl_idname, properties) 
+          
+      c.sendMultipleBlenderObjects(bpy.context.selected_objects, self.bl_idname, properties) 
       c.receiveObjects()
       return {'FINISHED'}
 
