@@ -6,6 +6,9 @@ import scala.collection.JavaConversions._
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 
+/**
+ * constructs the packet buffer from a toxi.geom.LineStrip3D construct
+ */
 class LineStripConverter private (val lineStrips:Seq[LineStrip3D], val bounds:AABB, val name:String="") {
   
   protected class LineStripModelBuilder(val modelBuilder:Model.Builder) {

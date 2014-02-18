@@ -335,7 +335,7 @@ object Mesh3DConverter {
   /** 
    * Build a segmented line from a sequence of vertices, each segment will have it's own face structure
    */
-  def apply(vertices:Seq[ReadonlyVec3D], name:String) = {
+  def apply(vertices:Array[ReadonlyVec3D], name:String) = {
     val aabb = {
       // if possible, use the first vertex when creating the AABB
       if (vertices.size >0 ) {
@@ -349,6 +349,40 @@ object Mesh3DConverter {
     vertices.foreach( v=> {
       vbuffer+=new Vec3D(v) 
       aabb.growToContainPoint(v)
+    })
+    (0 until vertices.size).sliding(2,1).foreach( v => {
+      val edge = new ArrayBuffer[Int](2)
+      edge += v(0)
+      edge += v(1)
+      fbuffer += edge
+    })
+    new Mesh3DConverter(vbuffer, fbuffer, aabb, name)
+  }
+  
+  /** 
+   * Build a segmented line from a sequence of vertices, each segment will have it's own face structure
+   */
+  def apply(vertices:Array[Array[ReadonlyVec3D]], name:String) = {
+    val aabb = {
+      // if possible, use the first vertex when creating the AABB
+      if (vertices.size >0 && vertices(0).size >0) {
+        val firstVertex = vertices(0)(0)
+        new AABB(new Vec3D(firstVertex.x, firstVertex.y, firstVertex.z), 0f)
+      } else
+        new AABB
+    }
+    val vbuffer = new ArrayBuffer[ReadonlyVec3D]
+    val fbuffer = new ArrayBuffer[ArrayBuffer[Int]]
+    val vMap = new HashMap[ReadonlyVec3D,Int]
+    vertices.foreach( sequence => {
+        sequence.foreach(v => {
+          if (vMap.contains(v)) {
+              
+          } else {
+            vbuffer+=new Vec3D(v) 
+            aabb.growToContainPoint(v)  
+          }
+      })
     })
     (0 until vertices.size).sliding(2,1).foreach( v => {
       val edge = new ArrayBuffer[Int](2)
