@@ -1,6 +1,7 @@
 package org.toxicblend.operations.zadjust.jbullet
 
 import org.toxicblend.ToxicblendException
+import org.toxicblend.geometry.TrianglePlaneIntersection
 import com.bulletphysics.util.ObjectArrayList
 import com.bulletphysics.collision.broadphase.BroadphaseInterface
 import com.bulletphysics.collision.broadphase.AxisSweep3_32
@@ -70,12 +71,13 @@ class CollisionObjectWrapper(val segments:IndexedSeq[IndexedSeq[ReadonlyVec3D]],
     val faces = models(0).getFaces
     (0 until totalTriangles).foreach(index => {
       val face = faces(index)
-      if (face.size != 3 ) throw new ToxicblendException("JBullet mesh must be triangulated")
-      else {
+      if (face.size > 3 ) throw new ToxicblendException("JBullet mesh must be triangulated")
+      else if (face.size == 3){
         gIndices.putInt((index*3 + 0) * 4, face(0))
         gIndices.putInt((index*3 + 1) * 4, face(1))
         gIndices.putInt((index*3 + 2) * 4, face(2))
       }
+      // silently ignore edges
     })
   }
   
@@ -160,27 +162,39 @@ class JBulletCollision(val segments:IndexedSeq[IndexedSeq[ReadonlyVec3D]], val m
        new AABB
      }
    }
-   val zMin = aabbAllModels.getMin.z
-   val zMax = aabbAllModels.getMax.z
-     
+   val zMin = aabbAllModels.getMin.z-1f
+   val zMax = aabbAllModels.getMax.z+1f
+   
+   /**
+    * returns the squared distance between two vertices when the Z coordinate is ignored
+    */
+   @inline
+   def distanceToSquaredXYPlane(v0:ReadonlyVec3D, v1:ReadonlyVec3D):Float = {
+     val dx = v0.x - v1.x
+     val dy = v0.y - v1.y
+     dx*dx + dy*dy;       
+   } 
+   
    def doRayTests(segments:IndexedSeq[ReadonlyVec3D]):IndexedSeq[ReadonlyVec3D] = {
      //println(collisionWrapper.collisionWorld)
      //println(collisionWrapper.groundShape)
      //val cs = collisionWrapper.addVCutter(2f,1f)
      //println(cs)
      val aabb =  models(0).getBounds.copy()
-     val deltaStep = 0.01f;
+     val deltaStep = 0.005f;
      models.foreach(model => aabb.union(model.getBounds))
      
      println("BB min:" + aabbAllModels.getMin + " max: " + aabbAllModels.getMax + " zMin=" + zMin + " zMax=" + zMax)
-     val rayResult = new ArrayBuffer[Vec3D]
+     val rayResult = new ArrayBuffer[ReadonlyVec3D]
      val resultCallback = new SpecialRayCallback(new Vector3f(1, 1, models(0).getBounds.getMax.z), new Vector3f(1, 1, models(0).getBounds.getMin.z))
-     val resolution = 0.01f
          
      segments.sliding(2,1).foreach(segment => {
        val fromV = segment(0)
        val toV = segment(1)
-       val steps = (.5f + fromV.distanceTo(toV)/deltaStep).intValue
+       val distanceToCoverSquared = distanceToSquaredXYPlane(fromV,toV)
+       val plane = TrianglePlaneIntersection.segmentToZPlane(fromV,toV)
+       //val steps = (.5f + fromV.distanceTo(toV)/deltaStep).intValue
+       //println("Steps = " + steps)
        val direction = {
          val d = toV.sub(fromV)
          d.z = 0
@@ -192,26 +206,47 @@ class JBulletCollision(val segments:IndexedSeq[IndexedSeq[ReadonlyVec3D]], val m
        resultCallback.rayToWorld = new Vector3f(resultCallback.rayFromWorld)
        resultCallback.rayToWorld.z = zMin
        resultCallback.closestHitFraction = 1f
-       (0 until steps).foreach(i => {
+       var lastRayResult = fromV.copy; lastRayResult.z = zMin
+       while (distanceToSquaredXYPlane(fromV,lastRayResult) < distanceToCoverSquared) {
          resultCallback.rayFromWorld.x += direction.x
          resultCallback.rayFromWorld.y += direction.y
          resultCallback.rayToWorld.x = resultCallback.rayFromWorld.x
          resultCallback.rayToWorld.y = resultCallback.rayFromWorld.y
          collisionWrapper.collisionWorld.rayTest(resultCallback.rayFromWorld, resultCallback.rayToWorld, resultCallback)
          if (resultCallback.closestHitFraction != 1f) {
-           val triangle = models(0).getFaces(resultCallback.triangleIndex).map(i =>  models(0).getVertices(i))
-           println("" + resultCallback.rayFromWorld + " -> " + resultCallback.hitPointWorld + " " + resultCallback.triangleIndex + ":" + triangle)
+           // we hit something
+           if (lastRayResult.z == zMin) {
+             rayResult.append(lastRayResult.copy)
+           }
+           val triangle = models(0).getFaces(resultCallback.triangleIndex).toIndexedSeq.map(i => models(0).getVertices(i))
+           val edgeHits = TrianglePlaneIntersection.trianglePlaneIntersection(triangle, plane, fromV, direction)
+           println("" + resultCallback.rayFromWorld + " -> " + edgeHits)
+           if (edgeHits.size > 1) {
+             println("Got two edgeHits, debug me")
+           }
+           edgeHits.foreach(edgeHit => {
+             rayResult.append(edgeHit)
+             resultCallback.rayFromWorld.x = edgeHit.x
+             resultCallback.rayFromWorld.y = edgeHit.y
+             lastRayResult.x = edgeHit.x; lastRayResult.y = edgeHit.y; lastRayResult.z = edgeHit.z;
+           })
            resultCallback.closestHitFraction = 1f
-           rayResult.append(JBulletUtil.convertVector3fToVec3D(resultCallback.hitPointWorld))
+           //rayResult.append(JBulletUtil.convertVector3fToVec3D(resultCallback.hitPointWorld))
          } else {
-           if (rayResult.size>0) 
+           // we hit nothing 
+           if (rayResult.size>0){
              if (rayResult.last.z != zMin){
                rayResult.append(JBulletUtil.convertVector3fToVec3D(resultCallback.rayToWorld))
-             } else {
-               rayResult.append(JBulletUtil.convertVector3fToVec3D(resultCallback.rayToWorld))
              }
+           } else {
+             rayResult.append(JBulletUtil.convertVector3fToVec3D(resultCallback.rayToWorld))
+           }
+           lastRayResult.x = resultCallback.rayToWorld.x; lastRayResult.y = resultCallback.rayToWorld.y; lastRayResult.z = resultCallback.rayToWorld.z;
          }
-       })
+       }
+       if (!rayResult.last.equals(lastRayResult)) {
+         rayResult.append(lastRayResult.copy)
+       }
      })
 
      rayResult

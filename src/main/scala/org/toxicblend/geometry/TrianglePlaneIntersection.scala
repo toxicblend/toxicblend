@@ -10,13 +10,37 @@ import scala.collection.mutable.ArrayBuffer
 object TrianglePlaneIntersection {
   
   private val SLIDINGSEQUENCE = Array((0,1),(1,2),(2,0))
+  
+  /**
+   * returns true if the two vectors point in the same direction in the XY plane
+   */
+  @inline 
+  def isCollinearXY(v0:ReadonlyVec3D, v1:ReadonlyVec3D ):Boolean = {
+    v0.x*v1.x + v0.y*v1.y > 0
+  }
+  
+  /**
+   * intersects a triangle with a plane. The point that is ahead of the @lastPosition in the @direction direction will be returned
+   */
   @inline
-  def trianglePlaneIntersection(triangle:IndexedSeq[ReadonlyVec3D], plane:Plane):IndexedSeq[ReadonlyVec3D] = {
+  def trianglePlaneIntersection(triangle:IndexedSeq[ReadonlyVec3D], plane:Plane, lastPosition:ReadonlyVec3D, direction:ReadonlyVec3D):IndexedSeq[ReadonlyVec3D] = {
     val rv = new ArrayBuffer[ReadonlyVec3D](2)
-    val epsilon = 0.0001f
+    val epsilon = 0.00001f
     val ray = new Ray3D
     SLIDINGSEQUENCE.foreach( i => {
-      if (rv.size < 2 && plane.classifyPoint(triangle(i._1), epsilon) != plane.classifyPoint(triangle(i._2), epsilon)) {
+      val class1 = plane.classifyPoint(triangle(i._1),epsilon)
+      val class2 = plane.classifyPoint(triangle(i._2),epsilon)
+      if (class1 == Plane.Classifier.ON_PLANE) {
+        val hit1 = triangle(i._1)
+        if ( isCollinearXY(direction, hit1.sub(lastPosition) )) {
+          rv.append(hit1)
+        }
+      } else if (class2 == Plane.Classifier.ON_PLANE) {
+        val hit2 = triangle(i._1)
+        if ( isCollinearXY(direction, hit2.sub(lastPosition) )) {
+          rv.append(hit2)
+        }
+      } else if (rv.size < 2 && class1 != class2)  {
         ray.set(triangle(i._1))
         ray.setDirection(triangle(i._2).sub(triangle(i._1)))
         val distance = plane.intersectRayDistance(ray)
@@ -24,7 +48,10 @@ object TrianglePlaneIntersection {
           // something went wrong
           System.err.println("negative distance")
         } else {
-          rv.append(ray.getPointAtDistance(distance))
+          val point = ray.getPointAtDistance(distance)
+          if (isCollinearXY(direction, point.sub(lastPosition) )) {
+            rv.append(point)
+          } 
         }
       }
     })
@@ -45,6 +72,7 @@ object TrianglePlaneIntersection {
   @inline 
   def triangleZPlaneIntersection(s0:ReadonlyVec3D, s1:ReadonlyVec3D, triangle:IndexedSeq[ReadonlyVec3D]):IndexedSeq[ReadonlyVec3D] = {
     val plane = segmentToZPlane(s0,s1)
-    trianglePlaneIntersection(triangle,plane)
+    val direction = s1.sub(s0).normalize()
+    trianglePlaneIntersection(triangle, plane, s0, direction)
   }
 }
