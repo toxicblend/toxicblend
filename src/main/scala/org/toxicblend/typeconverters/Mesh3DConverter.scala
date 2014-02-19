@@ -58,18 +58,14 @@ class Mesh3DConverter protected (protected val vertices:Buffer[ReadonlyVec3D],
     }
     
     val trueEdges = faces.filter(f => f.size < 3)
-    //val rv = new ArrayBuffer[Vec2DZ]
     trueEdges.foreach(face => {
       if (face.size ==1) {
-        //rv += new Vec2DZ(vertices(face(0)),face(0))
         getOrAddVec2d(face(0))
       } else if (face.size ==2) { // must be size == 2
         val v1 = getOrAddVec2d(face(0))
         val v2 = getOrAddVec2d(face(1))
         v1.addEdge(v2)
         v2.addEdge(v1)
-        //rv += v1
-        //rv += v2
       } 
       assert(face.size<=2)
     })
@@ -265,9 +261,7 @@ object Mesh3DConverter {
   /** 
    * Constructs from a packet buffer model. Will convert to world coordinates. Assuming unitScale = 1.0
    */
-  def apply(pbModel:Model,useWorldCoordinares:Boolean):Mesh3DConverter = {
-    apply(pbModel,useWorldCoordinares,1.0f)
-  }
+  def apply(pbModel:Model,useWorldCoordinares:Boolean):Mesh3DConverter = apply(pbModel,useWorldCoordinares,1.0f)
   
   /**
    * returns the first vertex found in the pbModel
