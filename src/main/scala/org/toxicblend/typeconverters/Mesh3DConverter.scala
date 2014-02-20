@@ -386,7 +386,7 @@ object Mesh3DConverter {
           }
       })
     })
-    sequences.foreach(sequence => {
+    sequences.filter(s => s.size>=2).foreach(sequence => {
       sequence.sliding(2,1).foreach( v => {
         val edge = new ArrayBuffer[Int](2)
         // The vertices were all added to the map in the previous loop
