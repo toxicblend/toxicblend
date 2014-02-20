@@ -30,23 +30,32 @@ import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import javax.vecmath.Vector3f
 import com.bulletphysics.linearmath.VectorUtil
+import org.toxicblend.geometry.TrianglePlaneIntersection
 
 object JBulletTest {
  
   def main(args: Array[String]): Unit = {
    
+    val a = new Vec3D(0,0,-1)
+    val b = new Vec3D(3,6,0)
+    val c = new Vec3D(1,2,0)
+    val dst = new Vec3D(-1,-1,-1)
+    
+    TrianglePlaneIntersection.interpolate3D(dst,b,a,c)
+    println("interpolate3D:" + dst)
+   
     val models = {
       val toximesh = new TriangleMesh
-      toximesh.addFace(new Vec3D(0,0,1), new Vec3D(10,0,1), new Vec3D(0,10,1))
+      toximesh.addFace(new Vec3D(0,0,1), new Vec3D(1,0,1), new Vec3D(0,1,1))
       val model = Mesh3DConverter(toximesh,"test")
       Array(model)
     }
     
     val segments:Array[IndexedSeq[ReadonlyVec3D]] = {
-      val segment:Array[ReadonlyVec3D] = Array(new Vec3D(-20,-20,1), new Vec3D(20,20,1))
+      val segment:Array[ReadonlyVec3D] = Array(new Vec3D(-2.5f,-2f,1f), new Vec3D(2f,2f,1f))
       Array(segment)
     }
-    val jbc = new JBulletCollision(segments, models)
+    val jbc = new JBulletCollision(segments, models, 10.005f)
         
     val result = new MutableList[IndexedSeq[ReadonlyVec3D]]
     segments.foreach(segment => {

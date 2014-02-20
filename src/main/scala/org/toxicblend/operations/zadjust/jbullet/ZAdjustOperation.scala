@@ -21,7 +21,7 @@ class ZAdjustOperation extends CommandProcessorTrait {
     if (segments._1.size > 0) throw new ToxicblendException("First object should only contain edges")
     val models = inMessage.getModelsList().tail.toIndexedSeq.map(i=>Mesh3DConverter(i,true))
     
-    val jbc = new JBulletCollision(segments._2, models) 
+    val jbc = new JBulletCollision(segments._2, models, 0.001f) 
     val result = new MutableList[IndexedSeq[ReadonlyVec3D]]
     segments._2.foreach(segment => {
       result += jbc.doRayTests(segment)
