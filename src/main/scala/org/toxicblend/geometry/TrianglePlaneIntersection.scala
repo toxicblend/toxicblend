@@ -7,6 +7,46 @@ import toxi.geom.Ray3D
 import toxi.geom.Triangle3D
 import scala.collection.mutable.ArrayBuffer
 
+/**
+ * result container for the triangle-plane intersection calculations
+ * forwardPoint is the intersection in the "correct" direction
+ * retroPoint is the other intersection, but in the opposite direction
+ */
+class TrianglePlaneIntersectionResult {
+  var hasForwardPoint:Boolean = false
+  val forwardPoint = new Vec3D
+  var hasRetroPoint:Boolean = false
+  val retroPoint = new Vec3D
+  
+  @inline def reset = {
+    hasRetroPoint = false
+    hasForwardPoint = false
+  }
+  
+  @inline def setForwardPoint(point:ReadonlyVec3D) = {
+    forwardPoint.x = point.x
+    forwardPoint.y = point.y
+    forwardPoint.z = point.z
+    hasForwardPoint = true
+  }
+  
+  @inline def unsetForwardPoint = hasForwardPoint = false
+  
+  @inline def setRetroPoint(point:ReadonlyVec3D) = {
+    retroPoint.x = point.x
+    retroPoint.y = point.y
+    retroPoint.z = point.z
+    hasRetroPoint = true
+  }
+  
+  @inline def unsetRetroPoint = hasRetroPoint = false;
+ 
+  override def toString:String = {
+    val rv = { if (hasForwardPoint) forwardPoint.toString() + " " else "no forward " } + { if (hasRetroPoint) retroPoint.toString() + " " else "no retro" }
+    rv
+  }
+}
+
 object TrianglePlaneIntersection {
   
   private val SLIDINGSEQUENCE = Array((0,1),(1,2),(2,0))
@@ -23,24 +63,30 @@ object TrianglePlaneIntersection {
    * intersects a triangle with a plane. The point that is ahead of the @lastPosition in the @direction direction will be returned
    */
   @inline
-  def trianglePlaneIntersection(triangle:IndexedSeq[ReadonlyVec3D], plane:Plane, lastPosition:ReadonlyVec3D, direction:ReadonlyVec3D):IndexedSeq[ReadonlyVec3D] = {
-    val rv = new ArrayBuffer[ReadonlyVec3D](2)
+  def trianglePlaneIntersection(triangle:IndexedSeq[ReadonlyVec3D], plane:Plane, lastPosition:ReadonlyVec3D, direction:ReadonlyVec3D, rvContainer:TrianglePlaneIntersectionResult) = {
+    val forwardIntersections = new ArrayBuffer[ReadonlyVec3D](2)
+    val retroIntersections = new ArrayBuffer[ReadonlyVec3D](2)
     val epsilon = 0.00001f
     val ray = new Ray3D
+    rvContainer.reset
     SLIDINGSEQUENCE.foreach( i => {
       val class1 = plane.classifyPoint(triangle(i._1),epsilon)
       val class2 = plane.classifyPoint(triangle(i._2),epsilon)
       if (class1 == Plane.Classifier.ON_PLANE) {
-        val hit1 = triangle(i._1)
-        if ( isCollinearXY(direction, hit1.sub(lastPosition) )) {
-          rv.append(hit1)
+        val hit = triangle(i._1)
+        if ( isCollinearXY(direction, hit.sub(lastPosition) )) {
+          forwardIntersections.append(hit)
+        } else {
+          retroIntersections.append(hit)
         }
       } else if (class2 == Plane.Classifier.ON_PLANE) {
-        val hit2 = triangle(i._1)
-        if ( isCollinearXY(direction, hit2.sub(lastPosition) )) {
-          rv.append(hit2)
+        val point = triangle(i._1)
+        if ( isCollinearXY(direction, point.sub(lastPosition) )) {
+          rvContainer.setForwardPoint(point)
+        } else {
+          rvContainer.setRetroPoint(point)
         }
-      } else if (rv.size < 2 && class1 != class2)  {
+      } else if (forwardIntersections.size < 2 && class1 != class2)  {
         ray.set(triangle(i._1))
         ray.setDirection(triangle(i._2).sub(triangle(i._1)))
         val distance = plane.intersectRayDistance(ray)
@@ -50,12 +96,13 @@ object TrianglePlaneIntersection {
         } else {
           val point = ray.getPointAtDistance(distance)
           if (isCollinearXY(direction, point.sub(lastPosition) )) {
-            rv.append(point)
-          } 
+            rvContainer.setForwardPoint(point)
+          } else {
+            rvContainer.setRetroPoint(point)
+          }
         }
       }
     })
-    rv
   }
   
   @inline
@@ -67,12 +114,37 @@ object TrianglePlaneIntersection {
   
   /**
    * finds the two points of intersection between a plane [defined by a line segment (s0 -> s1) and unlimited Z] and
-   * a triangle. returns empty array if no intersection was found   
+   * a triangle. Puts result in the rvContainer   
    */
   @inline 
-  def triangleZPlaneIntersection(s0:ReadonlyVec3D, s1:ReadonlyVec3D, triangle:IndexedSeq[ReadonlyVec3D]):IndexedSeq[ReadonlyVec3D] = {
+  def triangleZPlaneIntersection(s0:ReadonlyVec3D, s1:ReadonlyVec3D, triangle:IndexedSeq[ReadonlyVec3D], rvContainer:TrianglePlaneIntersectionResult) = {
     val plane = segmentToZPlane(s0,s1)
     val direction = s1.sub(s0).normalize()
-    trianglePlaneIntersection(triangle, plane, s0, direction)
+    trianglePlaneIntersection(triangle, plane, s0, direction,rvContainer)
+  }
+  
+  /**
+   * Setup dst vector so that dst.x = targetXY.x and dst.y = targetXY.y
+   * dst.z should be interpolated
+   */
+  def interpolate3D(dst:Vec3D, v0:Vec3D, v1:Vec3D, targetXY:Vec3D) = {
+    val deltaX = v0.x - v1.x
+    val deltaY = v0.y - v1.y
+    val deltaZ = v0.z - v1.z
+    val deltaTX = v0.x - targetXY.x
+    val deltaTY = v0.y - targetXY.y
+    dst.x = targetXY.x
+    dst.y = targetXY.y
+    if (deltaX==0f && deltaY==0f) {
+      // doesn't matter what we pick here
+      dst.z = v0.z
+    } else 
+      // pick the coordinate with highest numeric precision
+      if (math.abs(deltaX) > math.abs(deltaY)){
+        dst.z = v1.z + deltaZ*deltaTX/deltaX 
+      } else {
+        dst.z = v1.z + deltaZ*deltaTY/deltaY
+      }
+    dst
   }
 }
