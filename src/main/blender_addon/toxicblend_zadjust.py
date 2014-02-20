@@ -17,6 +17,7 @@ class ToxicBlend_ZAdjust(bpy.types.Operator):
   bl_idname = "object.toxicblend_zadjust"
   bl_label = "ToxicBlend Z adjust"
   bl_options = {'REGISTER', 'UNDO'}  # enable undo for the operator.
+  sampleStepProperty = bpy.props.FloatProperty(name="Sample step [mm]", default=0.05, min=0.001, max=100, description="the distance between sample in mm.")  
 
   @classmethod
   def poll(cls, context):
@@ -29,8 +30,9 @@ class ToxicBlend_ZAdjust(bpy.types.Operator):
       activeObject = context.scene.objects.active
       unitSystemProperty = context.scene.unit_settings
       
-      properties = {'unitSystem'            : str(unitSystemProperty.system), 
-                    'unitScale'             : str(unitSystemProperty.scale_length) }
+      properties = {'sampleStep' : str(self.sampleStepProperty),
+                    'unitSystem' : str(unitSystemProperty.system), 
+                    'unitScale'  : str(unitSystemProperty.scale_length) }
           
       c.sendMultipleBlenderObjects(bpy.context.selected_objects, self.bl_idname, properties) 
       c.receiveObjects()
