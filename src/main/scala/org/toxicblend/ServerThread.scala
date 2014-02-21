@@ -10,9 +10,9 @@ import org.toxicblend.protobuf.ToxicBlendProtos.{Option => MessageOption}
 import org.toxicblend.protobuf.ToxicBlendProtos.Model
 import org.toxicblend.typeconverters.OptionConverter
 import org.toxicblend.operations.volumetricrender.VolumetricRenderProcessor
-import org.toxicblend.operations.projectionoutline.ProjectionOutlineProcessor
-import org.toxicblend.operations.boostmedianaxis.MedianAxisProcessor
-import org.toxicblend.operations.dragoncurve.DragonCurveProcessor
+import org.toxicblend.operations.projectionoutline.ProjectionOutlineOperation
+import org.toxicblend.operations.boostmedianaxis.MedianAxisOperation
+import org.toxicblend.operations.dragoncurve.DragonCurveOperation
 import org.toxicblend.operations.boostsimplify.BoostSimplifyOperation
 import org.toxicblend.operations.simplegcodegenerator.SimpleGcodeGeneratorOperation
 import org.toxicblend.operations.simplegcodeparse.SimpleGcodeParseOperation
@@ -56,9 +56,9 @@ case class ServerThread(socket: Socket) extends Thread("ServerThread") {
           val outMessage = {
             val processor:CommandProcessorTrait = inMessage.getCommand() match {
               case "OBJECT_OT_toxicblend_volume" => new VolumetricRenderProcessor
-              case "OBJECT_OT_toxicblend_add_dragon_curve" => new DragonCurveProcessor
-              case "OBJECT_OT_toxicblend_projection_outline" => new ProjectionOutlineProcessor
-              case "OBJECT_OT_toxicblend_medianaxis" => new MedianAxisProcessor
+              case "OBJECT_OT_toxicblend_add_dragon_curve" => new DragonCurveOperation
+              case "OBJECT_OT_toxicblend_projection_outline" => new ProjectionOutlineOperation
+              case "OBJECT_OT_toxicblend_medianaxis" => new MedianAxisOperation
               case "OBJECT_OT_toxicblend_boostsimplify" => new BoostSimplifyOperation
               case "OBJECT_OT_toxicblend_simplegcodegenerator" => new SimpleGcodeGeneratorOperation     
               case "OBJECT_OT_toxicblend_simplegcodeviewer" => new SimpleGcodeParseOperation

@@ -12,7 +12,7 @@ import org.toxicblend.typeconverters.OptionConverter
 import org.toxicblend.CommandProcessorTrait
 import org.toxicblend.util.Time
 
-class ProjectionOutlineProcessor extends CommandProcessorTrait {
+class ProjectionOutlineOperation extends CommandProcessorTrait {
   
   def processInput(inMessage:Message) = {
     

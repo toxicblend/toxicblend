@@ -16,7 +16,7 @@ import scala.collection.mutable.ArrayBuffer
 import org.toxicblend.util.Time
 import toxi.geom.ReadonlyVec3D
 
-class MedianAxisProcessor extends CommandProcessorTrait {
+class MedianAxisOperation extends CommandProcessorTrait {
   
   protected def manageInput(inMessage:Message) = {
     // we are only using the first model as input
@@ -54,9 +54,9 @@ class MedianAxisProcessor extends CommandProcessorTrait {
       case s:String => System.err.println("MedianAxisProcessor: unrecognizable dotProductLimit property value: " +  s ); .3f
     }
     
-    val calculationResolution:Float = options.getOrElse("calculationResolution", MedianAxisProcessor.DEFAULT_CALCULATION_RESOLUTION ) match {
+    val calculationResolution:Float = options.getOrElse("calculationResolution", MedianAxisOperation.DEFAULT_CALCULATION_RESOLUTION ) match {
       case Regex.FLOAT_REGEX(limit) => limit.toFloat
-      case s:String => System.err.println("MedianAxisProcessor: unrecognizable calculationResolution property value: " +  s ); MedianAxisProcessor.DEFAULT_CALCULATION_RESOLUTION.toFloat
+      case s:String => System.err.println("MedianAxisProcessor: unrecognizable calculationResolution property value: " +  s ); MedianAxisOperation.DEFAULT_CALCULATION_RESOLUTION.toFloat
     }
     
     if ( calculationResolution < 100) {
@@ -129,6 +129,6 @@ class MedianAxisProcessor extends CommandProcessorTrait {
   }  
 }
 
-object MedianAxisProcessor {
+object MedianAxisOperation {
   val DEFAULT_CALCULATION_RESOLUTION = (math.sqrt(Int.MaxValue).toInt * -2).toString
 }

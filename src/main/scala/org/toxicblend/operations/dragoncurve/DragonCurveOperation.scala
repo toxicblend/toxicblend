@@ -13,7 +13,7 @@ import org.toxicblend.util.Regex
  * This class is a scala port of http://rosettacode.org/wiki/Dragon_curve#Java
  * Author unknown
  */
-class DragonCurveProcessor extends CommandProcessorTrait {
+class DragonCurveOperation extends CommandProcessorTrait {
   
   def processInput(inMessage:Message) = {
     val options = OptionConverter(inMessage)
@@ -32,13 +32,13 @@ class DragonCurveProcessor extends CommandProcessorTrait {
   }
   
   def generate(iterations:Int, edgeLength:Float) = {
-    val dragon = DragonCurveProcessor.draw(DragonCurveProcessor.generateData(iterations), edgeLength)
+    val dragon = DragonCurveOperation.draw(DragonCurveOperation.generateData(iterations), edgeLength)
     val model = LineStripConverter(dragon,"dragon curve") 
     model.center().toPBModel(false)
   }
 }
 
-object DragonCurveProcessor {
+object DragonCurveOperation {
   /**
    * start with original string="1"
    * add 1 to the right hand side of original string
