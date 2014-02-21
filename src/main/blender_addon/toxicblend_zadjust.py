@@ -18,7 +18,19 @@ class ToxicBlend_ZAdjust(bpy.types.Operator):
   bl_label = "ToxicBlend Z adjust"
   bl_options = {'REGISTER', 'UNDO'}  # enable undo for the operator.
   sampleStepProperty = bpy.props.FloatProperty(name="Sample step [mm]", default=0.05, min=0.001, max=100, description="the distance between sample in mm.")  
-
+  multiThreadProperty = bpy.props.EnumProperty(
+    name="Use experimental multi threading",
+    items=(("TRUE", "True",""),
+           ("FALSE", "False","")),
+           #update=mode_update_callback
+           default="TRUE")       
+  addDiffProperty = bpy.props.EnumProperty(
+    name="Add diff",
+    items=(("TRUE", "True",""),
+           ("FALSE", "False","")),
+           #update=mode_update_callback
+           default="FALSE" )
+                     
   @classmethod
   def poll(cls, context):
     return context.active_object is not None
@@ -30,9 +42,11 @@ class ToxicBlend_ZAdjust(bpy.types.Operator):
       activeObject = context.scene.objects.active
       unitSystemProperty = context.scene.unit_settings
       
-      properties = {'sampleStep' : str(self.sampleStepProperty),
-                    'unitSystem' : str(unitSystemProperty.system), 
-                    'unitScale'  : str(unitSystemProperty.scale_length) }
+      properties = {'sampleStep'        : str(self.sampleStepProperty),
+                    'useMultiThreading' : str(self.multiThreadProperty),
+                    'addDiff'           : str(self.addDiffProperty),
+                    'unitSystem'        : str(unitSystemProperty.system), 
+                    'unitScale'         : str(unitSystemProperty.scale_length) }
           
       c.sendMultipleBlenderObjects(bpy.context.selected_objects, self.bl_idname, properties) 
       c.receiveObjects()
