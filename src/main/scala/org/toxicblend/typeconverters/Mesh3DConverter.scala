@@ -24,13 +24,21 @@ import org.toxicblend.util.VertexToFaceMap
 
 import scala.collection.JavaConversions._
 
+/**
+ * A container for mesh data. This construct accepts triangles, any kind of n-gons, edges 
+ * and even unconnected vertices.
+ * It keeps track of each vertex so that it does not store doubles.
+ */
 class Mesh3DConverter protected (protected val vertices:Buffer[ReadonlyVec3D], 
                                  protected val faces:Buffer[ArrayBuffer[Int]], 
                                  protected val bounds:AABB, 
                                  val name:String="") {
   
-  val vert2id = new HashMap[ReadonlyVec3D,Int]()
-  (0 until vertices.size).foreach(i => vert2id.put(vertices(i),i ))
+  protected lazy val vert2id = {
+    val map = new HashMap[ReadonlyVec3D,Int]()
+    (0 until vertices.size).foreach(i => map.put(vertices(i),i ))
+    map
+  }
   
   def this(name:String="mesh3d") = {
     this(new ArrayBuffer[ReadonlyVec3D], new ArrayBuffer[ArrayBuffer[Int]], new AABB, name)  
