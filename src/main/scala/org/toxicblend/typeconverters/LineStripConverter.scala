@@ -129,24 +129,65 @@ object LineStripConverter {
   /** 
    * Constructs from a packet buffer model
    */
-  def apply(pbModel:Model):LineStripConverter = {
-    val vertices = new Array[Vec3D](pbModel.getVerticesList().size())
-    val bounds = new AABB()
-    for (v<-pbModel.getVerticesList()) {
-      val vector = new Vec3D(v.getX,v.getY,v.getZ)
-      vertices(v.getId()) = vector
-      bounds.growToContainPoint(vector)
-    }
+  def apply(pbModel:Model, useWorldCoordinares:Boolean):LineStripConverter = {
+   
+    val worldTransformation = if (useWorldCoordinares && pbModel.hasWorldOrientation) Option(Matrix4x4Converter(pbModel.getWorldOrientation)) else None
     
-    val lineStrips = new ArrayBuffer[LineStrip3D]
-    for (f<-pbModel.getFacesList()) {
-      val lineStrip = new LineStrip3D()
-      f.getVerticesList().foreach(v => lineStrip.add(vertices(v)))
-      //lineStrip.add(vertices(f.addVertices(0)))
-      lineStrips.append(lineStrip)
+    val vertices = new Array[Vec3D](pbModel.getVerticesList.size)
+    if (worldTransformation.isDefined) {
+      val wtransform = worldTransformation.get.matrix
+      val aabb = {
+        val firstVertexOpt = Mesh3DConverter.getFirstVertex(pbModel)
+        if (firstVertexOpt.isDefined) {
+          new AABB(wtransform.applyToSelf(firstVertexOpt.get),0f)
+        } else {
+          new AABB // no vertices, aabb will have origin at origo
+        }
+      }
+      for (v<-pbModel.getVerticesList()) {
+        val vector = wtransform.applyToSelf(new Vec3D(v.getX,v.getY,v.getZ))
+        vertices(v.getId()) = vector
+        aabb.growToContainPoint(vector)
+      }
+      
+      val lineStrips = new ArrayBuffer[LineStrip3D]
+      for (f<-pbModel.getFacesList()) {
+        val lineStrip = new LineStrip3D()
+        f.getVerticesList().foreach(v => lineStrip.add(vertices(v)))
+        lineStrips.append(lineStrip)
+      }
+      //println("LineStripConverter: Done importing model with matrix. aabb=" + aabb)
+      new LineStripConverter(lineStrips, aabb, pbModel.getName)
+    } else {
+      
+      val firstVertexOpt = Mesh3DConverter.getFirstVertex(pbModel)
+      val aabb = if (firstVertexOpt.isDefined) {
+        new AABB(firstVertexOpt.get,0f)
+      } else {
+        new AABB // no vertices, aabb will have origin at origo
+      }
+      
+      for (v<-pbModel.getVerticesList()) {
+        val vector = new Vec3D(v.getX,v.getY,v.getZ)
+        vertices(v.getId()) = vector
+        aabb.growToContainPoint(vector)
+      }
+      
+      val lineStrips = new ArrayBuffer[LineStrip3D]
+      for (f<-pbModel.getFacesList()) {
+        val lineStrip = new LineStrip3D()
+        f.getVerticesList().foreach(v => lineStrip.add(vertices(v)))
+        lineStrips.append(lineStrip)
+      }
+      //println("LineStripConverter: Done importing model w/o matrix. aabb=" + aabb)
+      new LineStripConverter(lineStrips, aabb, pbModel.getName)
     }
-    new LineStripConverter(lineStrips, bounds, pbModel.getName)
   }
+   
+  /** 
+   * Constructs from a packet buffer model
+   */
+  def apply(pbModel:Model):LineStripConverter = apply(pbModel,false)
   
   /** 
    * Constructs from some LineStrip3D:s
