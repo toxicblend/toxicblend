@@ -42,14 +42,25 @@ class ZAdjustOperation extends CommandProcessorTrait {
       case Regex.FLOAT_REGEX(limit) => limit.toFloat
       case s:String => System.err.println("ZAdjustOperation: unrecognizable 'sampleStep' property value: " +  s ); .1f
     } ) / 1000f // /1000 for conversion to mm
+    val addDiff:Boolean = options.getOrElse("addDiff", "FALSE").toUpperCase() match {
+      case "TRUE" => true
+      case "FALSE" => false
+      case s:String => System.err.println("ZAdjustOperation: Unrecognizable 'addDiff' property value: " +  s ); false
+    } 
+    
     println(options)
     val epsilon = 0.000002f
     println("sampleStep="+ sampleStep + " epsilon=" + epsilon)
     val jbc = new JBulletCollision(segments._2, models, sampleStep, epsilon) 
     val result = new MutableList[IndexedSeq[ReadonlyVec3D]]
-    segments._2.foreach(segment => {
-      result += jbc.doRayTests(segment)
-    })
+    if (addDiff) {
+      segments._2.filter( s => s.size > 1).foreach(segment => {
+        val collided = jbc.doRayTests(segment)
+        result += jbc.adjustZLevel(segment,collided)
+      })
+    } else {
+      segments._2.filter( s => s.size > 1).foreach(segment => result += jbc.doRayTests(segment).flatten)
+    } 
     
     //println("Result:")
     //result.foreach( s => {println; s.foreach(r => println(r))} )

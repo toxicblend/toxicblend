@@ -109,7 +109,7 @@ class JBulletCollision(val segments:IndexedSeq[IndexedSeq[ReadonlyVec3D]], val m
         
         if (currentC.hasForwardPoint){
           // test if the forward point overshot the segment 
-          val distanceToTriangleIntersection = distanceToSquaredInXYPlane(fromV,currentC.forwardPoint) 
+          val distanceToTriangleIntersection = JBulletUtil.distanceToSquaredInXYPlane(fromV,currentC.forwardPoint) 
           if ( distanceToTriangleIntersection > distanceToCoverSqr ) {
             
             //val oldStr = "" + currentC.forwardPoint.x + ", " + currentC.forwardPoint.y + ", " + currentC.forwardPoint.z
@@ -158,7 +158,7 @@ class JBulletCollision(val segments:IndexedSeq[IndexedSeq[ReadonlyVec3D]], val m
       fromV.x = newFromV.x; fromV.y = newFromV.y; fromV.z = newFromV.z;
       toV.x = newToV.x; toV.y = newToV.y; toV.z = newToV.z;
 
-      distanceToCoverSqr = distanceToSquaredInXYPlane(fromV,toV)
+      distanceToCoverSqr = JBulletUtil.distanceToSquaredInXYPlane(fromV,toV)
       plane = TrianglePlaneIntersection.segmentToZPlane(fromV,toV)
       directionNormalized = {
         val d = toV.sub(fromV)
@@ -183,7 +183,7 @@ class JBulletCollision(val segments:IndexedSeq[IndexedSeq[ReadonlyVec3D]], val m
       rayToWorld.x = rayFromWorld.x
       rayToWorld.y = rayFromWorld.y
       
-      val distanceCoveredSqr = distanceToSquaredInXYPlane(fromV,rayFromWorld) 
+      val distanceCoveredSqr = JBulletUtil.distanceToSquaredInXYPlane(fromV,rayFromWorld) 
       //println("distanceCoveredSoFar=" + distanceCoveredSoFar + " distanceToCoverSqr=" + distanceToCoverSqr + " :" + (distanceCoveredSoFar > distanceToCoverSqr)  + " atSegmentEnd:" + atSegmentEnd + " endOfSegmentReached:" + endOfSegmentReached)
 
       if (distanceCoveredSqr > distanceToCoverSqr){
@@ -203,7 +203,7 @@ class JBulletCollision(val segments:IndexedSeq[IndexedSeq[ReadonlyVec3D]], val m
      * The method only touches X & Y coordinates
      */
     def conditionalJumpAheadToXY(point:Vec3D) = {
-      val newDistanceSquared = distanceToSquaredInXYPlane(fromV,point)
+      val newDistanceSquared = JBulletUtil.distanceToSquaredInXYPlane(fromV,point)
       if (newDistanceSquared > distanceToCoverSqr){
         rayFromWorld.x = toV.x
         rayFromWorld.y = toV.y
@@ -230,7 +230,7 @@ class JBulletCollision(val segments:IndexedSeq[IndexedSeq[ReadonlyVec3D]], val m
         //println("isDone: endOfSegmentReached already seen, ending iteration at:" + rayFromWorld)
         true
       } else {
-        val distanceCoveredSqr = distanceToSquaredInXYPlane(fromV,rayFromWorld) 
+        val distanceCoveredSqr = JBulletUtil.distanceToSquaredInXYPlane(fromV,rayFromWorld) 
         //val diff = math.abs(distanceCoveredSoFar-distanceToCoverSqr)
         if ( distanceCoveredSqr >= distanceToCoverSqr) {
           // allow one more iteration at 'end of segment'
@@ -256,45 +256,27 @@ class JBulletCollision(val segments:IndexedSeq[IndexedSeq[ReadonlyVec3D]], val m
   
   val collisionWrapper = new CollisionObjectWrapper(segments,models)
    
-   /**
-    * returns the squared distance between two vertices in XY plane ( Z coordinate is ignored )
-    */
-   @inline
-   def distanceToSquaredInXYPlane(v0:ReadonlyVec3D, v1:ReadonlyVec3D) = {
-     val dx = (v0.x - v1.x)//.toDouble
-     val dy = (v0.y - v1.y)//.toDouble
-     dx*dx + dy*dy   
-   }
-  
-   /**
-    * returns the squared distance between two vertices in XY plane ( Z coordinate is ignored )
-    */
-   @inline
-   def distanceToSquaredInXYPlane(v0:ReadonlyVec3D, v1:Vector3f) = {
-     val dx = (v0.x - v1.x)//.toDouble
-     val dy = (v0.y - v1.y)//.toDouble
-     dx*dx + dy*dy   
-   }
-   
-   def doRayTests(segments:IndexedSeq[ReadonlyVec3D]):IndexedSeq[Vec3D] = {
+   def doRayTests(segments:IndexedSeq[ReadonlyVec3D]):IndexedSeq[IndexedSeq[Vec3D]] = {
 
      val aabb =  models(0).getBounds.copy()
      models.foreach(model => aabb.union(model.getBounds))
      
      println("BB min:" + collisionWrapper.aabbAllModels.getMin + " max: " + collisionWrapper.aabbAllModels.getMax + " zMin=" + collisionWrapper.zMin + " zMax=" + collisionWrapper.zMax)
-     val rayResult = new ArrayBuffer[Vec3D]
-     
-     @inline
-     def addToRayResult(p:Vec3D) = {
-       if (rayResult.size<1 || rayResult.last != p){
-         rayResult.append(p)
-       }
-     } 
      
      val searchState = new SearchState(new Vector3f(1, 1, collisionWrapper.zMax), new Vector3f(1, 1, collisionWrapper.zMin), collisionWrapper.zMin, collisionWrapper.zMax)
+     val totalRayResult = new ArrayBuffer[ArrayBuffer[Vec3D]]
      
      segments.sliding(2,1).foreach(segment => {
        searchState.setSegment(segment(0), segment(1))
+       
+       val rayResult = new ArrayBuffer[Vec3D]
+     
+       @inline
+       def addToRayResult(p:Vec3D) = {
+         if (rayResult.size<1 || rayResult.last != p){
+           rayResult.append(p)
+         }
+       }
        
        while (!searchState.isDone) {
          if (searchState.rayTest(collisionWrapper.collisionWorld)) {
@@ -349,18 +331,55 @@ class JBulletCollision(val segments:IndexedSeq[IndexedSeq[ReadonlyVec3D]], val m
        // end of segment
        if (rayResult.size == 0 || 
             (searchState.hasPrevious && 
-              (distanceToSquaredInXYPlane(searchState.toV,rayResult.last) > 
-               distanceToSquaredInXYPlane(searchState.toV,searchState.previousC.collisionPoint)))) {
+              (JBulletUtil.distanceToSquaredInXYPlane(searchState.toV,rayResult.last) > 
+               JBulletUtil.distanceToSquaredInXYPlane(searchState.toV,searchState.previousC.collisionPoint)))) {
          // segment completed, save the last of the hits points 
          //println("done all tests, saving last hit" + searchState.previousC.collisionPoint)
          addToRayResult(searchState.previousC.collisionPoint.copy)
        }
+       totalRayResult.append(rayResult)
      })
-     rayResult
+     totalRayResult
    }
    
    def cleanup = {
      collisionWrapper.collisionWorld.destroy
+   }
+   
+   /**
+    * iterate over each vertice pair in segments, find the corresponding vertices in levels
+    * and add the two
+    */
+   def adjustZLevel(segments:IndexedSeq[ReadonlyVec3D], levels:IndexedSeq[IndexedSeq[Vec3D]]):IndexedSeq[ReadonlyVec3D] = {
+     
+     def xyDistanceFromStart(v0:ReadonlyVec3D, v1:ReadonlyVec3D):Float = {
+       val deltaX = v0.x-v1.x
+       val deltaY = v0.y-v1.y
+       math.sqrt(deltaX*deltaX+deltaY*deltaY).toFloat
+     }
+     
+     @inline
+     def adjustSample(sample:Vec3D, interpolated:ReadonlyVec3D) = {
+       sample.z = sample.z + interpolated.z
+     }
+
+     (0 until segments.size).sliding(2,1).foreach(segmentI =>{
+       if (segmentI.size > 1){
+         val fromV = segments(segmentI(0))
+         val toV = segments(segmentI(1))
+         val direction = toV.sub(fromV).normalize
+         levels(segmentI(0)).iterator.sliding(2).map(_.head).foreach(sample => {  // .iterator.sliding(2).map(_.head) == iterator all but last
+           val distance = xyDistanceFromStart(sample,fromV) 
+           val interpolated = fromV.add(direction.scale(distance))
+           adjustSample(sample, interpolated)
+         })
+         // Don't interpolate the last position, it gives jagged edges. Just use the real thing
+         adjustSample(levels(segmentI(0)).last, toV)
+       } else {
+         System.err.println("Ignoring segment with only one vertex: " + segmentI + " segments.size=" + segments.size)
+       }
+     })
+     levels.flatten
    }
 }
 

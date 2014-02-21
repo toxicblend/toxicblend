@@ -62,7 +62,7 @@ object JBulletTest {
       segment.sliding(2,1).foreach(s => {
         val r = jbc.doRayTests(s)
         println("from: " + s(0) + " to:" + s(1) + " = " + r.mkString("\n   ","\n   ", ""))
-        result += r
+        result += r.flatten
       })
     })
     println("Result: " + result)

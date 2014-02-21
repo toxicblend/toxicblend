@@ -7,6 +7,27 @@ import toxi.geom.ReadonlyVec3D
  * Simple conversion utilities
  */
 object JBulletUtil {
+  
+  /**
+    * returns the squared distance between two vertices in XY plane ( Z coordinate is ignored )
+    */
+   @inline
+   def distanceToSquaredInXYPlane(v0:ReadonlyVec3D, v1:ReadonlyVec3D) = {
+     val dx = (v0.x - v1.x)//.toDouble
+     val dy = (v0.y - v1.y)//.toDouble
+     dx*dx + dy*dy   
+   }
+  
+   /**
+    * returns the squared distance between two vertices in XY plane ( Z coordinate is ignored )
+    */
+   @inline
+   def distanceToSquaredInXYPlane(v0:ReadonlyVec3D, v1:Vector3f) = {
+     val dx = (v0.x - v1.x)//.toDouble
+     val dy = (v0.y - v1.y)//.toDouble
+     dx*dx + dy*dy   
+   }
+   
   /**
    * copy a Vector3f into a new Vec3D
    */

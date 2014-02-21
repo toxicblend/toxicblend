@@ -375,9 +375,7 @@ object Mesh3DConverter {
     var index = 0
     sequences.foreach( sequence => {
         sequence.foreach(v => {
-          if (vMap.contains(v)) {
-            
-          } else {
+          if (!vMap.contains(v)) {
             val vCopy:ReadonlyVec3D = v.copy() 
             vMap.update(vCopy,index)
             index += 1

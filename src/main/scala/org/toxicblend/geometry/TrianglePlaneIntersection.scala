@@ -60,6 +60,7 @@ object TrianglePlaneIntersection {
   
   /**
    * returns true if the two vectors point in the same direction in the XY plane
+   * Note that this only works if v0 and v1 are built from the same vector, just with different scaling (+/-)
    */
   @inline 
   def isCollinearXY(v0:ReadonlyVec3D, v1:ReadonlyVec3D ):Boolean = {
@@ -67,7 +68,16 @@ object TrianglePlaneIntersection {
   }
   
   /**
-   * intersects a triangle with a plane. The point that is ahead of the @lastPosition in the @direction direction will be returned
+   * returns the result of: isCollinearXY(direction, samplePoint.sub(lastPosition))
+   * but without creating any temporary objects
+   */
+  @inline 
+  def isCollinearXY(direction:ReadonlyVec3D, samplePoint:ReadonlyVec3D, lastPosition:ReadonlyVec3D):Boolean = {
+    direction.x*(samplePoint.x-lastPosition.x) + direction.y*(samplePoint.y-lastPosition.y) > 0
+  }
+  
+  /**
+   * intersects a triangle with a plane. The intersection points will be returned in rvContainer
    */
   @inline
   def trianglePlaneIntersection(triangle:IndexedSeq[ReadonlyVec3D], plane:Plane, lastPosition:ReadonlyVec3D, direction:ReadonlyVec3D, rvContainer:TrianglePlaneIntersectionResult) = {
@@ -81,7 +91,7 @@ object TrianglePlaneIntersection {
       val class2 = plane.classifyPoint(triangle(i._2),ε)
       if (class1 == Plane.Classifier.ON_PLANE) {
         val point = triangle(i._1)
-        if ( isCollinearXY(direction, point.sub(lastPosition) )) {
+        if ( isCollinearXY(direction, point, lastPosition )) {
           rvContainer.setForwardPoint(point)
         } else {
           rvContainer.setRetroPoint(point)
@@ -89,7 +99,7 @@ object TrianglePlaneIntersection {
       }
       if (class2 == Plane.Classifier.ON_PLANE) {
         val point = triangle(i._2)
-        if ( isCollinearXY(direction, point.sub(lastPosition) )) {
+        if ( isCollinearXY(direction, point, lastPosition)) {
           rvContainer.setForwardPoint(point)
         } else {
           rvContainer.setRetroPoint(point)
@@ -100,11 +110,10 @@ object TrianglePlaneIntersection {
         ray.setDirection(triangle(i._2).sub(triangle(i._1)))
         val distance = plane.intersectRayDistance(ray)
         if (distance < 0){
-          // something went wrong
           System.err.println("trianglePlaneIntersection: negative distance, debug me")
         } else {
           val point = ray.getPointAtDistance(distance)
-          if (isCollinearXY(direction, point.sub(lastPosition) )) {
+          if (isCollinearXY(direction, point, lastPosition)) {
             rvContainer.setForwardPoint(point)
           } else {
             rvContainer.setRetroPoint(point)
@@ -116,8 +125,9 @@ object TrianglePlaneIntersection {
   
   @inline
   def segmentToZPlane(s0:ReadonlyVec3D, s1:ReadonlyVec3D):Plane = {
+    // TODO: There are a ton of temporary Vec3D:s created here, and this is executed once for every vertex pair - fix it
     val fakePointOnZ = new Vec3D(s0.x, s0.y, s0.y + math.max(math.abs(s0.x-s1.x),  math.abs(s0.y-s1.y)))
-    val tri = new Triangle3D(new Vec3D(s0), new Vec3D(s1), fakePointOnZ)
+    val tri = new Triangle3D(s0.copy, s1.copy, fakePointOnZ)
     new Plane(tri)
   }
   
