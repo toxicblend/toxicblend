@@ -274,7 +274,7 @@ object Mesh3DConverter {
   /**
    * returns the first vertex found in the pbModel
    */
-  protected def getFirstVertex(pbModel:Model):Option[ReadonlyVec3D] = {
+  def getFirstVertex(pbModel:Model):Option[Vec3D] = {
     val vertexList = pbModel.getVerticesList()
     if (vertexList.size >0 ) {
       val firstPBVertex = vertexList(0)
