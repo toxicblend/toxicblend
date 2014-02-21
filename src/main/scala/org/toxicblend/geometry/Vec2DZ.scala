@@ -10,10 +10,10 @@ import toxi.geom.ReadonlyVec3D
  * Distances between points are calculated in 2D while there is an additional Z parameter
  * This object also 'knows' its neighbourhood vertices
  * 
- * @param ẍ, ÿ is named this way because of the way scala handles constructor input parameters (non-var or val). 
+ * @param __x, __y is named this way because of the way scala handles constructor input parameters (non-var or val). 
  *     If the variable is, by accident, referenced anywhere in this class it will be retained as a 'private final' in bytecode
  */
-class Vec2DZ(ẍ:Float, ÿ:Float, var z:Float, var objIndex:Int) extends Vec2D(ẍ,ÿ) {
+class Vec2DZ(__x:Float, __y:Float, var z:Float, var objIndex:Int) extends Vec2D(__x,__y) {
   
   def this(v:Array[Double]) = this (v(0).toFloat, v(1).toFloat, v(2).toFloat, -1)
   def this(v:Array[Float]) = this (v(0), v(1), v(2), -1)
