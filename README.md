@@ -87,7 +87,7 @@ You will find the location with this command in the blender python console:
     
     /opt/icedtea-bin-6.1.12.7/jre/lib/amd64/xawt/libmawt.so
     
-    export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}/opt/oracle-jdk-bin-1.7.0.51/jre/lib/amd64/xawt/
+    export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/opt/oracle-jdk-bin-1.7.0.51/jre/lib/amd64/xawt/
     
     sbt  
     
@@ -103,14 +103,27 @@ You will find the location with this command in the blender python console:
 8. In blender, press space and search for the addons:
  	
  	
- 	toxicblend_volume
+ 	toxicblend_volume (converts edges to volumetric voxels) 
+ 	
+ 	toxicblend_metavolume (converts edges to volumetric voxels, standalone pure python) 
     
-    toxicblend_add_dragon_curve
+    toxicblend_applyall (apply all transformations on an object, standalone pure python) 
     
-    toxicblend_projection_outline
+    toxicblend_dragoncurve (draws a parametric dragon curve as edges)
     
-    toxicblend_medianaxis
+    toxicblend_projectionoutline (orthogonally projects an object on an axis plane)
     
-    toxicblend_boostsimplify
+    toxicblend_medianaxis  (Using an experimental median axis algorithm (native))
     
-    Some day i will document what the plugins actually does :)
+    toxicblend_boostsimplify (Simplifies sequences of edges (native))
+    
+    toxicblend_simplegcodegenerator (generates layered gcode from a set of edges)
+    
+    toxicblend_simplegcodeview (visualizes gcode as a set of edges)
+    
+    toxicblend_zadjust (wraps a set of edges onto objects, similar to shrinkwrap modifier but with z offset option)
+    
+    I use the combination of toxicblend_medianaxis, toxicblend_boostsimplify, toxicblend_zadjust and toxicblend_simplegcodegenerator to generate gcode for v-carved text onto curved surfaces.
+    
+    
+    Some day i will document in more detail what the plugins actually does and how to use them :)
