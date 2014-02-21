@@ -35,18 +35,6 @@ import toxi.geom.Ray3D
 import toxi.geom.AABB
 
 class JBulletCollision(val segments:IndexedSeq[IndexedSeq[ReadonlyVec3D]], val models:IndexedSeq[Mesh3DConverter], val sampleDelta:Float, val ε:Float) {
-  
-  val aabbAllModels = {
-    if (models.size > 0){
-      val aabbTmp = models(0).getBounds.copy
-      models.tail.foreach(b => aabbTmp.union(b.getBounds))
-      aabbTmp
-    } else {
-      new AABB
-    }
-  }
-  val zMin = aabbAllModels.getMin.z-1f
-  val zMax = aabbAllModels.getMax.z+1f
    
   class CollisionState extends TrianglePlaneIntersectionResult {
     val collisionPoint:Vec3D = new Vec3D
@@ -68,6 +56,7 @@ class JBulletCollision(val segments:IndexedSeq[IndexedSeq[ReadonlyVec3D]], val m
   
   /**
    * This is an effort to avoid having to create millions of Vec3D objects.
+   * It's ugly, and not very scala:esqe. But it works
    */
   class SearchState(val rayFromWorld:Vector3f, val rayToWorld:Vector3f,val zMin:Float,val zMax:Float) extends RayResultCallback {
     var currentC:CollisionState = new CollisionState
@@ -77,7 +66,6 @@ class JBulletCollision(val segments:IndexedSeq[IndexedSeq[ReadonlyVec3D]], val m
     val toV:Vec3D = new Vec3D
     var distanceToCoverSqr = 0.0f
     var plane:Plane = new Plane
-    //var directionNormalized:Vec3D = new Vec3D
     var directionDelta:Vec3D = new Vec3D
     var directionNormalized:Vec3D = new Vec3D
     val hitPointWorld = new Vector3f
@@ -277,7 +265,10 @@ class JBulletCollision(val segments:IndexedSeq[IndexedSeq[ReadonlyVec3D]], val m
      val dy = (v0.y - v1.y)//.toDouble
      dx*dx + dy*dy   
    }
-   
+  
+   /**
+    * returns the squared distance between two vertices in XY plane ( Z coordinate is ignored )
+    */
    @inline
    def distanceToSquaredInXYPlane(v0:ReadonlyVec3D, v1:Vector3f) = {
      val dx = (v0.x - v1.x)//.toDouble
@@ -290,7 +281,7 @@ class JBulletCollision(val segments:IndexedSeq[IndexedSeq[ReadonlyVec3D]], val m
      val aabb =  models(0).getBounds.copy()
      models.foreach(model => aabb.union(model.getBounds))
      
-     println("BB min:" + aabbAllModels.getMin + " max: " + aabbAllModels.getMax + " zMin=" + zMin + " zMax=" + zMax)
+     println("BB min:" + collisionWrapper.aabbAllModels.getMin + " max: " + collisionWrapper.aabbAllModels.getMax + " zMin=" + collisionWrapper.zMin + " zMax=" + collisionWrapper.zMax)
      val rayResult = new ArrayBuffer[Vec3D]
      
      @inline
@@ -300,7 +291,7 @@ class JBulletCollision(val segments:IndexedSeq[IndexedSeq[ReadonlyVec3D]], val m
        }
      } 
      
-     val searchState = new SearchState(new Vector3f(1, 1, zMax), new Vector3f(1, 1, zMin), zMin, zMax)
+     val searchState = new SearchState(new Vector3f(1, 1, collisionWrapper.zMax), new Vector3f(1, 1, collisionWrapper.zMin), collisionWrapper.zMin, collisionWrapper.zMax)
      
      segments.sliding(2,1).foreach(segment => {
        searchState.setSegment(segment(0), segment(1))
@@ -309,14 +300,14 @@ class JBulletCollision(val segments:IndexedSeq[IndexedSeq[ReadonlyVec3D]], val m
          if (searchState.rayTest(collisionWrapper.collisionWorld)) {
            // we hit something
            if (searchState.hasPrevious) {
-             if (searchState.previousC.collisionPoint.z == zMin) {
+             if (searchState.previousC.collisionPoint.z == collisionWrapper.zMin) {
                // we hit something but last time we didn't. So store that last miss
                val prevCopy = if (searchState.currentC.hasRetroPoint) {
                  searchState.currentC.retroPoint.copy               
                } else {
                  searchState.previousC.collisionPoint.copy
                }
-               prevCopy.z = zMin
+               prevCopy.z = collisionWrapper.zMin
                //println("saving (modified) air hit: " + prevCopy)
                addToRayResult(prevCopy)
                if (searchState.currentC.hasRetroPoint) 
@@ -341,10 +332,10 @@ class JBulletCollision(val segments:IndexedSeq[IndexedSeq[ReadonlyVec3D]], val m
          } else {
            // we hit nothing
            if (rayResult.size>0){
-             if (rayResult.last.z != zMin){
+             if (rayResult.last.z != collisionWrapper.zMin){
                // we have previous results with non-miss result
                val lastHit = rayResult.last.copy
-               lastHit.z = zMin
+               lastHit.z = collisionWrapper.zMin
                addToRayResult(lastHit)
              }
            } else {
@@ -369,7 +360,6 @@ class JBulletCollision(val segments:IndexedSeq[IndexedSeq[ReadonlyVec3D]], val m
    }
    
    def cleanup = {
-     //collisionWrapper.groundShape
      collisionWrapper.collisionWorld.destroy
    }
 }

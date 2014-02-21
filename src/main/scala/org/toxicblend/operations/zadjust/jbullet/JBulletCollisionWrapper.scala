@@ -47,6 +47,18 @@ class CollisionObjectWrapper(val segments:IndexedSeq[IndexedSeq[ReadonlyVec3D]],
   val gVertices = ByteBuffer.allocateDirect(totalVerts * 3 * 4).order(ByteOrder.nativeOrder());
   val gIndices = ByteBuffer.allocateDirect(totalTriangles * 3 * 4).order(ByteOrder.nativeOrder());
   
+  val aabbAllModels = {
+    if (models.size > 0){
+      val aabbTmp = models(0).getBounds.copy
+      models.tail.foreach(b => aabbTmp.union(b.getBounds))
+      aabbTmp
+    } else {
+      new AABB
+    }
+  }
+  val zMin = aabbAllModels.getMin.z-1f
+  val zMax = aabbAllModels.getMax.z+1f
+  
   (0 until totalVerts).foreach(index => {
     val v = models(0).getVertices(index)
     gVertices.putFloat((index*3 + 0) * 4, v.x)
