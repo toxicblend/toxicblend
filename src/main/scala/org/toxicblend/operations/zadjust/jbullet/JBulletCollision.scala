@@ -258,10 +258,10 @@ class JBulletCollision(val segments:IndexedSeq[IndexedSeq[ReadonlyVec3D]], val m
    
    def doRayTests(segments:IndexedSeq[ReadonlyVec3D]):IndexedSeq[IndexedSeq[Vec3D]] = {
 
-     val aabb =  models(0).getBounds.copy()
-     models.foreach(model => aabb.union(model.getBounds))
+     //val aabb =  models(0).getBounds.copy()
+     //models.foreach(model => aabb.union(model.getBounds))
      
-     println("BB min:" + collisionWrapper.aabbAllModels.getMin + " max: " + collisionWrapper.aabbAllModels.getMax + " zMin=" + collisionWrapper.zMin + " zMax=" + collisionWrapper.zMax)
+     //println("BB min:" + collisionWrapper.aabbAllModels.getMin + " max: " + collisionWrapper.aabbAllModels.getMax + " zMin=" + collisionWrapper.zMin + " zMax=" + collisionWrapper.zMax)
      
      val searchState = new SearchState(new Vector3f(1, 1, collisionWrapper.zMax), new Vector3f(1, 1, collisionWrapper.zMin), collisionWrapper.zMin, collisionWrapper.zMax)
      val totalRayResult = new ArrayBuffer[ArrayBuffer[Vec3D]]
