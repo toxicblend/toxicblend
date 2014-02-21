@@ -35,14 +35,14 @@ import org.toxicblend.geometry.TrianglePlaneIntersection
 object JBulletTest {
  
   def main(args: Array[String]): Unit = {
-   
-    val a = new Vec3D(0,0,-1)
-    val b = new Vec3D(3,6,0)
-    val c = new Vec3D(1,2,0)
-    val dst = new Vec3D(-1,-1,-1)
+        
+    //val a = new Vec3D(0,0,-1)
+    //val b = new Vec3D(3,6,0)
+    //val c = new Vec3D(1,2,0)
+    //val dst = new Vec3D(-1,-1,-1)
     
-    TrianglePlaneIntersection.interpolate3D(dst,b,a,c)
-    println("interpolate3D:" + dst)
+    //TrianglePlaneIntersection.interpolate3D(dst,b,a,c)
+    //println("interpolate3D:" + dst)
    
     val models = {
       val toximesh = new TriangleMesh
@@ -52,10 +52,10 @@ object JBulletTest {
     }
     
     val segments:Array[IndexedSeq[ReadonlyVec3D]] = {
-      val segment:Array[ReadonlyVec3D] = Array(new Vec3D(-2.5f,-2f,1f), new Vec3D(2f,2f,1f))
+      val segment:Array[ReadonlyVec3D] = Array(new Vec3D(-2f,-2f,1f), new Vec3D(2f,2f,1f))
       Array(segment)
     }
-    val jbc = new JBulletCollision(segments, models, 10.005f)
+    val jbc = new JBulletCollision(segments, models, 0.005f, 0.0001f)
         
     val result = new MutableList[IndexedSeq[ReadonlyVec3D]]
     segments.foreach(segment => {

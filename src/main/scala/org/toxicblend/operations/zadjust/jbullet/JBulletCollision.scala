@@ -140,7 +140,9 @@ object CollisionObjectWrapper {
   }
 }
 
-class JBulletCollision(val segments:IndexedSeq[IndexedSeq[ReadonlyVec3D]], val models:IndexedSeq[Mesh3DConverter], val deltaStep:Float) {
+class JBulletCollision(val segments:IndexedSeq[IndexedSeq[ReadonlyVec3D]], val models:IndexedSeq[Mesh3DConverter], val sampleDelta:Float, val ε:Float) {
+  // used when comparing squared lengthts
+  // val εSqr = ε.toDouble*ε.toDouble
   
   class CollisionState extends TrianglePlaneIntersectionResult {
     val collisionPoint:Vec3D = new Vec3D
@@ -169,13 +171,18 @@ class JBulletCollision(val segments:IndexedSeq[IndexedSeq[ReadonlyVec3D]], val m
     var previousC:CollisionState = new CollisionState
     val fromV:Vec3D = new Vec3D
     val toV:Vec3D = new Vec3D
-    var distanceToCoverSquared = 0f
+    var distanceToCoverSqr = 0.0f
     var plane:Plane = new Plane
     //var directionNormalized:Vec3D = new Vec3D
-    var direction:Vec3D = new Vec3D
+    var directionDelta:Vec3D = new Vec3D
+    var directionNormalized:Vec3D = new Vec3D
     val hitPointWorld = new Vector3f
     var triangleIndex:Int = -1
+    var endOfSegmentReached = false
     
+    /**
+     * callback from jbullet on collision
+     */
     override def addSingleResult(rayResult:LocalRayResult, normalInWorldSpace:Boolean):Float = {
       closestHitFraction = rayResult.hitFraction      
       VectorUtil.setInterpolate3(hitPointWorld, rayFromWorld, rayToWorld, rayResult.hitFraction)
@@ -190,8 +197,7 @@ class JBulletCollision(val segments:IndexedSeq[IndexedSeq[ReadonlyVec3D]], val m
       val tmp = previousC
       previousC = currentC
       currentC = tmp
-      currentC.hasRetroPoint = false
-      currentC.hasForwardPoint = false
+      currentC.reset
     }
     
     def rayTest(collisionWorld:CollisionWorld):Boolean = {
@@ -201,22 +207,22 @@ class JBulletCollision(val segments:IndexedSeq[IndexedSeq[ReadonlyVec3D]], val m
       if ( closestHitFraction == 1.0f ){
         // we hit nothing, mark 'end of world' as collision point 
         currentC.setCollisionPoint(rayToWorld)
-        println("rayTest " + rayFromWorld + " -> " + rayToWorld + " -> air " + currentC.collisionPoint)
+        //println("rayTest " + rayFromWorld + " -> " + rayToWorld + " -> air " + currentC.collisionPoint)
         false
       } else {
-        println("rayTest " + rayFromWorld + " -> " + rayToWorld + " -> hit " + currentC.collisionPoint)
+        //println("rayTest " + rayFromWorld + " -> " + rayToWorld + " -> hit " + currentC.collisionPoint)
         
         val triangle = models(0).getFaces(triangleIndex).toIndexedSeq.map(i => models(0).getVertices(i))
-        TrianglePlaneIntersection.trianglePlaneIntersection(triangle, plane, currentC.collisionPoint, direction, currentC)
+        TrianglePlaneIntersection.trianglePlaneIntersection(triangle, plane, currentC.collisionPoint, directionNormalized, currentC)
         
         if (currentC.hasForwardPoint){
           // test if the forward point overshot the segment 
           val distanceToTriangleIntersection = distanceToSquaredInXYPlane(fromV,currentC.forwardPoint) 
-          if ( distanceToTriangleIntersection > distanceToCoverSquared ) {
+          if ( distanceToTriangleIntersection > distanceToCoverSqr ) {
             
             //val oldStr = "" + currentC.forwardPoint.x + ", " + currentC.forwardPoint.y + ", " + currentC.forwardPoint.z
             // sample at segment end
-            jumpAheadToXY(toV)
+            conditionalJumpAheadToXY(toV)
             closestHitFraction = 1f 
             val oldX = currentC.collisionPoint.x
             val oldY = currentC.collisionPoint.y
@@ -231,7 +237,6 @@ class JBulletCollision(val segments:IndexedSeq[IndexedSeq[ReadonlyVec3D]], val m
             currentC.collisionPoint.y = oldY
             currentC.collisionPoint.z = oldZ
             currentC.hasForwardPoint = true
-            currentC.hasRetroPoint = false
             //println("forward point overshot " + oldStr + " interpolated to " + currentC.forwardPoint.x + ", " + currentC.forwardPoint.y+ ", " + currentC.forwardPoint.z)
             /**
             if (currentC.hasRetroPoint ){
@@ -239,14 +244,16 @@ class JBulletCollision(val segments:IndexedSeq[IndexedSeq[ReadonlyVec3D]], val m
               TrianglePlaneIntersection.interpolate3D(currentC.forwardPoint,currentC.retroPoint,currentC.forwardPoint, toV) 
               println("forward point overshot " + oldStr + " interpolated to " + currentC.forwardPoint.x + ", " + currentC.forwardPoint.y+ ", " + currentC.forwardPoint.z)
             }
-           
             */
           }
         }
         true
       }
     }
-      
+    
+    /**
+     * resets the instance for reuse  
+     */  
     def setSegment(newFromV:ReadonlyVec3D, newToV:ReadonlyVec3D) = {
       currentC.hasForwardPoint = false
       currentC.hasRetroPoint = false
@@ -254,43 +261,93 @@ class JBulletCollision(val segments:IndexedSeq[IndexedSeq[ReadonlyVec3D]], val m
       previousC.hasRetroPoint = false
       hasPrevious = false
       closestHitFraction = 1f
+      endOfSegmentReached = false
       
       fromV.x = newFromV.x; fromV.y = newFromV.y; fromV.z = newFromV.z;
       toV.x = newToV.x; toV.y = newToV.y; toV.z = newToV.z;
 
-      distanceToCoverSquared = distanceToSquaredInXYPlane(fromV,toV)
+      distanceToCoverSqr = distanceToSquaredInXYPlane(fromV,toV)
       plane = TrianglePlaneIntersection.segmentToZPlane(fromV,toV)
-      direction = {
+      directionNormalized = {
         val d = toV.sub(fromV)
         d.z = 0
-        d.normalize().scaleSelf(deltaStep)
-      }  
+        d.normalize
+      } 
+      directionDelta = directionNormalized.scale(sampleDelta)
       
       setRayOrigin(fromV)
-      println("From= "+ fromV.x + "," + fromV.y + " to=" + toV.x + "," + toV.y + " Direction = " + direction.x + "," + direction.y)
+      //println("setSegment: From= "+ fromV.x + "," + fromV.y + " to=" + toV.x + "," + toV.y + " Direction = " + direction.x + "," + direction.y)
     }
     
     @inline 
     def incrementPosition = {
-      val oldStr = "" + rayFromWorld.x + "," + rayFromWorld.y + " "
-      rayFromWorld.x += direction.x
-      rayFromWorld.y += direction.y
+      //val oldStr = "" + rayFromWorld.x + "," + rayFromWorld.y + " "
+      //val atSegmentEnd = math.abs(rayFromWorld.x-toV.x) <= ε && math.abs(rayFromWorld.y-toV.y) <= ε
+      //println(" toV.x         =" +  toV.x +         "  toV.y=        " + toV.y)
+      //println(" rayFromWorld.x=" + rayFromWorld.x + " rayFromWorld.y=" + rayFromWorld.y)
+      
+      rayFromWorld.x += directionDelta.x
+      rayFromWorld.y += directionDelta.y
       rayToWorld.x = rayFromWorld.x
-      rayToWorld.y = rayFromWorld.y 
-      println("Incrementing position from " + oldStr + " to: " + rayFromWorld.x + "," + rayFromWorld.y + " should stop at " +toV.x + "," + toV.y )
+      rayToWorld.y = rayFromWorld.y
+      
+      val distanceCoveredSqr = distanceToSquaredInXYPlane(fromV,rayFromWorld) 
+      //println("distanceCoveredSoFar=" + distanceCoveredSoFar + " distanceToCoverSqr=" + distanceToCoverSqr + " :" + (distanceCoveredSoFar > distanceToCoverSqr)  + " atSegmentEnd:" + atSegmentEnd + " endOfSegmentReached:" + endOfSegmentReached)
+
+      if (distanceCoveredSqr > distanceToCoverSqr){
+        //if (!atSegmentEnd){
+          //println("went to far, testing segment end")
+          rayFromWorld.x = toV.x
+          rayFromWorld.y = toV.y
+          rayToWorld.x = toV.x
+          rayToWorld.y = toV.y
+        //}
+      }
+      //println("Incrementing position from " + oldStr + " to: " + rayFromWorld.x + "," + rayFromWorld.y + " should stop at " +toV.x + "," + toV.y )
     }
     
-    def jumpAheadToXY(point:Vec3D) = {
-      rayFromWorld.x = point.x
-      rayFromWorld.y = point.y
-      rayToWorld.x = point.x
-      rayToWorld.y = point.y  
+    /**
+     * jumps the scan to new coordinates, but if the new coordinate exceeds the current segment it will be clipped
+     * The method only touches X & Y coordinates
+     */
+    def conditionalJumpAheadToXY(point:Vec3D) = {
+      val newDistanceSquared = distanceToSquaredInXYPlane(fromV,point)
+      if (newDistanceSquared > distanceToCoverSqr){
+        rayFromWorld.x = toV.x
+        rayFromWorld.y = toV.y
+        rayToWorld.x = toV.x
+        rayToWorld.y = toV.y
+        //println("jumping ahead to " + rayFromWorld + " (limited)")
+      } else {
+        rayFromWorld.x = point.x
+        rayFromWorld.y = point.y
+        rayToWorld.x = point.x
+        rayToWorld.y = point.y
+        //println("jumping ahead to " + rayFromWorld)
+      }
     }
     
+    /**
+     * tests if we have reached the end of the segment. 
+     * But allow to sample at the end coordinate for one iteration
+     */
     @inline
     def isDone = {
-      val distanceCoveredSoFar = distanceToSquaredInXYPlane(fromV,rayFromWorld) 
-      distanceCoveredSoFar >= distanceToCoverSquared
+      if (endOfSegmentReached) {
+        // end of segment already sampled, we're done
+        //println("isDone: endOfSegmentReached already seen, ending iteration at:" + rayFromWorld)
+        true
+      } else {
+        val distanceCoveredSqr = distanceToSquaredInXYPlane(fromV,rayFromWorld) 
+        //val diff = math.abs(distanceCoveredSoFar-distanceToCoverSqr)
+        if ( distanceCoveredSqr >= distanceToCoverSqr) {
+          // allow one more iteration at 'end of segment'
+          endOfSegmentReached = true
+          //println("isDone: setting endOfSegmentReached at: " + rayFromWorld + " distanceCoveredSqr=" + distanceCoveredSqr)
+        }
+        //println("isDone: continuing, distanceCoveredSqr = " + distanceCoveredSqr)
+        false
+      }
     }
     
     @inline
@@ -322,16 +379,16 @@ class JBulletCollision(val segments:IndexedSeq[IndexedSeq[ReadonlyVec3D]], val m
     * returns the squared distance between two vertices in XY plane ( Z coordinate is ignored )
     */
    @inline
-   def distanceToSquaredInXYPlane(v0:ReadonlyVec3D, v1:ReadonlyVec3D):Float = {
-     val dx = v0.x - v1.x
-     val dy = v0.y - v1.y
+   def distanceToSquaredInXYPlane(v0:ReadonlyVec3D, v1:ReadonlyVec3D) = {
+     val dx = (v0.x - v1.x)//.toDouble
+     val dy = (v0.y - v1.y)//.toDouble
      dx*dx + dy*dy   
    }
    
    @inline
-   def distanceToSquaredInXYPlane(v0:ReadonlyVec3D, v1:Vector3f):Float = {
-     val dx = v0.x - v1.x
-     val dy = v0.y - v1.y
+   def distanceToSquaredInXYPlane(v0:ReadonlyVec3D, v1:Vector3f) = {
+     val dx = (v0.x - v1.x)//.toDouble
+     val dy = (v0.y - v1.y)//.toDouble
      dx*dx + dy*dy   
    }
    
@@ -342,13 +399,20 @@ class JBulletCollision(val segments:IndexedSeq[IndexedSeq[ReadonlyVec3D]], val m
      
      println("BB min:" + aabbAllModels.getMin + " max: " + aabbAllModels.getMax + " zMin=" + zMin + " zMax=" + zMax)
      val rayResult = new ArrayBuffer[ReadonlyVec3D]
+     
+     @inline
+     def addToRayResult(p:ReadonlyVec3D) = {
+       if (rayResult.size<1 || rayResult.last != p){
+         rayResult.append(p)
+       }
+     } 
+     
      val searchState = new SearchState(new Vector3f(1, 1, zMax), new Vector3f(1, 1, zMin), zMin, zMax)
      
      segments.sliding(2,1).foreach(segment => {
        searchState.setSegment(segment(0), segment(1))
        
        while (!searchState.isDone) {
-
          if (searchState.rayTest(collisionWrapper.collisionWorld)) {
            // we hit something
            if (searchState.hasPrevious) {
@@ -360,24 +424,26 @@ class JBulletCollision(val segments:IndexedSeq[IndexedSeq[ReadonlyVec3D]], val m
                  searchState.previousC.collisionPoint.copy
                }
                prevCopy.z = zMin
-               println("saving (modified) air hit: " + prevCopy)
-               rayResult.append(prevCopy)
-               if (searchState.currentC.hasRetroPoint) rayResult.append(searchState.currentC.retroPoint.copy)
-               else println("No retro point, what to do???")
+               //println("saving (modified) air hit: " + prevCopy)
+               addToRayResult(prevCopy)
+               if (searchState.currentC.hasRetroPoint) 
+                 addToRayResult(searchState.currentC.retroPoint.copy)
+               else 
+                 System.err.println("No retro point, what to do???")
              }
            } else {
-             println("saving segment first hit : " + searchState.currentC.collisionPoint)
-             rayResult.append(searchState.currentC.collisionPoint.copy)
+             //println("saving segment first hit : " + searchState.currentC.collisionPoint)
+             addToRayResult(searchState.currentC.collisionPoint.copy)
            }
            
            if (searchState.currentC.hasForwardPoint) {
-             println("Adding front edge: " + searchState.currentC.forwardPoint)
-             rayResult.append(searchState.currentC.forwardPoint.copy)
-             println("jumping ahead to " + searchState.currentC.forwardPoint )
-             searchState.jumpAheadToXY(searchState.currentC.forwardPoint)
+             //println("Adding front edge: " + searchState.currentC.forwardPoint)
+             addToRayResult(searchState.currentC.forwardPoint.copy)
+             //println("jumping ahead to " + searchState.currentC.forwardPoint )
+             searchState.conditionalJumpAheadToXY(searchState.currentC.forwardPoint)
            } else {
-             println("Adding plain collision point: " + searchState.currentC.collisionPoint)
-             rayResult.append(searchState.currentC.collisionPoint.copy)
+             //println("Adding plain collision point: " + searchState.currentC.collisionPoint)
+             addToRayResult(searchState.currentC.collisionPoint.copy)
            }
          } else {
            // we hit nothing
@@ -386,11 +452,11 @@ class JBulletCollision(val segments:IndexedSeq[IndexedSeq[ReadonlyVec3D]], val m
                // we have previous results with non-miss result
                val lastHit = rayResult.last.copy
                lastHit.z = zMin
-               rayResult.append(lastHit)
+               addToRayResult(lastHit)
              }
            } else {
              // the very first test was a dud, save it as an starting point
-             rayResult.append(searchState.currentC.collisionPoint.copy)
+             addToRayResult(searchState.currentC.collisionPoint.copy)
            }
          }
          searchState.incrementPosition
@@ -402,8 +468,8 @@ class JBulletCollision(val segments:IndexedSeq[IndexedSeq[ReadonlyVec3D]], val m
               (distanceToSquaredInXYPlane(searchState.toV,rayResult.last) > 
                distanceToSquaredInXYPlane(searchState.toV,searchState.previousC.collisionPoint)))) {
          // segment completed, save the last of the hits points 
-         println("done all tests, saving last hit" + searchState.previousC.collisionPoint)
-         rayResult.append(searchState.previousC.collisionPoint.copy)
+         //println("done all tests, saving last hit" + searchState.previousC.collisionPoint)
+         addToRayResult(searchState.previousC.collisionPoint.copy)
        }
      })
      rayResult

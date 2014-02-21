@@ -9,6 +9,8 @@ import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.MutableList
 import toxi.geom.ReadonlyVec3D
 import scala.collection.JavaConversions._
+import org.toxicblend.util.Regex
+import org.toxicblend.UnitSystem
 
 class ZAdjustOperation extends CommandProcessorTrait {
   
@@ -21,14 +23,36 @@ class ZAdjustOperation extends CommandProcessorTrait {
     if (segments._1.size > 0) throw new ToxicblendException("First object should only contain edges")
     val models = inMessage.getModelsList().tail.toIndexedSeq.map(i=>Mesh3DConverter(i,true))
     
-    val jbc = new JBulletCollision(segments._2, models, 0.001f) 
+    val useMultiThreading = options.getOrElse("useMultiThreading", "FALSE").toUpperCase() match {
+      case "TRUE" => true
+      case "FALSE" => false
+      case s:String => System.err.println("ZAdjustOperation: Unrecognizable 'useMultiThreading' property value: " +  s ); false
+    }
+    val unitScale:Float = options.getOrElse("unitScale", "1.0") match {
+      case Regex.FLOAT_REGEX(limit) => limit.toFloat
+      case s:String => System.err.println("ZAdjustOperation: unrecognizable 'unitScale' property value: " +  s ); 1f
+    }
+    val unitIsMetric = options.getOrElse("unitSystem", "METRIC").toUpperCase() match {
+      case "METRIC" => UnitSystem.Metric
+      case "NONE" => None
+      case "IMPERIAL" => UnitSystem.Imperial
+      case s:String => System.err.println("ZAdjustOperation: Unrecognizable 'unitSystem' property value: " +  s ); None
+    }
+    val sampleStep:Float = (options.getOrElse("sampleStep", "0.1") match {
+      case Regex.FLOAT_REGEX(limit) => limit.toFloat
+      case s:String => System.err.println("ZAdjustOperation: unrecognizable 'sampleStep' property value: " +  s ); .1f
+    } ) / 1000f // /1000 for conversion to mm
+    println(options)
+    val epsilon = 0.000002f
+    println("sampleStep="+ sampleStep + " epsilon=" + epsilon)
+    val jbc = new JBulletCollision(segments._2, models, sampleStep, epsilon) 
     val result = new MutableList[IndexedSeq[ReadonlyVec3D]]
     segments._2.foreach(segment => {
       result += jbc.doRayTests(segment)
     })
     
-    println("Result:")
-    result.foreach( s => {println; s.foreach(r => println(r))} )
+    //println("Result:")
+    //result.foreach( s => {println; s.foreach(r => println(r))} )
 
     jbc.cleanup
     val returnMessageBuilder = Message.newBuilder()

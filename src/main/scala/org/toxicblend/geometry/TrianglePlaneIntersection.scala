@@ -19,6 +19,7 @@ class TrianglePlaneIntersectionResult {
   val retroPoint = new Vec3D
   
   @inline def reset = {
+    //println("unsetting retro and forward")
     hasRetroPoint = false
     hasForwardPoint = false
   }
@@ -28,6 +29,7 @@ class TrianglePlaneIntersectionResult {
     forwardPoint.y = point.y
     forwardPoint.z = point.z
     hasForwardPoint = true
+    //println("setting forward point: " + point)
   }
   
   @inline def unsetForwardPoint = hasForwardPoint = false
@@ -37,9 +39,13 @@ class TrianglePlaneIntersectionResult {
     retroPoint.y = point.y
     retroPoint.z = point.z
     hasRetroPoint = true
+    //println("setting retro point: " + point)
   }
   
-  @inline def unsetRetroPoint = hasRetroPoint = false;
+  @inline def unsetRetroPoint = {
+    //println("unsetting retro")
+    hasRetroPoint = false;
+  }
  
   override def toString:String = {
     val rv = { if (hasForwardPoint) forwardPoint.toString() + " " else "no forward " } + { if (hasRetroPoint) retroPoint.toString() + " " else "no retro" }
@@ -50,6 +56,7 @@ class TrianglePlaneIntersectionResult {
 object TrianglePlaneIntersection {
   
   private val SLIDINGSEQUENCE = Array((0,1),(1,2),(2,0))
+  val ε = 0.00001f
   
   /**
    * returns true if the two vectors point in the same direction in the XY plane
@@ -64,35 +71,37 @@ object TrianglePlaneIntersection {
    */
   @inline
   def trianglePlaneIntersection(triangle:IndexedSeq[ReadonlyVec3D], plane:Plane, lastPosition:ReadonlyVec3D, direction:ReadonlyVec3D, rvContainer:TrianglePlaneIntersectionResult) = {
-    val forwardIntersections = new ArrayBuffer[ReadonlyVec3D](2)
-    val retroIntersections = new ArrayBuffer[ReadonlyVec3D](2)
-    val epsilon = 0.00001f
+    //val forwardIntersections = new ArrayBuffer[ReadonlyVec3D](2)
+    //val retroIntersections = new ArrayBuffer[ReadonlyVec3D](2)
+    
     val ray = new Ray3D
     rvContainer.reset
     SLIDINGSEQUENCE.foreach( i => {
-      val class1 = plane.classifyPoint(triangle(i._1),epsilon)
-      val class2 = plane.classifyPoint(triangle(i._2),epsilon)
+      val class1 = plane.classifyPoint(triangle(i._1),ε)
+      val class2 = plane.classifyPoint(triangle(i._2),ε)
       if (class1 == Plane.Classifier.ON_PLANE) {
-        val hit = triangle(i._1)
-        if ( isCollinearXY(direction, hit.sub(lastPosition) )) {
-          forwardIntersections.append(hit)
-        } else {
-          retroIntersections.append(hit)
-        }
-      } else if (class2 == Plane.Classifier.ON_PLANE) {
         val point = triangle(i._1)
         if ( isCollinearXY(direction, point.sub(lastPosition) )) {
           rvContainer.setForwardPoint(point)
         } else {
           rvContainer.setRetroPoint(point)
         }
-      } else if (forwardIntersections.size < 2 && class1 != class2)  {
+      }
+      if (class2 == Plane.Classifier.ON_PLANE) {
+        val point = triangle(i._2)
+        if ( isCollinearXY(direction, point.sub(lastPosition) )) {
+          rvContainer.setForwardPoint(point)
+        } else {
+          rvContainer.setRetroPoint(point)
+        }
+      }
+      if ( class1 != Plane.Classifier.ON_PLANE && class2 != Plane.Classifier.ON_PLANE && class1 != class2)  {
         ray.set(triangle(i._1))
         ray.setDirection(triangle(i._2).sub(triangle(i._1)))
         val distance = plane.intersectRayDistance(ray)
         if (distance < 0){
           // something went wrong
-          System.err.println("negative distance")
+          System.err.println("trianglePlaneIntersection: negative distance, debug me")
         } else {
           val point = ray.getPointAtDistance(distance)
           if (isCollinearXY(direction, point.sub(lastPosition) )) {
