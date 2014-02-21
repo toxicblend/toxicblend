@@ -43,7 +43,8 @@ class ToxicLibsVolume(bpy.types.Operator):
   voxelResolution = bpy.props.FloatProperty(name="Voxel resolution", description="The resolution of the brush, if nothing is shown this value needs to be increased", default=32, min=1, max=512)
   voxelIsoValue = bpy.props.FloatProperty(name="Voxel Iso value", description="Not exactly sure what this does, better kept at 0.66", default=0.66, min=0.01, max=1.0)
   voxelBrushDrawStep = bpy.props.FloatProperty(name="Voxel brush draw step", description="Distance between each 'brushpaint' along a segment (in pixels)", default=1, min=0.001, max=256)  
-   
+  laplacianIterations = bpy.props.IntProperty(name="Laplacian smooth iterations", description="Numer of times you want to run laplacian smooth on the result", default=0, min=0, max=10)   
+      
   @classmethod
   def poll(cls, context):
     return context.active_object is not None
@@ -55,14 +56,15 @@ class ToxicLibsVolume(bpy.types.Operator):
     with toxicblend.ByteCommunicator("localhost", 9999) as c: 
       # bpy.context.selected_objects,
       activeObject = context.scene.objects.active
-      properties = {'voxelBrushSize'    : str(self.voxelBrushSize), \
-                    'voxelResolution'   : str(self.voxelResolution), \
-                    'voxelIsoValue'     : str(self.voxelIsoValue), \
-                    'voxelBrushDrawStep': str(self.voxelBrushDrawStep), \
-                    'voxelBrushType'    : str(self.voxelBrushType),
-                    'voxelBrushMode'    : str(self.voxelBrushMode),
-                    'unitSystem'        : str(unitSystemProperty.system), 
-                    'unitScale'         : str(unitSystemProperty.scale_length) }
+      properties = {'voxelBrushSize'     : str(self.voxelBrushSize),
+                    'voxelResolution'    : str(self.voxelResolution),
+                    'voxelIsoValue'      : str(self.voxelIsoValue),
+                    'voxelBrushDrawStep' : str(self.voxelBrushDrawStep),
+                    'voxelBrushType'     : str(self.voxelBrushType),
+                    'voxelBrushMode'     : str(self.voxelBrushMode),
+                    'laplacianIterations': str(self.laplacianIterations),
+                    'unitSystem'         : str(unitSystemProperty.system), 
+                    'unitScale'          : str(unitSystemProperty.scale_length) }
       #print(str(self.voxelBrushType))               
       c.sendSingleBlenderObject(activeObject, self.bl_idname, properties) 
       c.receiveObjects()
