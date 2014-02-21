@@ -27,7 +27,7 @@ class ToxicBlend_SimpleGcodeGenerator(bpy.types.Operator):
   #        )        
   #simplifyLimitProperty = bpy.props.FloatProperty(name="Simplify Limit", default=0.5, min=0.0001, max=100, description="the maximum allowed 3d deviation (in pixels) from a straight line, if the deviation is larger than this the line will be segmented.")  
   safeZProperty = bpy.props.FloatProperty(name="Safe Z[mm]", default=2, min=0.0001, max=100, description="Safe Z position, gcode will initiate at this height")
-  stepdownProperty = bpy.props.FloatProperty(name="Stepdown Z[mm]", default=2, min=0, max=100, description="Maximum plunge depth per layer")
+  stepdownProperty = bpy.props.FloatProperty(name="Stepdown Z[mm]", default=1000, min=0, max=2000, description="Maximum plunge depth per layer (set it large to disable layers)")
   g0FeedrateProperty = bpy.props.FloatProperty(name="G0 feedrate [mm/min]", default=1000, min=0, max=5000, description="Rapid feedrate")
   g1FeedrateProperty = bpy.props.FloatProperty(name="G1 feedrate [mm/min]", default=300, min=0, max=5000, description="Feedrate")
   g1PlungeFeedrateProperty = bpy.props.FloatProperty(name="plunge feedrate [mm/min]", default=100, min=0, max=5000, description="Plunge feedrate")
