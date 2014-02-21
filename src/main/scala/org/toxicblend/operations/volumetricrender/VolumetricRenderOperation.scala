@@ -25,7 +25,7 @@ import org.toxicblend.geometry.Matrix4x4Implicit._
  * 
  * TODO: There are an issue with scaling and centering of the resulting mesh
  */
-class VolumetricRenderProcessor extends CommandProcessorTrait {
+class VolumetricRenderOperation extends CommandProcessorTrait {
   
    def processInput(inMessage:Message) = {
     
