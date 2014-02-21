@@ -15,7 +15,7 @@ import org.toxicblend.operations.boostmedianaxis.MedianAxisJni.simplify2D
 
 import scala.collection.JavaConversions._
 
-class BoostSimplify extends CommandProcessorTrait {
+class BoostSimplifyOperation extends CommandProcessorTrait {
   
   def processInput(inMessage:Message) = {
     val options = OptionConverter(inMessage)
