@@ -9,7 +9,7 @@ import org.toxicblend.protobuf.ToxicBlendProtos.Message
 import org.toxicblend.protobuf.ToxicBlendProtos.{Option => MessageOption}
 import org.toxicblend.protobuf.ToxicBlendProtos.Model
 import org.toxicblend.typeconverters.OptionConverter
-import org.toxicblend.operations.volumetricrender.VolumetricRenderProcessor
+import org.toxicblend.operations.volumetricrender.VolumetricRenderOperation
 import org.toxicblend.operations.projectionoutline.ProjectionOutlineOperation
 import org.toxicblend.operations.boostmedianaxis.MedianAxisOperation
 import org.toxicblend.operations.dragoncurve.DragonCurveOperation
@@ -55,7 +55,7 @@ case class ServerThread(socket: Socket) extends Thread("ServerThread") {
           
           val outMessage = {
             val processor:CommandProcessorTrait = inMessage.getCommand() match {
-              case "OBJECT_OT_toxicblend_volume" => new VolumetricRenderProcessor
+              case "OBJECT_OT_toxicblend_volume" => new VolumetricRenderOperation
               case "OBJECT_OT_toxicblend_add_dragon_curve" => new DragonCurveOperation
               case "OBJECT_OT_toxicblend_projection_outline" => new ProjectionOutlineOperation
               case "OBJECT_OT_toxicblend_medianaxis" => new MedianAxisOperation
@@ -95,8 +95,7 @@ case class ServerThread(socket: Socket) extends Thread("ServerThread") {
       out.close()
       in.close()
       socket.close()
-    }
-    catch {
+    } catch {
       case e: SocketException =>
         () // avoid stack trace when stopping a client with Ctrl-C
       case e: EOFException =>
