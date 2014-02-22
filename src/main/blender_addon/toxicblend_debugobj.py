@@ -49,7 +49,8 @@ class ToxicBlend_DebugObj(bpy.types.Operator):
     if len(bm.edges)==0:
       print("No edges")
     else:
-        print("Edges:")  
+        print("Edges:") 
+        edgeMap = {} 
         for e in bm.edges:
           indices = []
           for v in e.verts:
@@ -57,8 +58,16 @@ class ToxicBlend_DebugObj(bpy.types.Operator):
           if len(indices)!=2 or indices[0]==indices[1]:
             print("%s %s"%(",".join(indices), "problematic!!" ))  
           else:
-            print(",".join(indices))
-                
+            lowI = min(int(indices[0]),int(indices[1]))
+            highI = max(int(indices[0]),int(indices[1]))
+            #print("%d to %d " % (lowI,highI))
+            key = "%d-%d" % (lowI,highI)
+            if key in edgeMap:
+              print("%s %s"%(",".join(indices), "double edge!!" ))  
+            else:
+              print(",".join(indices))
+            edgeMap[key] = True    
+            
     return {'FINISHED'}
 
 def register():
