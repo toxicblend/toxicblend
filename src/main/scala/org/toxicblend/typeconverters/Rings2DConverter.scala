@@ -99,7 +99,9 @@ class Rings2DConverter private (val mesh2d:Rings2D, val projectionPlane:Projecti
         f.sliding(2).foreach(e => 
           helper.addFace(e.to)
         )
-        helper.addFace(f(0),f.last)
+        if (f.size>2) {
+          helper.addFace(f(0),f.last)
+        }
       })
      else
         mesh2d.faces.foreach(f => helper.addFace(f))

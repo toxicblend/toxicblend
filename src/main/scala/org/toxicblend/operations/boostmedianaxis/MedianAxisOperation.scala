@@ -32,28 +32,23 @@ class MedianAxisOperation extends CommandProcessorTrait {
       case _ => throw new IllegalArgumentException("No projection plane specified")
       //case s:String => System.err.println("Unknown projection: " +  s ); None
     }
-    
     val useMultiThreading = options.getOrElse("useMultiThreading", "None").toUpperCase() match {
       case "TRUE" => true
       case "FALSE" => false
       case s:String => System.err.println("Unrecognizable useMultiThreading property value: " +  s ); false
     }
-    
     val simplifyLimit:Float = options.getOrElse("simplifyLimit", "0.0") match {
       case Regex.FLOAT_REGEX(limit) => limit.toFloat
       case s:String => System.err.println("MedianAxisProcessor: unrecognizable simplifyLimit property value: " +  s ); 0f
     }
-    
     val zEpsilon:Float = options.getOrElse("zEpsilon", "1.1") match {
       case Regex.FLOAT_REGEX(limit) => limit.toFloat
       case s:String => System.err.println("MedianAxisProcessor: unrecognizable zEpsilon property value: " +  s ); 1.1f
     }
-    
     val dotProductLimit:Float = options.getOrElse("dotProductLimit", "0.3") match {
       case Regex.FLOAT_REGEX(limit) => limit.toFloat
       case s:String => System.err.println("MedianAxisProcessor: unrecognizable dotProductLimit property value: " +  s ); .3f
     }
-    
     val calculationResolution:Float = options.getOrElse("calculationResolution", MedianAxisOperation.DEFAULT_CALCULATION_RESOLUTION ) match {
       case Regex.FLOAT_REGEX(limit) => limit.toFloat
       case s:String => System.err.println("MedianAxisProcessor: unrecognizable calculationResolution property value: " +  s ); MedianAxisOperation.DEFAULT_CALCULATION_RESOLUTION.toFloat
@@ -75,12 +70,7 @@ class MedianAxisOperation extends CommandProcessorTrait {
   
   def computeMedianAxis(majni:MedianAxisJni,rings2D:Rings2DConverter, zEpsilon:Float, dotProductLimit:Float, calculationResolution:Float, simplifyLimit:Float, objectName:String, useMultiThreading:Boolean):Mesh3DConverter = {
     
-    //println("Starting loadObj");
-    // val inFileName = "data/axel.obj" // "data/simple_test.obj"//"data/test.obj"
     var ringSeq = Time.time { majni.loadRings2D(rings2D.mesh2d, simplifyLimit, objectName) }
-    //println("Found "+ ringSeq.size + " standalone rings");
-    //println(ringSeq.mkString("\n"))
-    //ma.saveRingsAsObj("data/axel_rings.obj", inData)
     ringSeq = Ring2D.sortOutInternals(ringSeq)
     
     println("Starting interiorVoronoiEdges: objectName=" + objectName+ " zEpsilon=" +zEpsilon+ " dotProductLimit=" +dotProductLimit + " calculationResolution="+ calculationResolution + " simplifyLimit="+ simplifyLimit + " useMultiThreading=" + useMultiThreading);
@@ -89,12 +79,7 @@ class MedianAxisOperation extends CommandProcessorTrait {
       Time.time { ringSeq.par.map(ring => Mesh3DConverter.removeZDoubles(majni.voronoiInternalEdges(ring, zEpsilon, dotProductLimit, calculationResolution, simplifyLimit))).toArray }
     else
       Time.time { ringSeq.map(ring => Mesh3DConverter.removeZDoubles(majni.voronoiInternalEdges(ring, zEpsilon, dotProductLimit, calculationResolution, simplifyLimit))).toArray }
-    
-    println("Done interiorVoronoiEdges");
-    
-    //var outFilename = "data/axel_unfiltered_out.obj"
-    //ma.saveEdgesToObj(outFilename, ie.toArray)
-    
+   
     val rv = new Mesh3DConverter
     // Do .toArray before assembling result into one Mesh3DConverter
     internalEdges.foreach( mesh3d => 
@@ -130,5 +115,6 @@ class MedianAxisOperation extends CommandProcessorTrait {
 }
 
 object MedianAxisOperation {
+  // this is how large the integer voronoi calculation range will be (in c++)
   val DEFAULT_CALCULATION_RESOLUTION = (math.sqrt(Int.MaxValue).toInt * -2).toString
 }
