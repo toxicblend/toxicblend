@@ -49,7 +49,7 @@ class VolumetricRenderOperation extends CommandProcessorTrait {
       case Regex.FLOAT_REGEX(limit) => limit.toFloat
       case s:String => System.err.println("VolumetricRenderOperation: unrecognizable 'voxelIsoValue' property value: " +  s ); 1f
     }
-    val laplacianIterations:Int = options.getOrElse("laplacianIterations", "0") match {
+    val laplacianSmoothIterations:Int = options.getOrElse("laplacianIterations", "0") match {
       case Regex.INT_REGEX(limit) => limit.toInt
       case s:String => System.err.println("VolumetricRenderOperation: unrecognizable 'laplacianIterations' property value: " +  s ); 0
     }
@@ -71,19 +71,19 @@ class VolumetricRenderOperation extends CommandProcessorTrait {
     // all displaced facade points
     val extent = bounds3D.getExtent
     // figure out which axis is the longest/largest
-    val maxAxis = List(extent.x, extent.y, extent.z).max;
+    val maxAxis = List(extent.x, extent.y, extent.z).max
     // scale voxel resolution per axis in relation to major axis
-    val resX = (extent.x / maxAxis * voxelResolution).toInt;
-    val resY = (extent.y / maxAxis * voxelResolution).toInt;
-    val resZ = (extent.z / maxAxis * voxelResolution).toInt;
+    val resX = (extent.x / maxAxis * voxelResolution).toInt
+    val resY = (extent.y / maxAxis * voxelResolution).toInt
+    val resZ = (extent.z / maxAxis * voxelResolution).toInt
     // create a new mesh lattice builder utility configured
     // to match the current physical size of the facade and voxel resolution
-    val builder = new MeshLatticeBuilder(extent.scale(2), resX, resY, resZ, new FloatRange(1, 1));
+    val builder = new MeshLatticeBuilder(extent.scale(2), resX, resY, resZ, new FloatRange(1, 1))
     // use a slightly enlarged bounding box as range for input coordinates
     // it needs to be slightly larger to avoid clipping/thinning of the
     // voxel structure
     // at the sides of the volume
-    builder.setInputBounds(new AABB(bounds3D, extent.scale(magicalScalingFactor)));
+    builder.setInputBounds(new AABB(bounds3D, extent.scale(magicalScalingFactor)))
     // ask the builder for the underlying volumetric/voxel space data
     // structure
     val volume = builder.getVolume();
@@ -120,31 +120,41 @@ class VolumetricRenderOperation extends CommandProcessorTrait {
     // create an iso surface for the volume and threshold value
     // and turn it into a triangle mesh
     new HashIsoSurface(volume).computeSurfaceMesh(mesh, voxelIsoValue)
-    // center the mesh around the world origin (0,0,0)
-    //mesh.center(new Vec3D(0, 0, 0));
-    // apply 2 iterations of the laplacian smooth filter to average
-    // neighboring mesh vertices and so reduce voxel aliasing
-    
-    if (laplacianIterations > 0) {
-      try {
-        new LaplacianSmooth().filter(mesh, laplacianIterations)
-        println("Done doing "+laplacianIterations + " laplacian smooth iterations")
-      } catch {
-        // sometimes it just throws an exception
-        case e: NullPointerException => e.printStackTrace
-      }
-    }
     
     {
-      // scale back the 1.1 multiplication we did earlier
-      // TODO: find out what to scale with here, nothing seems to work
-      val scale = new Vec3D(1,1,1)//.scaleSelf(1f/magicalScalingFactor)
+      // laplacian smooth sometimes deforms scale and origin, so i transform the mesh 
+      // before smoothing
+      val scale = {
+        val maxAxisInput = {
+          val e = lineStripConverter.bounds.getExtent
+          List(e.x,e.y,e.z).max+(voxelBrushSize*0.5f)
+        }
+        val maxAxisOutput = {
+          val e = mesh.getBoundingBox.getExtent
+          List(e.x,e.y,e.z).max
+        }
+        val scale = maxAxisInput/maxAxisOutput
+        new Vec3D(scale,scale,scale)
+      }
       val translate = lineStripConverter.bounds
+      //println("Scalaing mesh with " + scale + " and translating to " + translate)
       val m = (new Matrix4x4).translateScale(translate, scale)
       mesh.transform(m)
     }
-    //mesh.scale(1f/magicalScalingFactor)
-    //mesh.translate(lineStripConverter.bounds)
+    
+    // apply 2 iterations of the laplacian smooth filter to average
+    // neighboring mesh vertices and so reduce voxel aliasing
+    
+    if (laplacianSmoothIterations > 0) {
+      try new LaplacianSmooth().filter(mesh, laplacianSmoothIterations)
+      catch {
+        // sometimes it just throws an exception
+        case e: NullPointerException => e.printStackTrace
+      }
+      println("Done doing "+laplacianSmoothIterations + " laplacian smooth iterations")
+    }
+    
+
     
     val messageBuilder = Message.newBuilder
     val pbModel = Mesh3DConverter(mesh).toPBModel(None, None)
