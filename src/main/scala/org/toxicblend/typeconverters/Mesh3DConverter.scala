@@ -3,6 +3,7 @@ package org.toxicblend.typeconverters
 import toxi.geom.mesh.Mesh3D
 import toxi.geom.ReadonlyVec3D
 import toxi.geom.Vec3D
+import toxi.geom.mesh.Vertex
 import toxi.geom.ReadonlyVec2D
 import toxi.geom.Vec2D
 import toxi.geom.mesh.TriangleMesh
@@ -407,24 +408,25 @@ object Mesh3DConverter {
   /** 
    * Constructs from one toxi.geom.mesh.Mesh3D
    */
-  def apply(toxiMesh:Mesh3D, name:String=""):Mesh3DConverter = {
-    val vbuffer = new ArrayBuffer[ReadonlyVec3D](toxiMesh.getNumVertices())
-    val vmap = new HashMap[ReadonlyVec3D, Int]()
-    val fbuffer = new ArrayBuffer[ArrayBuffer[Int]](toxiMesh.getNumFaces())
-     
-    toxiMesh.getVertices().foreach( v => {
-      vmap.put(v, vbuffer.size)
-      vbuffer += new Vec3D(v) 
+  def apply(toxiMesh:Mesh3D, name:String=""):Mesh3DConverter = {    
+    
+    // create a new vertex index, sometimes vertex.id doesn't work 
+    val vbuffer = new ArrayBuffer[ReadonlyVec3D](toxiMesh.getNumVertices)
+    val vmap = new Array[Int](toxiMesh.getNumVertices) // vmap(vertex.id) = index in vbuffer
+    
+    toxiMesh.getVertices.foreach( v => {
+      val newIndex = vbuffer.size
+      vbuffer+= new Vec3D(v)
+      vmap(v.id) = newIndex
     })
     
-    toxiMesh.getFaces().foreach( f => {
+    val fbuffer = new ArrayBuffer[ArrayBuffer[Int]](toxiMesh.getNumFaces)
+    toxiMesh.getFaces.foreach( f => {
       val tmpface = new ArrayBuffer[Int](3)
-      tmpface +=  vmap(f.a)
-      tmpface +=  vmap(f.b)
-      tmpface +=  vmap(f.c)
+      f.getVertices(null).foreach(i => tmpface += vmap(i.id))
       fbuffer += tmpface
     })
-    new Mesh3DConverter(vbuffer, fbuffer, toxiMesh.getBoundingBox(), name)
+    new Mesh3DConverter(vbuffer, fbuffer, toxiMesh.getBoundingBox, name)
   }
   
   /**
