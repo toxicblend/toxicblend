@@ -18,6 +18,7 @@ import org.toxicblend.operations.simplegcodegenerator.SimpleGcodeGeneratorOperat
 import org.toxicblend.operations.simplegcodeparse.SimpleGcodeParseOperation
 import org.toxicblend.operations.saveobj.SaveObjOperation
 import org.toxicblend.operations.zadjust.jbullet.ZAdjustOperation
+import org.toxicblend.operations.generatemaze.GenerateMazeOperation
 
 import com.google.protobuf.{CodedInputStream,CodedOutputStream}
 import toxi.geom.AABB
@@ -64,6 +65,7 @@ case class ServerThread(socket: Socket) extends Thread("ServerThread") {
               case "OBJECT_OT_toxicblend_simplegcodeviewer" => new SimpleGcodeParseOperation
               case "OBJECT_OT_toxicblend_saveobj" => new SaveObjOperation
               case "OBJECT_OT_toxicblend_zadjust" => new ZAdjustOperation
+              case "OBJECT_OT_toxicblend_generatemaze" => new GenerateMazeOperation
               case s:String => System.err.println("Unknown command: " + s); new EchoProcessor
             }
             try {
