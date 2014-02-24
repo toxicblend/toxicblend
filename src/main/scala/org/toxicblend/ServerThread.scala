@@ -19,6 +19,7 @@ import org.toxicblend.operations.simplegcodeparse.SimpleGcodeParseOperation
 import org.toxicblend.operations.saveobj.SaveObjOperation
 import org.toxicblend.operations.zadjust.jbullet.ZAdjustOperation
 import org.toxicblend.operations.generatemaze.GenerateMazeOperation
+import org.toxicblend.operations.intersectedges.IntersectEdgesOperation
 
 import com.google.protobuf.{CodedInputStream,CodedOutputStream}
 import toxi.geom.AABB
@@ -55,20 +56,26 @@ case class ServerThread(socket: Socket) extends Thread("ServerThread") {
           //println(inMessage)
           
           val outMessage = {
-            val processor:CommandProcessorTrait = inMessage.getCommand() match {
-              case "OBJECT_OT_toxicblend_volume" => new VolumetricRenderOperation
-              case "OBJECT_OT_toxicblend_add_dragon_curve" => new DragonCurveOperation
-              case "OBJECT_OT_toxicblend_projection_outline" => new ProjectionOutlineOperation
-              case "OBJECT_OT_toxicblend_medianaxis" => new MedianAxisOperation
-              case "OBJECT_OT_toxicblend_boostsimplify" => new BoostSimplifyOperation
-              case "OBJECT_OT_toxicblend_simplegcodegenerator" => new SimpleGcodeGeneratorOperation     
-              case "OBJECT_OT_toxicblend_simplegcodeviewer" => new SimpleGcodeParseOperation
-              case "OBJECT_OT_toxicblend_saveobj" => new SaveObjOperation
-              case "OBJECT_OT_toxicblend_zadjust" => new ZAdjustOperation
-              case "OBJECT_OT_toxicblend_generatemaze" => new GenerateMazeOperation
-              case s:String => System.err.println("Unknown command: " + s); new EchoProcessor
-            }
             try {
+              val processor:CommandProcessorTrait = inMessage.getCommand() match {
+                case "OBJECT_OT_toxicblend_volume" => new VolumetricRenderOperation
+                case "OBJECT_OT_toxicblend_add_dragon_curve" => new DragonCurveOperation
+                case "OBJECT_OT_toxicblend_projection_outline" => new ProjectionOutlineOperation
+                case "OBJECT_OT_toxicblend_medianaxis" => new MedianAxisOperation
+                case "OBJECT_OT_toxicblend_boostsimplify" => new BoostSimplifyOperation
+                case "OBJECT_OT_toxicblend_simplegcodegenerator" => new SimpleGcodeGeneratorOperation     
+                case "OBJECT_OT_toxicblend_simplegcodeviewer" => new SimpleGcodeParseOperation
+                case "OBJECT_OT_toxicblend_saveobj" => new SaveObjOperation
+                case "OBJECT_OT_toxicblend_zadjust" => new ZAdjustOperation
+                case "OBJECT_OT_toxicblend_generatemaze" => new GenerateMazeOperation
+                case "OBJECT_OT_toxicblend_intersectedges" => new IntersectEdgesOperation   
+                case s:String => {
+                  val errMsg = "Unknown command: " + s
+                  System.err.println(errMsg) 
+                  throw new ToxicblendException(errMsg)
+                }
+              }
+            
               processor.processInput(inMessage)
             } catch {
               case e:Throwable => {
