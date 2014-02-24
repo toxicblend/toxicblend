@@ -39,7 +39,7 @@ class ToxicBlend_IntersectEdges(bpy.types.Operator):
                     'unitScale'         : str(unitSystemProperty.scale_length) }
           
       c.sendMultipleBlenderObjects(bpy.context.selected_objects, self.bl_idname, properties) 
-      c.receiveObjects()
+      c.receiveObjects(removeDoublesThreshold=0.00001)
       return {'FINISHED'}
 
 def register():
