@@ -16,6 +16,7 @@ import org.toxicblend.UnitSystem
 import scala.collection.JavaConversions._
 import scala.collection.mutable.HashSet
 import scala.collection.mutable.HashMap
+import scala.math
 
 trait HasContainsMethod[A] {
   def contains(key: A): Boolean
@@ -30,10 +31,14 @@ class IntersectEdgesOperation extends CommandProcessorTrait {
     val rv = new Mesh3DConverter("intersected edges")
     val alreadyDrawnA = new HashSet[(Int,Int)] with HasContainsMethod[(Int,Int)]
     val alreadyDrawnB = new HashMap[(Int,Int),ArrayBuffer[ReadonlyVec3D]] with HasContainsMethod[(Int,Int)]
+    var intersectingEdges = 0
+    var smallestIntersectionDistance = Float.MaxValue
     
     val modelAVertices = modelA.getVertices
     val modelBVertices = modelB.getVertices
     val lineAintersections = new ArrayBuffer[ReadonlyVec3D]
+    println("ModelA bounds: " + modelA.getBounds)
+    println("ModelB bounds: " + modelB.getBounds)
     modelA.getFaces.foreach(face =>{
       face.sliding(2).foreach(vAseq => {
         val fromA = modelAVertices(vAseq(0))
@@ -50,27 +55,32 @@ class IntersectEdgesOperation extends CommandProcessorTrait {
             val lineB = new Line3D(fromB,toB)
                
             val intersection = lineA.closestLineTo(lineB)
-            if (intersection.isIntersectionInside && intersection.getLine().getLengthSquared() < IntersectEdgesOperation.ε) {
-              val intersectionLine = intersection.getLine
-              
-              // I separate intersectionLine.a and intersectionLine.b here, but they should be (almost) identical
-              lineAintersections += intersectionLine.a
-              val lineBintersections = if (alreadyDrawnB.contains(keyB)) {
-                alreadyDrawnB(keyB)
-              } else {
-                val newIntersectionArray = new ArrayBuffer[ReadonlyVec3D]
-                newIntersectionArray.add(fromB)
-                alreadyDrawnB.put(keyB,newIntersectionArray)
-                newIntersectionArray
-              } 
-              lineBintersections += intersectionLine.b
-              // TODO: what if intersecting lines are parallel?
+            if (intersection.isIntersectionInside) {
+              val distance = intersection.getLine().getLengthSquared()
+              smallestIntersectionDistance = Math.min(smallestIntersectionDistance, distance)
+              if ( distance < IntersectEdgesOperation.ε) {
+                val intersectionLine = intersection.getLine
+                
+                // I separate intersectionLine.a and intersectionLine.b here, but they should be (almost) identical
+                lineAintersections += intersectionLine.a
+                val lineBintersections = if (alreadyDrawnB.contains(keyB)) {
+                  alreadyDrawnB(keyB)
+                } else {
+                  val newIntersectionArray = new ArrayBuffer[ReadonlyVec3D]
+                  newIntersectionArray.add(fromB)
+                  alreadyDrawnB.put(keyB,newIntersectionArray)
+                  newIntersectionArray
+                } 
+                lineBintersections += intersectionLine.b
+                // TODO: what if intersecting lines are parallel?
+              }
             }
           })
         })
         // add the model A edge intersections in correct order
         if (lineAintersections.size > 1) {
           alreadyDrawnA.add(keyA)
+          intersectingEdges += 1
           val lineAsortedIntersections = lineAintersections.sortBy(intersection => fromA.distanceToSquared(intersection))
           lineAsortedIntersections.add(toA)
           lineAsortedIntersections.sliding(2,1).foreach( aIntersectionPoints => {
@@ -81,6 +91,7 @@ class IntersectEdgesOperation extends CommandProcessorTrait {
     })
     // add the model B edge intersections in correct order
     alreadyDrawnB.foreach( b => {
+      intersectingEdges += 1
       val fromB = modelBVertices(b._1._1)
       val toB = modelBVertices(b._1._2)
       val lineBinterserctions = b._2.sortBy(intersection => fromB.distanceToSquared(intersection))
@@ -103,7 +114,9 @@ class IntersectEdgesOperation extends CommandProcessorTrait {
         })
       })
     }
-    
+    println("Found " + intersectingEdges + " intersecting edges")
+    val strD = if (smallestIntersectionDistance==Float.MaxValue) "Float.MaxValue" else smallestIntersectionDistance.toString
+    println("Smallest intersection distance = " + strD) 
     addAllNonIntersectingEdges(modelA, alreadyDrawnA, modelAVertices)
     addAllNonIntersectingEdges(modelB, alreadyDrawnB, modelBVertices)
     
