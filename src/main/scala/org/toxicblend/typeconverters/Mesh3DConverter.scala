@@ -157,7 +157,7 @@ class Mesh3DConverter protected (protected val vertices:Buffer[ReadonlyVec3D],
    * @param matrix the transformation matrix
    * @return this (not a copy)
    */  
-  def transformOne(inMatrix:Matrix4x4):Mesh3DConverter = {
+  def transform(inMatrix:Matrix4x4):Mesh3DConverter = {
     bounds.clearAABB()
     (0 until vertices.size).foreach(i=>{
       val vOld = vertices(i)

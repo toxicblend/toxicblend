@@ -74,7 +74,7 @@ class BoostSimplifyOperation extends CommandProcessorTrait {
       if (mesh3d._2.isDefined) {
         val worldOrientation = mesh3d._2.get
         val worldOrientationI = worldOrientation.matrix.copy; worldOrientationI.invert
-        mesh3d._1.transformOne(worldOrientationI)
+        mesh3d._1.transform(worldOrientationI)
         
         val pbModel = mesh3d._1.toPBModel(None, None)
         pbModel.setWorldOrientation(worldOrientation.toPBModel)
