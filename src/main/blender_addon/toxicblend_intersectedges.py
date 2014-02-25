@@ -5,16 +5,16 @@ import imp # needed when reloading toxicblend site-packages, won't be used in a 
 
 bl_info = {
   "name": "Toxicblend - Intersect Edges",
+  'description':' Merges two objects made of edges. Self-intersecting edges inside one of the objects are ignored',
   'author': 'EAD Fritz',
   'blender': (2, 69, 0),
-  'description':' Merges two objects made of edges.',
   "category": "Object",
 }
           
 class ToxicBlend_IntersectEdges(bpy.types.Operator):
   '''Intersect edges'''
   bl_idname = "object.toxicblend_intersectedges"
-  bl_label = "ToxicBlend Intersect Edges"
+  bl_label = "Toxicblend:Intersect Edges"
   bl_options = {'REGISTER', 'UNDO'}  # enable undo for the operator.
   multiThreadProperty = bpy.props.EnumProperty(
     name="Use experimental multi threading",

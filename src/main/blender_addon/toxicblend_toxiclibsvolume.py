@@ -7,14 +7,17 @@ import toxicblend
 import imp
 
 bl_info = {
-  "name": "Volumetric operation on a lattice built from edges (toxiclibs service)",
+  "name": "Toxicblend - Toxiclibs volume",
+  'description': 'Generates volume from a lattice of edges using toxiclibs.',  
+  'author': 'EAD Fritz',
+  'blender': (2, 69, 0),
   "category": "Object",
 }
        
 class ToxicLibsVolume(bpy.types.Operator):
   '''Volumetric operation an a lattice'''
   bl_idname = "object.toxicblend_volume"
-  bl_label = "ToxicBlend Toxiclibs volume"
+  bl_label = "Toxicblend:Toxiclibs volume"
   bl_options = {'REGISTER', 'UNDO'}  # enable undo for the operator.
   
   voxelBrushType = bpy.props.EnumProperty(

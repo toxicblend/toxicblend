@@ -7,14 +7,17 @@ import toxicblend
 import imp
 
 bl_info = {
-  "name": "Boost implementation of Douglas-Peucker simplification",
+  "name": "Toxicblend - Boost simplify",
+  'description': 'Boost implementation of Douglas-Peucker simplification',
+  'author': 'EAD Fritz',
+  'blender': (2, 69, 0),
   "category": "Object",
 }
        
 class ToxicBlend_BoostSimplify(bpy.types.Operator):
   '''Simplify edges using boost'''
   bl_idname = "object.toxicblend_boostsimplify"
-  bl_label = "ToxicBlend Boost simplify"
+  bl_label = "Toxicblend:Boost simplify"
   bl_options = {'REGISTER', 'UNDO'}  # enable undo for the operator.
   
   useMultiThreadingProperty = bpy.props.EnumProperty(

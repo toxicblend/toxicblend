@@ -4,18 +4,17 @@ import toxicblend
 import imp # needed when reloading toxicblend site-packages, won't be used in a release version
 
 bl_info = {
-  "name": "Toxicblend-SaveObj",
+  "name": "Toxicblend - SaveObj",
+  'description': 'Saves an object in a format native to toxicblend (for testing purposes).',
   'author': 'EAD Fritz',
   'blender': (2, 69, 0),
-  #'api': 35774,
-  'description': 'Saves an object in a format native to toxicblend (for testing purposes).',
   "category": "Object",
 }
           
 class ToxicBlend_SaveObj(bpy.types.Operator):
   '''Simple gcode generation'''
   bl_idname = "object.toxicblend_saveobj"
-  bl_label = "ToxicBlend Save object (for testing purposes)"
+  bl_label = "Toxicblend:Save object (for testing purposes)"
   bl_options = {'REGISTER', 'UNDO'}  # enable undo for the operator.
 
   @classmethod

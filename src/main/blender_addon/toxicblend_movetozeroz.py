@@ -2,14 +2,17 @@ import bpy
 from mathutils import Matrix, Vector
 
 bl_info = {
-  "name": "Moves an object so that top of bounding box touches the Z=0 plane",
+  "name": "Toxicblend - Move to zero Z",
+  'description': 'Moves an object so that top of bounding box touches the Z=0 plane (standalone)',
+  'author': 'EAD Fritz',
+  'blender': (2, 69, 0),
   "category": "Object",
 }
 
 class ToxicBlend_MoveToZeroZOperator(bpy.types.Operator):
   '''Moves an object so that top of bounding box touches the Z=0 plane'''
   bl_idname = "object.toxicblend_movetozeroz"
-  bl_label = "ToxicBlend Move to zero Z"
+  bl_label = "Toxicblend:Move to zero Z"
   bl_options = {'REGISTER', 'UNDO'}  # enable undo for the operator.
     
   @classmethod

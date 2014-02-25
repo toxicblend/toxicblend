@@ -4,18 +4,17 @@ import toxicblend
 import imp # needed when reloading toxicblend site-packages, won't be used in a release version
 
 bl_info = {
-  "name": "Naive implementation of gcode visualization",
+  "name": "Toxicblend - Simple gcode viewer",
+  'description': 'Simple implementation of gcode visualization.',
   'author': 'EAD Fritz',
   'blender': (2, 69, 0),
-  #'api': 35774,
-  'description': 'Visualizes gocde using toxicblend.',
   "category": "Object",
 }
           
 class ToxicBlend_SimpleGcodeViewer(bpy.types.Operator):
   '''Simple gcode viewer'''
   bl_idname = "object.toxicblend_simplegcodeviewer"
-  bl_label = "ToxicBlend Simple Gcode viewer"
+  bl_label = "Toxicblend:Simple gcode viewer"
   bl_options = {'REGISTER', 'UNDO'}  # enable undo for the operator.
   
   useMultiThreadingProperty = bpy.props.EnumProperty(

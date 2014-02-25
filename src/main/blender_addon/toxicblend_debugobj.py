@@ -3,18 +3,17 @@ import bpy
 import bmesh
 
 bl_info = {
-  "name": "Toxicblend-DebugObj",
+  "name": "Toxicblend - DebugObj",
+  'description': 'Checks selected object for anomalies, and prints the results to the console',
   'author': 'EAD Fritz',
   'blender': (2, 69, 0),
-  #'api': 35774,
-  'description': 'Saves an object in a format native to toxicblend (for testing purposes).',
   "category": "Object",
 }
           
 class ToxicBlend_DebugObj(bpy.types.Operator):
   '''Simple object debug'''
   bl_idname = "object.toxicblend_debugobj"
-  bl_label = "ToxicBlend debug object (for testing purposes)"
+  bl_label = "Toxicblend:debug object (check console for messages)"
   bl_options = {'REGISTER', 'UNDO'}  # enable undo for the operator.
 
   @classmethod

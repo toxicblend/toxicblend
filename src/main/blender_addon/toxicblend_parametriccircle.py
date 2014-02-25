@@ -4,14 +4,17 @@ import toxicblend
 import imp
 
 bl_info = {
-  "name": "Custom draw circle operation",
+  "name": "Toxicblend - Custom draw circle operation",
+  'description': 'An example on how parameteric geometry can be created in code',
+  'author': 'EAD Fritz',
+  'blender': (2, 69, 0),
   "category": "Object",
 }
        
-class ToxicBlend_ParametricCircleOperation(bpy.types.Operator):
+class ToxicBlend_ParametricCircle(bpy.types.Operator):
   '''Custom draw circle operation'''
   bl_idname = "object.toxicblend_parametriccircleoperation"
-  bl_label = "Custom draw circle operation"
+  bl_label = "Toxicblend:Custom draw circle"
   bl_options = {'REGISTER', 'UNDO'}  # enable undo for the operator.
   
   projectionPlaneProperty = bpy.props.EnumProperty(
@@ -36,10 +39,6 @@ class ToxicBlend_ParametricCircleOperation(bpy.types.Operator):
   zEpsilonProperty = bpy.props.FloatProperty(name="z Epsilon", description="Z values smaller than this is considered to be zero, these points enables 'dot product limit'", default=1.5, min=0.00001, max=10)
   dotProductLimitProperty = bpy.props.FloatProperty(name="Dot Product Limit", description="filter for internal edges relative to the outer ring segment, ideally only edges with 90 degree angles should be kept", default=0.95, min=0.0001, max=1)
   calculationResolutionProperty = 46338 # sqrt(Int.MaxValue)-2
-  
-  @classmethod
-  def poll(cls, context):
-    return context.active_object is not None
 
   def execute(self, context):
     imp.reload(toxicblend)
@@ -61,10 +60,10 @@ class ToxicBlend_ParametricCircleOperation(bpy.types.Operator):
       return {'FINISHED'}
 
 def register():
-  bpy.utils.register_class(ToxicBlend_ParametricCircleOperation)
+  bpy.utils.register_class(ToxicBlend_ParametricCircle)
 
 def unregister():
-  bpy.utils.unregister_class(ToxicBlend_ParametricCircleOperation)
+  bpy.utils.unregister_class(ToxicBlend_ParametricCircle)
 
 if __name__ == "__main__":
   register()

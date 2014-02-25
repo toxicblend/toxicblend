@@ -1,14 +1,17 @@
 import bpy
 
 bl_info = {
-  "name": "Apply all transformations (rotation, scala, location)",
+  'name': "Toxicblend - Apply all transformations (standalone)",
+  'description': 'Apply all world transformations (rotation, scala, location) on a model (standalone)',
+  'author': 'EAD Fritz',
+  'blender': (2, 69, 0),
   "category": "Object",
 }
 
-class ApplyAllTransformsOperator(bpy.types.Operator):
+class ToxicBlend_ApplyAllTransforms(bpy.types.Operator):
   '''Apply all transformations (rotation, scala, location)'''
   bl_idname = "object.toxicblend_apply_all_transforms"
-  bl_label = "ToxicBlend Apply All Transforms"
+  bl_label = "Toxicblend:Apply all transformations"
   bl_options = {'REGISTER', 'UNDO'}  # enable undo for the operator.
     
   @classmethod
@@ -20,10 +23,10 @@ class ApplyAllTransformsOperator(bpy.types.Operator):
     return {'FINISHED'}
 
 def register():
-  bpy.utils.register_class(ApplyAllTransformsOperator)
+  bpy.utils.register_class(ToxicBlend_ApplyAllTransforms)
 
 def unregister():
-  bpy.utils.unregister_class(ApplyAllTransformsOperator)
+  bpy.utils.unregister_class(ToxicBlend_ApplyAllTransforms)
 
 if __name__ == "__main__":
   register()

@@ -7,14 +7,17 @@ import toxicblend
 import imp
 
 bl_info = {
-  "name": "Naive implementation of median axis",
+  "name": "Toxicblend - Median axis",
+  'description': 'Naive implementation of median axis using boost voronoi.',
+  'author': 'EAD Fritz',
+  'blender': (2, 69, 0),
   "category": "Object",
 }
        
 class ToxicBlend_MedianAxis(bpy.types.Operator):
   '''Naive implementation of median axis'''
   bl_idname = "object.toxicblend_medianaxis"
-  bl_label = "ToxicBlend Median axis"
+  bl_label = "Toxicblend:Median axis"
   bl_options = {'REGISTER', 'UNDO'}  # enable undo for the operator.
   
   projectionPlaneProperty = bpy.props.EnumProperty(

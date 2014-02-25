@@ -4,18 +4,17 @@ import toxicblend
 import imp # needed when reloading toxicblend site-packages, won't be used in a release version
 
 bl_info = {
-  "name": "Toxicblend-Z-Adjust",
+  "name": "Toxicblend - Z adjust",
+  'description':'Adjusts one object with the z-adjust from another.',
   'author': 'EAD Fritz',
   'blender': (2, 69, 0),
-  #'api': 35774,
-  'description':' Adjusts a curve.',
   "category": "Object",
 }
           
 class ToxicBlend_ZAdjust(bpy.types.Operator):
   '''Z adjust'''
   bl_idname = "object.toxicblend_zadjust"
-  bl_label = "ToxicBlend Z adjust"
+  bl_label = "Toxicblend:Z adjust"
   bl_options = {'REGISTER', 'UNDO'}  # enable undo for the operator.
   sampleStepProperty = bpy.props.FloatProperty(name="Sample step [mm]", default=0.05, min=0.001, max=100, description="the distance between sample in mm.")  
   multiThreadProperty = bpy.props.EnumProperty(

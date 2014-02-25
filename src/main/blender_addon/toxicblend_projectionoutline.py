@@ -7,7 +7,10 @@ import toxicblend
 import imp
 
 bl_info = {
-  "name": "Naive implementation of projection outline (toxiclibs service)",
+  "name": "Toxicblend - projection outline",
+  'description': 'Naive, and really slow, implementation of projection outline',
+  'author': 'EAD Fritz',
+  'blender': (2, 69, 0),
   "category": "Object",
 }
        

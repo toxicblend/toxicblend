@@ -5,14 +5,17 @@ import mathutils
 import math
 
 bl_info = {
-  "name": "Naive implementation of volumetric edge fill",
+  "name": "Toxicblend - Metavolume",
+  'description': 'Generates volume from a lattice of edges using metacubes. (standalone)',  
+  'author': 'EAD Fritz',
+  'blender': (2, 69, 0),
   "category": "Object",
 }
        
 class ToxicBlend_MetaVolume(bpy.types.Operator):
   '''Volumetric edge fill using meta capsules'''
   bl_idname = "object.toxicblend_metavolume"
-  bl_label = "Metacapsule Volume"
+  bl_label = "Toxicblend:Metacapsule volume"
   bl_options = {'REGISTER', 'UNDO'}  # enable undo for the operator.
   
   CAPSULE_VECTOR = mathutils.Vector((1.0, 0.0, 0.0)) # capsule orientation
@@ -34,24 +37,16 @@ class ToxicBlend_MetaVolume(bpy.types.Operator):
     angle = math.acos(fromVn.dot(toVn))
     return mathutils.Quaternion(crossProduct,angle)
  
-  def newCapsule(self, metaFactory, v0, v1, radius) : 
-    #print("fromV= %s" % str(v0))
-    #print("toV= %s" % str(v1))
-  
+  def newCapsule(self, metaFactory, v0, v1, radius):  
     segment = v1-v0
-    #print("segment= %s" % segment)
     capsule = metaFactory.new()
     capsule.co = (v1 + v0) / 2.0
     capsule.type = 'CAPSULE'
-    #ele.use_negative = False 
     capsule.radius = radius
-    #print("length/2 = %f" % (segment.length / 2.0))
     capsule.size_x = segment.length/2.0
     direction = segment.normalized()
-    #print("direction = %s" % direction )
     quaternion = self.getRotationTo(self.CAPSULE_VECTOR,direction)
     capsule.rotation = quaternion
-    #print("quaternion = %s" % quaternion )
     return capsule
        
   def execute(self, context):
@@ -62,7 +57,6 @@ class ToxicBlend_MetaVolume(bpy.types.Operator):
     sourceBm.from_mesh(bpy.context.scene.objects.active.data)
     worldOriention = bpy.context.scene.objects.active.matrix_world.copy()
     mball = bpy.data.metaballs.new("Volumetric metacapsules")
-    #print("Resolution = %f" % self.resolutionProperty)
     mball.resolution = self.resolutionProperty
     mball.threshold = self.thresholdProperty
     metaObj = bpy.data.objects.new("Volumetric metacapsules", mball)
@@ -77,7 +71,6 @@ class ToxicBlend_MetaVolume(bpy.types.Operator):
     metaObj.select = True  
 
     metaObj.matrix_world = worldOriention
-    #metaObj.update(calc_edges=True)
     return {'FINISHED'}
 
 def register():

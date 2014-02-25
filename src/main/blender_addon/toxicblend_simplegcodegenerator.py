@@ -4,18 +4,17 @@ import toxicblend
 import imp # needed when reloading toxicblend site-packages, won't be used in a release version
 
 bl_info = {
-  "name": "Naive implementation gcode generation",
+  "name": "Toxicblend - Simple gcode generator",
+  'description': 'Naive implementation gcode generation, converts a set of edges into gcode.',
   'author': 'EAD Fritz',
   'blender': (2, 69, 0),
-  #'api': 35774,
-  'description': 'Converts a set of edges into GCode using toxicblend.',
   "category": "Object",
 }
           
 class ToxicBlend_SimpleGcodeGenerator(bpy.types.Operator):
   '''Simple gcode generator'''
   bl_idname = "object.toxicblend_simplegcodegenerator"
-  bl_label = "ToxicBlend Simple Gcode generator"
+  bl_label = "Toxicblend:Simple gcode generator"
   bl_options = {'REGISTER', 'UNDO'}  # enable undo for the operator.
   
   #useMultiThreadingProperty = bpy.props.EnumProperty(
