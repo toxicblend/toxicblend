@@ -1,7 +1,6 @@
 package org.toxicblend.tests
 
 import toxi.geom.Vec2D
-import toxi.geom.Vec3D
 import toxi.geom.Rect
 import org.toxicblend.geometry.Matrix3x3
 
