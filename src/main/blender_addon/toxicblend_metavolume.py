@@ -5,8 +5,8 @@ import mathutils
 import math
 
 bl_info = {
-  "name": "Toxicblend - Metavolume",
-  'description': 'Generates volume from a lattice of edges using metacubes. (standalone)',  
+  "name": "Toxicblend - Metavolume (standalone)",
+  'description': 'Generates volume from a lattice of edges using metacubes (standalone)',  
   'author': 'EAD Fritz',
   'blender': (2, 69, 0),
   "category": "Object",

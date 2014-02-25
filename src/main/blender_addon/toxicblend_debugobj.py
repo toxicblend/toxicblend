@@ -3,7 +3,7 @@ import bpy
 import bmesh
 
 bl_info = {
-  "name": "Toxicblend - DebugObj",
+  "name": "Toxicblend - DebugObj (standalone)",
   'description': 'Checks selected object for anomalies, and prints the results to the console',
   'author': 'EAD Fritz',
   'blender': (2, 69, 0),
