@@ -20,6 +20,7 @@ import org.toxicblend.operations.saveobj.SaveObjOperation
 import org.toxicblend.operations.zadjust.jbullet.ZAdjustOperation
 import org.toxicblend.operations.generatemaze.GenerateMazeOperation
 import org.toxicblend.operations.intersectedges.IntersectEdgesOperation
+import org.toxicblend.operations.parametricmodels.ParametricCircleOperation
 
 import com.google.protobuf.{CodedInputStream,CodedOutputStream}
 import toxi.geom.AABB
@@ -68,7 +69,8 @@ case class ServerThread(socket: Socket) extends Thread("ServerThread") {
                 case "OBJECT_OT_toxicblend_saveobj" => new SaveObjOperation
                 case "OBJECT_OT_toxicblend_zadjust" => new ZAdjustOperation
                 case "OBJECT_OT_toxicblend_generatemaze" => new GenerateMazeOperation
-                case "OBJECT_OT_toxicblend_intersectedges" => new IntersectEdgesOperation   
+                case "OBJECT_OT_toxicblend_intersectedges" => new IntersectEdgesOperation
+                case "OBJECT_OT_toxicblend_parametriccircleoperation" => new ParametricCircleOperation
                 case s:String => {
                   val errMsg = "Unknown command: " + s
                   System.err.println(errMsg) 
