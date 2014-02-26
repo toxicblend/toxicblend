@@ -25,10 +25,16 @@ class GenerateMazeOperation extends CommandProcessorTrait {
         None
       })
     })
+    val startPoint = options.getOrElse("startPoint", "RANDOM") match {
+      case "CORNER" => StartPoint.CORNER
+      case "CENTER" => StartPoint.CENTER
+      case "RANDOM" => StartPoint.RANDOM
+      case s:String => System.err.println("Unknown start point option: " +  s ); StartPoint.RANDOM
+    }
     
     // Perform the generate maze on each model
     val result = models.map(model =>{    
-      val mazegenerator = new MazeGenerator
+      val mazegenerator = new MazeGenerator(model._1.getBounds)
       val segments = model._1.findContinuousLineSegments
       if (segments._2.size < 2) {
         throw new ToxicblendException("The object must contain simple edges, try removing faces (and only faces)")
@@ -38,7 +44,7 @@ class GenerateMazeOperation extends CommandProcessorTrait {
           mazegenerator.addWall(segment)
         }
       })
-      returnMessageBuilder.addModels(mazegenerator.generateMaze(model._1.name + " maze", model._2))
+      returnMessageBuilder.addModels(mazegenerator.generateMaze(model._1.name + " maze", model._2, startPoint))
     })
     
     returnMessageBuilder

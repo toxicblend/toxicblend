@@ -16,7 +16,15 @@ class ToxicBlend_GenerateMaze(bpy.types.Operator):
   bl_idname = "object.toxicblend_generatemaze"
   bl_label = "Toxicblend:Generate Maze"
   bl_options = {'REGISTER', 'UNDO'}  # enable undo for the operator.
-    
+  
+  startPointProperty = bpy.props.EnumProperty(
+    name="Starting point",
+    items=(("CORNER", "Corner",""),
+           ("CENTER", "Center",""),
+           ("RANDOM", "Random","")),
+           default="RANDOM"    
+          )
+              
   @classmethod
   def poll(cls, context):
     return context.active_object is not None
@@ -28,8 +36,8 @@ class ToxicBlend_GenerateMaze(bpy.types.Operator):
       unitSystemProperty = context.scene.unit_settings
       activeObject = context.scene.objects.active
       properties = {'unitSystem'            : str(unitSystemProperty.system), 
-                    'unitScale'             : str(unitSystemProperty.scale_length)}
-                     
+                    'unitScale'             : str(unitSystemProperty.scale_length),
+                    'startPoint'            : str(self.startPointProperty)}
       c.sendSingleBlenderObject(activeObject, self.bl_idname, properties) 
       c.receiveObjects()
       return {'FINISHED'}
