@@ -2,7 +2,7 @@ import bpy
 from mathutils import Matrix, Vector
 
 bl_info = {
-  "name": "Toxicblend - Move to zero Z",
+  "name": "Toxicblend - Move to zero Z (standalone)",
   'description': 'Moves an object so that top of bounding box touches the Z=0 plane (standalone)',
   'author': 'EAD Fritz',
   'blender': (2, 69, 0),
