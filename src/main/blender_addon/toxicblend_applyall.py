@@ -6,6 +6,7 @@ bl_info = {
   'author': 'EAD Fritz',
   'blender': (2, 69, 0),
   "category": "Object",
+  'location': 'View3D > Object > Apply',
 }
 
 class ToxicBlend_ApplyAllTransforms(bpy.types.Operator):
@@ -20,13 +21,18 @@ class ToxicBlend_ApplyAllTransforms(bpy.types.Operator):
 
   def execute(self, context):
     bpy.ops.object.transform_apply(location=True,rotation=True,scale=True)
-    return {'FINISHED'}
-
+    return {'FINISHED'} 
+    
+def menu_func(self, context):
+  self.layout.operator(ToxicBlend_ApplyAllTransforms.bl_idname, text=ToxicBlend_ApplyAllTransforms.bl_label)
+    
 def register():
-  bpy.utils.register_class(ToxicBlend_ApplyAllTransforms)
-
+  bpy.utils.register_module(__name__)
+  bpy.types.VIEW3D_MT_object_apply.append(menu_func)
+ 
 def unregister():
-  bpy.utils.unregister_class(ToxicBlend_ApplyAllTransforms)
-
+  bpy.utils.unregister_module(__name__)
+  bpy.types.VIEW3D_MT_object_apply.remove(menu_func)
+    
 if __name__ == "__main__":
-  register()
+  register()    
