@@ -38,7 +38,7 @@ class ToxicBlend_MedianAxis(bpy.types.Operator):
            default="FALSE"    
           )
           
-  simplifyLimitProperty = bpy.props.FloatProperty(name="Simplify Limit (Not used yet)", default=0.5, min=0.0001, max=100, description="the maximum allowed 3d deviation (in pixels) from a straight line, if the deviation is larger than this the line will be segmented.")  
+  #simplifyLimitProperty = bpy.props.FloatProperty(name="Simplify Limit (Not used yet)", default=0.5, min=0.0001, max=100, description="the maximum allowed 3d deviation (in pixels) from a straight line, if the deviation is larger than this the line will be segmented.")  
   zEpsilonProperty = bpy.props.FloatProperty(name="z Epsilon", description="Z values smaller than this is considered to be zero, these points enables 'dot product limit'", default=1.5, min=0.00001, max=10)
   dotProductLimitProperty = bpy.props.FloatProperty(name="Dot Product Limit", description="filter for internal edges relative to the outer ring segment, ideally only edges with 90 degree angles should be kept", default=0.95, min=0.0001, max=1)
   calculationResolutionProperty = 46338 # sqrt(Int.MaxValue)-2
@@ -55,7 +55,7 @@ class ToxicBlend_MedianAxis(bpy.types.Operator):
       activeObject = context.scene.objects.active
       properties = {'projectionPlane'       : str(self.projectionPlaneProperty), 
                     'useMultiThreading'     : str(self.useMultiThreadingProperty),
-                    'simplifyLimit'         : str(self.simplifyLimitProperty),
+                    #'simplifyLimit'         : str(self.simplifyLimitProperty),
                     'zEpsilon'              : str(self.zEpsilonProperty),
                     'dotProductLimit'       : str(self.dotProductLimitProperty),
                     'calculationResolution' : str(self.calculationResolutionProperty),
