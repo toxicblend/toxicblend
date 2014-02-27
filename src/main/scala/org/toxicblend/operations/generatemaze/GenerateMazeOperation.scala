@@ -18,7 +18,7 @@ class GenerateMazeOperation extends CommandProcessorTrait {
     val options = OptionConverter(inMessage)
     val returnMessageBuilder = Message.newBuilder()
     val models = inMessage.getModelsList().map(inModel => {
-      (Mesh3DConverter(inModel,false), // don't convert to world coordinates
+      (Mesh3DConverter(inModel,false), // don't convert to world coordinates, instead keep the transform in the result
       if (inModel.hasWorldOrientation()) {
         Option(Matrix4x4Converter(inModel.getWorldOrientation()))
       } else {
