@@ -34,7 +34,7 @@ import toxi.geom.Plane
 import toxi.geom.Ray3D
 import toxi.geom.AABB
 
-class JBulletCollision(val segments:IndexedSeq[IndexedSeq[ReadonlyVec3D]], val models:IndexedSeq[Mesh3DConverter], val sampleDelta:Float, val ε:Float) {
+class JBulletCollision(val models:IndexedSeq[Mesh3DConverter], val sampleDelta:Float, val ε:Float) {
    
   class CollisionState extends TrianglePlaneIntersectionResult {
     val collisionPoint:Vec3D = new Vec3D
@@ -256,7 +256,7 @@ class JBulletCollision(val segments:IndexedSeq[IndexedSeq[ReadonlyVec3D]], val m
     }
   }
   
-  val collisionWrapper = new CollisionWrapper(segments,models)
+  val collisionWrapper = new CollisionWrapper(models)
    
    def doRayTests(segments:IndexedSeq[ReadonlyVec3D]):IndexedSeq[IndexedSeq[Vec3D]] = {
 

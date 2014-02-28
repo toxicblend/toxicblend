@@ -51,7 +51,7 @@ class ZAdjustOperation extends CommandProcessorTrait {
     println(options)
     val epsilon = 0.000002f
     println("sampleStep="+ sampleStep + " epsilon=" + epsilon)
-    val jbc = new JBulletCollision(segments._2, models, sampleStep, epsilon) 
+    val jbc = new JBulletCollision(models, sampleStep, epsilon) 
     val result = new MutableList[IndexedSeq[ReadonlyVec3D]]
     if (addDiff) {
       segments._2.filter( s => s.size > 1).foreach(segment => {

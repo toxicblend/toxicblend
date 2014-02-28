@@ -34,7 +34,7 @@ import toxi.geom.Plane
 import toxi.geom.Ray3D
 import toxi.geom.AABB
 
-class CollisionWrapper(val segments:IndexedSeq[IndexedSeq[ReadonlyVec3D]], val models:IndexedSeq[Mesh3DConverter]) {
+class CollisionWrapper(val models:IndexedSeq[Mesh3DConverter]) {
   
   val collisionShapes = new ObjectArrayList[CollisionShape]();
   val convexShapes = new ArrayBuffer[ConvexShape]
@@ -139,10 +139,4 @@ class CollisionWrapper(val segments:IndexedSeq[IndexedSeq[ReadonlyVec3D]], val m
 object CollisionWrapper {
   val VERTEX_S = 8 // a double
   val INDEX_S = 4  // an int
-  /**
-   * Alternative constructor
-   */
-  def apply(__segment:IndexedSeq[ReadonlyVec3D], __models:IndexedSeq[Mesh3DConverter]) = {
-    new CollisionWrapper(Array(__segment), __models)
-  }
 }

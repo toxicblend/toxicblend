@@ -22,7 +22,7 @@ class JBulletTest1 extends FlatSpec with Matchers {
     val segment:Array[ReadonlyVec3D] = Array(new Vec3D(-2f,-2f,1f), new Vec3D(2f,2f,1f))
     Array(segment)
   }
-  val jbc = new JBulletCollision(segments, models, 0.005f, 0.0001f)
+  val jbc = new JBulletCollision(models, 0.005f, 0.0001f)
   
   
   "jbullet1" should "collide just fine" in {
