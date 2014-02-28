@@ -28,8 +28,8 @@ object GCodeConverter {
     
     segments.foreach(segment => {
       segment.command match {
-        case "G0" => g0Model.addEdges(segment.p0, segment.p1)
-        case "G1" => g1Model.addEdges(segment.p0, segment.p1)
+        case "G0" => g0Model.addEdge(segment.p0, segment.p1)
+        case "G1" => g1Model.addEdge(segment.p0, segment.p1)
         case _  => // ignore
        }
     })
