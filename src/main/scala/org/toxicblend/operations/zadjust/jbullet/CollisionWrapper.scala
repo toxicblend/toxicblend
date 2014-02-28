@@ -34,7 +34,7 @@ import toxi.geom.Plane
 import toxi.geom.Ray3D
 import toxi.geom.AABB
 
-class CollisionObjectWrapper(val segments:IndexedSeq[IndexedSeq[ReadonlyVec3D]], val models:IndexedSeq[Mesh3DConverter]) {
+class CollisionWrapper(val segments:IndexedSeq[IndexedSeq[ReadonlyVec3D]], val models:IndexedSeq[Mesh3DConverter]) {
   
   val collisionShapes = new ObjectArrayList[CollisionShape]();
   val convexShapes = new ArrayBuffer[ConvexShape]
@@ -48,7 +48,7 @@ class CollisionObjectWrapper(val segments:IndexedSeq[IndexedSeq[ReadonlyVec3D]],
   val gIndices = ByteBuffer.allocateDirect(totalTriangles * 3 * 4).order(ByteOrder.nativeOrder());
   
   val aabbAllModels = {
-    if (models.size > 0){
+    if (models.size > 0) {
       val aabbTmp = models(0).getBounds.copy
       models.tail.foreach(b => aabbTmp.union(b.getBounds))
       aabbTmp
@@ -82,10 +82,7 @@ class CollisionObjectWrapper(val segments:IndexedSeq[IndexedSeq[ReadonlyVec3D]],
     })
   }
   
-  val indexVertexArrays = new TriangleIndexVertexArray(totalTriangles,
-        gIndices,
-        indexStride,
-        totalVerts, gVertices, vertStride)
+  val indexVertexArrays = new TriangleIndexVertexArray(totalTriangles, gIndices, indexStride, totalVerts, gVertices, vertStride)
   
   val useQuantizedAabbCompression = true
   
@@ -96,12 +93,12 @@ class CollisionObjectWrapper(val segments:IndexedSeq[IndexedSeq[ReadonlyVec3D]],
   val collisionConfiguration = new DefaultCollisionConfiguration()
   val dispatcher = new CollisionDispatcher(collisionConfiguration)
   val broadphase:BroadphaseInterface = if (true) {
-    val worldMin = JBulletUtil.convertVec3DToVector3f(models(0).getBounds.getMin)
-    val worldMax = JBulletUtil.convertVec3DToVector3f(models(0).getBounds.getMax)
-    //println("worldMin=" + worldMin)
-    //println("worldMax=" + worldMax)
-    new AxisSweep3_32(worldMin, worldMax, 1500000/2);
-  } else {
+      val worldMin = JBulletUtil.convertVec3DToVector3f(models(0).getBounds.getMin)
+      val worldMax = JBulletUtil.convertVec3DToVector3f(models(0).getBounds.getMax)
+      //println("worldMin=" + worldMin)
+      //println("worldMax=" + worldMax)
+      new AxisSweep3_32(worldMin, worldMax, 1500000/2);
+    } else {
     new DbvtBroadphase
   }
   
@@ -110,7 +107,6 @@ class CollisionObjectWrapper(val segments:IndexedSeq[IndexedSeq[ReadonlyVec3D]],
   val startTransform = new Transform
   startTransform.setIdentity();
   startTransform.origin.set(0f, 0f, 0f);
-  startTransform.setIdentity();
   val staticBody = localCreateCollisionObject(startTransform, groundShape)
 
   staticBody.setCollisionFlags(staticBody.getCollisionFlags() | CollisionFlags.STATIC_OBJECT);
@@ -129,10 +125,10 @@ class CollisionObjectWrapper(val segments:IndexedSeq[IndexedSeq[ReadonlyVec3D]],
   
   def addVCutter(radius:Float, height:Float):ConvexShape = {
     val margin = 0.02f;
-     val colShape:ConvexShape = new ConeShapeZ(2f,2f);
+     val colShape:ConvexShape = new ConeShapeZ(2f, 2f);
      colShape.setMargin(margin)
      collisionShapes.add(colShape);
-     val convexShape = new UniformScalingShape(colShape,1f)
+     val convexShape = new UniformScalingShape(colShape, 1f)
      convexShapes.append(convexShape)
      convexShape
   }
@@ -143,11 +139,11 @@ class CollisionObjectWrapper(val segments:IndexedSeq[IndexedSeq[ReadonlyVec3D]],
 }
 
 
-object CollisionObjectWrapper {
+object CollisionWrapper {
   /**
    * Alternative constructor
    */
   def apply(__segment:IndexedSeq[ReadonlyVec3D], __models:IndexedSeq[Mesh3DConverter]) = {
-    new CollisionObjectWrapper(Array(__segment),__models)
+    new CollisionWrapper(Array(__segment), __models)
   }
 }

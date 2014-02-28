@@ -254,7 +254,7 @@ class JBulletCollision(val segments:IndexedSeq[IndexedSeq[ReadonlyVec3D]], val m
     }
   }
   
-  val collisionWrapper = new CollisionObjectWrapper(segments,models)
+  val collisionWrapper = new CollisionWrapper(segments,models)
    
    def doRayTests(segments:IndexedSeq[ReadonlyVec3D]):IndexedSeq[IndexedSeq[Vec3D]] = {
 
