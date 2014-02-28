@@ -9,7 +9,7 @@ import org.toxicblend.operations.zadjust.jbullet.JBulletCollision
 import org.scalatest._
 
 
-class JBulletTest extends FlatSpec with Matchers {
+class JBulletTest1 extends FlatSpec with Matchers {
   
   val models = {
     val toximesh = new TriangleMesh
