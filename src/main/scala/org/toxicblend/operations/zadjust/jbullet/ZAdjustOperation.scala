@@ -62,8 +62,8 @@ class ZAdjustOperation extends CommandProcessorTrait {
       segments._2.filter( s => s.size > 1).foreach(segment => result += jbc.doRayTests(segment).flatten)
     } 
     
-    //println("Result:")
-    //result.foreach( s => {println; s.foreach(r => println(r))} )
+    println("Result:")
+    result.foreach( s => {println; s.foreach(r => println(r))} )
 
     jbc.cleanup
     val returnMessageBuilder = Message.newBuilder()

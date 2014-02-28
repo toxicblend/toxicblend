@@ -6,5 +6,7 @@ scalaVersion := "2.10.3"
 
 libraryDependencies ++= Seq(
 	"org.scalatest" % "scalatest_2.10" % "2.0" % "test",
-	"cz.advel.jbullet" % "jbullet" % "20101010"
+	"java3d" % "vecmath" % "1.5.2"
 )
+
+resolvers += "Geotoolkit.org" at "http://maven.geotoolkit.org"

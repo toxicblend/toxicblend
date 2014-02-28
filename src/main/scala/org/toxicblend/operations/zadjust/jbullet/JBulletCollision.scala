@@ -27,7 +27,7 @@ import org.toxicblend.typeconverters.Mesh3DConverter
 import scala.collection.mutable.ArrayBuffer
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
-import javax.vecmath.Vector3f
+import javax.vecmath.Vector3d
 import toxi.geom.Vec3D
 import toxi.geom.ReadonlyVec3D
 import toxi.geom.Plane
@@ -40,10 +40,10 @@ class JBulletCollision(val segments:IndexedSeq[IndexedSeq[ReadonlyVec3D]], val m
     val collisionPoint:Vec3D = new Vec3D
     
     @inline
-    def setCollisionPoint(col:Vector3f) = {
-      collisionPoint.x = col.x
-      collisionPoint.y = col.y
-      collisionPoint.z = col.z
+    def setCollisionPoint(col:Vector3d) = {
+      collisionPoint.x = col.x.toFloat
+      collisionPoint.y = col.y.toFloat
+      collisionPoint.z = col.z.toFloat
     }
     
     @inline
@@ -58,24 +58,25 @@ class JBulletCollision(val segments:IndexedSeq[IndexedSeq[ReadonlyVec3D]], val m
    * This is an effort to avoid having to create millions of Vec3D objects.
    * It's ugly, and not very scala:esqe. But it works
    */
-  class SearchState(val rayFromWorld:Vector3f, val rayToWorld:Vector3f,val zMin:Float,val zMax:Float) extends RayResultCallback {
+  class SearchState(val rayFromWorld:Vector3d, val rayToWorld:Vector3d,val zMin:Double,val zMax:Double) extends RayResultCallback {
     var currentC:CollisionState = new CollisionState
     var hasPrevious:Boolean = false
     var previousC:CollisionState = new CollisionState
     val fromV:Vec3D = new Vec3D
     val toV:Vec3D = new Vec3D
-    var distanceToCoverSqr = 0.0f
+    var distanceToCoverSqr = 0d
+    var distanceCoveredSqr = 0d
     var plane:Plane = new Plane
     var directionDelta:Vec3D = new Vec3D
     var directionNormalized:Vec3D = new Vec3D
-    val hitPointWorld = new Vector3f
+    val hitPointWorld = new Vector3d
     var triangleIndex:Int = -1
     var endOfSegmentReached = false
     
     /**
      * callback from jbullet on collision
      */
-    override def addSingleResult(rayResult:LocalRayResult, normalInWorldSpace:Boolean):Float = {
+    override def addSingleResult(rayResult:LocalRayResult, normalInWorldSpace:Boolean):Double = {
       closestHitFraction = rayResult.hitFraction      
       VectorUtil.setInterpolate3(hitPointWorld, rayFromWorld, rayToWorld, rayResult.hitFraction)
       triangleIndex = rayResult.localShapeInfo.triangleIndex
@@ -95,8 +96,9 @@ class JBulletCollision(val segments:IndexedSeq[IndexedSeq[ReadonlyVec3D]], val m
     def rayTest(collisionWorld:CollisionWorld):Boolean = {
       
       closestHitFraction = 1f
+      //println("testing " + rayFromWorld + " to " + rayToWorld)
       collisionWorld.rayTest(rayFromWorld,rayToWorld,this)
-      if ( closestHitFraction == 1.0f ){
+      if ( closestHitFraction >= 1d ){
         // we hit nothing, mark 'end of world' as collision point 
         currentC.setCollisionPoint(rayToWorld)
         //println("rayTest " + rayFromWorld + " -> " + rayToWorld + " -> air " + currentC.collisionPoint)
@@ -183,7 +185,7 @@ class JBulletCollision(val segments:IndexedSeq[IndexedSeq[ReadonlyVec3D]], val m
       rayToWorld.x = rayFromWorld.x
       rayToWorld.y = rayFromWorld.y
       
-      val distanceCoveredSqr = JBulletUtil.distanceToSquaredInXYPlane(fromV,rayFromWorld) 
+      distanceCoveredSqr = JBulletUtil.distanceToSquaredInXYPlane(fromV,rayFromWorld) 
       //println("distanceCoveredSoFar=" + distanceCoveredSoFar + " distanceToCoverSqr=" + distanceToCoverSqr + " :" + (distanceCoveredSoFar > distanceToCoverSqr)  + " atSegmentEnd:" + atSegmentEnd + " endOfSegmentReached:" + endOfSegmentReached)
 
       if (distanceCoveredSqr > distanceToCoverSqr){
@@ -193,6 +195,7 @@ class JBulletCollision(val segments:IndexedSeq[IndexedSeq[ReadonlyVec3D]], val m
           rayFromWorld.y = toV.y
           rayToWorld.x = toV.x
           rayToWorld.y = toV.y
+          distanceCoveredSqr = distanceToCoverSqr
         //}
       }
       //println("Incrementing position from " + oldStr + " to: " + rayFromWorld.x + "," + rayFromWorld.y + " should stop at " +toV.x + "," + toV.y )
@@ -230,7 +233,6 @@ class JBulletCollision(val segments:IndexedSeq[IndexedSeq[ReadonlyVec3D]], val m
         //println("isDone: endOfSegmentReached already seen, ending iteration at:" + rayFromWorld)
         true
       } else {
-        val distanceCoveredSqr = JBulletUtil.distanceToSquaredInXYPlane(fromV,rayFromWorld) 
         //val diff = math.abs(distanceCoveredSoFar-distanceToCoverSqr)
         if ( distanceCoveredSqr >= distanceToCoverSqr) {
           // allow one more iteration at 'end of segment'
@@ -263,7 +265,7 @@ class JBulletCollision(val segments:IndexedSeq[IndexedSeq[ReadonlyVec3D]], val m
      
      //println("BB min:" + collisionWrapper.aabbAllModels.getMin + " max: " + collisionWrapper.aabbAllModels.getMax + " zMin=" + collisionWrapper.zMin + " zMax=" + collisionWrapper.zMax)
      
-     val searchState = new SearchState(new Vector3f(1, 1, collisionWrapper.zMax), new Vector3f(1, 1, collisionWrapper.zMin), collisionWrapper.zMin, collisionWrapper.zMax)
+     val searchState = new SearchState(new Vector3d(1, 1, collisionWrapper.zMax), new Vector3d(1, 1, collisionWrapper.zMin), collisionWrapper.zMin, collisionWrapper.zMax)
      val totalRayResult = new ArrayBuffer[ArrayBuffer[Vec3D]]
      
      segments.sliding(2,1).foreach(segment => {
@@ -289,7 +291,7 @@ class JBulletCollision(val segments:IndexedSeq[IndexedSeq[ReadonlyVec3D]], val m
                } else {
                  searchState.previousC.collisionPoint.copy
                }
-               prevCopy.z = collisionWrapper.zMin
+               prevCopy.z = collisionWrapper.zMin.toFloat
                //println("saving (modified) air hit: " + prevCopy)
                addToRayResult(prevCopy)
                if (searchState.currentC.hasRetroPoint) 
@@ -317,7 +319,7 @@ class JBulletCollision(val segments:IndexedSeq[IndexedSeq[ReadonlyVec3D]], val m
              if (rayResult.last.z != collisionWrapper.zMin){
                // we have previous results with non-miss result
                val lastHit = rayResult.last.copy
-               lastHit.z = collisionWrapper.zMin
+               lastHit.z = collisionWrapper.zMin.toFloat
                addToRayResult(lastHit)
              }
            } else {

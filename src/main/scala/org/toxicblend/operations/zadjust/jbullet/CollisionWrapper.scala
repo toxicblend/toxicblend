@@ -27,7 +27,7 @@ import org.toxicblend.typeconverters.Mesh3DConverter
 import scala.collection.mutable.ArrayBuffer
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
-import javax.vecmath.Vector3f
+import javax.vecmath.Vector3d
 import toxi.geom.Vec3D
 import toxi.geom.ReadonlyVec3D
 import toxi.geom.Plane
@@ -39,13 +39,13 @@ class CollisionWrapper(val segments:IndexedSeq[IndexedSeq[ReadonlyVec3D]], val m
   val collisionShapes = new ObjectArrayList[CollisionShape]();
   val convexShapes = new ArrayBuffer[ConvexShape]
   
-  val vertStride = 3 * 4
-  val indexStride = 3 * 4
+  val vertStride = 3 * CollisionWrapper.VERTEX_S
+  val indexStride = 3 * CollisionWrapper.INDEX_S
   val totalVerts = models(0).getVertices.size
   val totalTriangles = models(0).getFaces.size
    
-  val gVertices = ByteBuffer.allocateDirect(totalVerts * 3 * 4).order(ByteOrder.nativeOrder());
-  val gIndices = ByteBuffer.allocateDirect(totalTriangles * 3 * 4).order(ByteOrder.nativeOrder());
+  val gVertices = ByteBuffer.allocateDirect(totalVerts * 3 * CollisionWrapper.VERTEX_S).order(ByteOrder.nativeOrder());
+  val gIndices = ByteBuffer.allocateDirect(totalTriangles * 3 * CollisionWrapper.INDEX_S).order(ByteOrder.nativeOrder());
   
   val aabbAllModels = {
     if (models.size > 0) {
@@ -56,14 +56,14 @@ class CollisionWrapper(val segments:IndexedSeq[IndexedSeq[ReadonlyVec3D]], val m
       new AABB
     }
   }
-  val zMin = aabbAllModels.getMin.z-1f
-  val zMax = aabbAllModels.getMax.z+1f
+  val zMin = aabbAllModels.getMin.z-1d
+  val zMax = aabbAllModels.getMax.z+1d
   
   (0 until totalVerts).foreach(index => {
     val v = models(0).getVertices(index)
-    gVertices.putFloat((index*3 + 0) * 4, v.x)
-    gVertices.putFloat((index*3 + 1) * 4, v.y)
-    gVertices.putFloat((index*3 + 2) * 4, v.z)
+    gVertices.putDouble((index*3 + 0) * CollisionWrapper.VERTEX_S, v.x)
+    gVertices.putDouble((index*3 + 1) * CollisionWrapper.VERTEX_S, v.y)
+    gVertices.putDouble((index*3 + 2) * CollisionWrapper.VERTEX_S, v.z)
   });
   
   {
@@ -74,9 +74,9 @@ class CollisionWrapper(val segments:IndexedSeq[IndexedSeq[ReadonlyVec3D]], val m
       val face = faces(index)
       if (face.size > 3 ) throw new ToxicblendException("JBullet mesh must be triangulated")
       else if (face.size == 3){
-        gIndices.putInt((index*3 + 0) * 4, face(0))
-        gIndices.putInt((index*3 + 1) * 4, face(1))
-        gIndices.putInt((index*3 + 2) * 4, face(2))
+        gIndices.putInt((index*3 + 0) * CollisionWrapper.INDEX_S, face(0))
+        gIndices.putInt((index*3 + 1) * CollisionWrapper.INDEX_S, face(1))
+        gIndices.putInt((index*3 + 2) * CollisionWrapper.INDEX_S, face(2))
       }
       // silently ignore edges and unconnected vertices
     })
@@ -93,8 +93,8 @@ class CollisionWrapper(val segments:IndexedSeq[IndexedSeq[ReadonlyVec3D]], val m
   val collisionConfiguration = new DefaultCollisionConfiguration()
   val dispatcher = new CollisionDispatcher(collisionConfiguration)
   val broadphase:BroadphaseInterface = if (true) {
-      val worldMin = JBulletUtil.convertVec3DToVector3f(models(0).getBounds.getMin)
-      val worldMax = JBulletUtil.convertVec3DToVector3f(models(0).getBounds.getMax)
+      val worldMin = JBulletUtil.convertVec3DToVector3d(aabbAllModels.getMin)
+      val worldMax = JBulletUtil.convertVec3DToVector3d(aabbAllModels.getMax)
       //println("worldMin=" + worldMin)
       //println("worldMax=" + worldMax)
       new AxisSweep3_32(worldMin, worldMax, 1500000/2);
@@ -133,13 +133,12 @@ class CollisionWrapper(val segments:IndexedSeq[IndexedSeq[ReadonlyVec3D]], val m
      convexShape
   }
   
-  def destroy = {
-    collisionWorld.destroy
-  }
+  def destroy = collisionWorld.destroy
 }
 
-
 object CollisionWrapper {
+  val VERTEX_S = 8 // a double
+  val INDEX_S = 4  // an int
   /**
    * Alternative constructor
    */
