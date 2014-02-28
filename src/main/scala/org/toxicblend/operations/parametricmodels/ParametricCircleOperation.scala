@@ -23,8 +23,8 @@ class ParametricCircleOperation extends CommandProcessorTrait {
       circle(i) = new Vec3D(Math.cos(degree).toFloat, Math.sin(degree).toFloat, 0)
       degree += deltaDegree
     })
-    circle.sliding(2).foreach(l => rv.addEdges(l(0),l(1)))
-    rv.addEdges(circle.last,circle(0))
+    circle.sliding(2).foreach(l => rv.addEdge(l(0),l(1)))
+    rv.addEdge(circle.last,circle(0))
     
     var r = 0.1f
     val deltaR = 0.1f
@@ -32,10 +32,10 @@ class ParametricCircleOperation extends CommandProcessorTrait {
       val circum = 2.*Math.PI*r
       val steps = ((0.1d/circum)*circle.size).toInt
       (0 until (circle.size, steps) ).foreach( s => {
-         rv.addEdges(circle(s).scale(r-deltaR),circle(s).scale(r))
+         rv.addEdge(circle(s).scale(r-deltaR),circle(s).scale(r))
       })
-      circle.sliding(2).foreach(l => rv.addEdges(l(0).scale(r),l(1).scale(r)))
-      rv.addEdges(circle.last.scale(r),circle(0).scale(r))
+      circle.sliding(2).foreach(l => rv.addEdge(l(0).scale(r),l(1).scale(r)))
+      rv.addEdge(circle.last.scale(r),circle(0).scale(r))
       r += deltaR
     })
     rv

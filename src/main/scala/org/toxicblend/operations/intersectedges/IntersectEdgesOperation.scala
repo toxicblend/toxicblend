@@ -87,7 +87,7 @@ class IntersectEdgesOperation extends CommandProcessorTrait {
           val lineAsortedIntersections = lineAintersections.sortBy(intersection => fromA.distanceToSquared(intersection))
           lineAsortedIntersections.add(toA)
           lineAsortedIntersections.sliding(2,1).foreach( aIntersectionPoints => {
-            rv.addEdges( aIntersectionPoints(0), aIntersectionPoints(1))
+            rv.addEdge( aIntersectionPoints(0), aIntersectionPoints(1))
           })
         }
       })
@@ -100,7 +100,7 @@ class IntersectEdgesOperation extends CommandProcessorTrait {
       val lineBinterserctions = b._2.sortBy(intersection => fromB.distanceToSquared(intersection))
       lineBinterserctions.add(toB)
       lineBinterserctions.sliding(2,1).foreach( bIntersectionPoints => {
-        rv.addEdges( bIntersectionPoints(0), bIntersectionPoints(1))
+        rv.addEdge( bIntersectionPoints(0), bIntersectionPoints(1))
       })
     })
     
@@ -112,7 +112,7 @@ class IntersectEdgesOperation extends CommandProcessorTrait {
           val toV = vertices(vSeq(1))
           val keyV = (vSeq(0),vSeq(1))
           if (!set.contains(keyV)) {
-            rv.addEdges(fromV,toV)
+            rv.addEdge(fromV,toV)
           }
         })
       })

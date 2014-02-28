@@ -85,7 +85,7 @@ class MedianAxisOperation extends CommandProcessorTrait {
     internalEdges.foreach( mesh3d => 
       mesh3d.getFaces.foreach( es => 
         es.sliding(2,1).foreach(e => {
-          rv.addEdges(mesh3d.getVertices(e(0)), mesh3d.getVertices(e(1)))
+          rv.addEdge(mesh3d.getVertices(e(0)), mesh3d.getVertices(e(1)))
         })
       )
     )

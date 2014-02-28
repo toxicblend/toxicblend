@@ -109,7 +109,7 @@ class Mesh3DConverter protected (protected val vertices:Buffer[ReadonlyVec3D],
       val distincts = vertices.distinct
       if (distincts.size != vertices.size) {
         if (distincts.size>1) {
-          println("findLineSegments:: This is terrible wrong, i know. But i just took the unique vertices of a face and added them to the result set.") // TODO: fix it
+          System.err.println("findContinuousLineSegmentsAsId:: This is terrible wrong, i know. But i just took the unique vertices of a face and added them to the result set.") // TODO: fix it
           println("" + vertices.mkString("{",",","}") + " => " + distincts.mkString("{",",","}"))
           map.add(distincts, faceId)
         }
@@ -215,18 +215,17 @@ class Mesh3DConverter protected (protected val vertices:Buffer[ReadonlyVec3D],
   /**
    * Adds an edge between two vertices. 
    */
-  def addEdges (v1:ReadonlyVec3D, v2:ReadonlyVec3D) = {
+  def addEdge(v1:ReadonlyVec3D, v2:ReadonlyVec3D) = {
     val v1index = addVertex(v1)
     val v2index = addVertex(v2)
-    val newFace = new ArrayBuffer[Int](2) += v1index += v2index
-    faces += newFace
+    if (v1index != v2index) faces += ( new ArrayBuffer[Int](2) += v1index += v2index )
     this
   }
   
   /**
    * Adds edges between a list of vertices (line segment). 
    */
-  def addMultipleEdges (inVertices:IndexedSeq[ReadonlyVec3D]) = {
+  def addMultipleEdges(inVertices:IndexedSeq[ReadonlyVec3D]) = {
     if ( 1 == inVertices.size ) {
       System.err.println("addEdges: One single vertex does not build an edge: Debug me")
     }
@@ -331,7 +330,7 @@ object Mesh3DConverter {
     
     pbModel.getFacesList().foreach( face => {
       val eBuffer = new ArrayBuffer[Int](face.getVerticesList().size())
-      face.getVerticesList().foreach( v => eBuffer += v )
+      face.getVerticesList.foreach( v => eBuffer += v )
       fbuffer += eBuffer
     })
     new Mesh3DConverter(vbuffer, fbuffer, aabb, pbModel.getName)
@@ -464,7 +463,7 @@ object Mesh3DConverter {
       val v2as2D = new Vec2D(v2.x, v2.y)
       val v1as3Dmedian = map2(v1as2D)
       val v2as3Dmedian = map2(v2as2D)
-      undoubled.addEdges(v1as3Dmedian, v2as3Dmedian)
+      undoubled.addEdge(v1as3Dmedian, v2as3Dmedian)
     }))
     val segments = undoubled.findContinuousLineSegments._2
     val rv = new Mesh3DConverter(undoubled.name)
