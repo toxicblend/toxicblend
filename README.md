@@ -4,26 +4,34 @@ Toxicblend
 *** Pre-Alpha code ***
 
 A set of plugins that will bring the power of ToxicLibs, Boost Voronoi, jBullet and other geometric libraries to Blender 2.69+.
-There are several blender plugins, one for each operation. They send objects (vertices, edges/faces) over the net (via google 
-protocol buffers) to a JVM server. This server then computes the operation (volumetric brush, median axis, 
-simplify 2D polygon, etc. etc) and sends the resulting object back to the blender plugin.
+There are several blender plugins. They send objects (vertices, edges/faces) over the net (via google 
+protocol buffers) to a local JVM server. This server then computes the operation (volumetric brush, median axis, 
+simplify 2D polygon, etc. etc) and sends the resulting object back to blender.
 
-I have tested the code on Ubuntu 13.10, Gentoo (64 bit) and OSX 10.9 with mac ports installed
+I have tested the code on Ubuntu 13.10 (64 bit), Gentoo (64 bit) and OSX 10.9 with mac ports installed.
 
 Dependencies
 ------------
-Blender 2.69                                  (only pure python code is used in blender, so blender addon installation is easy)
-https://github.com/malthe/google-protobuf.git (google protobufs with python 3 support, only needed when .proto file is modified) 
-https://bitbucket.org/ead_fritz/toxiclibs     (toxiclibs fork with some minor tweaks)
-http://jbullet.advel.cz                       (java port of bullet physics (managed by sbt))  
-http://www.scalatest.org                      (scala test suite (managed by sbt))
-http://www.scala-sbt.org					  (scala build tool)
+Blender 2.69                                  Only pure python code is used in blender, so blender addon installation is easy)
+http://github.com/malthe/google-protobuf.git  Google protobufs with Python 3 support (only needed if you want to build and or modify the .proto file) 
+http://bitbucket.org/ead_fritz/toxiclibs      Toxiclibs fork with some minor tweaks (fork of http://toxiclibs.org) 
+http://github.com/toxicblend/jbulletd         Java port of bullet physics with double precision (fork of http://jbullet.advel.cz) )  
+http://www.scalatest.org                      Scala test suite (managed by sbt)
+http://www.scala-sbt.org					  Scala build tool
 www.boost.org version 1.55                    (It seems like only 'System' needs to be installed as a library, rest is header files)
-two files from http://libgdx.badlogicgames.com is blatantly copied into the repository
+two files from libgdx.badlogicgames.com are blatantly copied into the repository
  
 Installation & running
 ----------------------
 
+0. Download and build http://github.com/toxicblend/jbulletd
+   
+   cd jbulletd
+   
+   sbt -> package
+   
+   make soft links from toxicblend/lib/jbulletd.jar -> your_build_path/jbulletd/target/scala-2.10/jbulletd_2.10-0.1.jar 
+   
 1. Download and compile the bitbucket.org/ead_fritz/toxiclibs code
 
 	hg clone https://bitbucket.org/ead_fritz/toxiclibs
@@ -32,8 +40,8 @@ Installation & running
 
 	ant -f ant/build_all.xml 
 
-	make soft links from toxicblend/lib/toxiclibscore.jar -> your_compilation_path/toxiclibs/dist/toxiclibscore.jar 
-	and toxicblend/lib/volumeutils.jar ->  your_compilation_path/toxiclibs/dist/volumeutils.jar
+	make soft links from toxicblend/lib/toxiclibscore.jar -> your_build_path/toxiclibs/dist/toxiclibscore.jar 
+	and toxicblend/lib/volumeutils.jar ->  your_build_path/toxiclibs/dist/volumeutils.jar
 	
 2. Install boost 1.55 (boost.org)
 	
@@ -73,11 +81,9 @@ You will find the location with this command in the blender python console:
     
     compile  (there are a few warnings generated from libgdx and google-protobuf)
     
-7. run the server (still in sbt console)
+7. Run the Java server (still in sbt console)
     
     run
-    
-    4 (org.toxicblend.Server)
 
     If you experience problems with a missing java library (libmawt.so in my case)
     you can search for the location and add it to LD_LIBRARY_PATH and restart sbt
@@ -126,7 +132,7 @@ You will find the location with this command in the blender python console:
     
     toxicblend_simplegcodeview (visualizes gcode as a set of edges)
     
-    toxicblend_zadjust (wraps a set of edges onto objects, similar to blender shrink wrap modifier but with z offset option)
+    toxicblend_zadjust (wraps a set of edges onto objects, similar to blender shrink wrap modifier but with an optional 'add z component' choise)
     
     I use the combination of toxicblend_medianaxis, toxicblend_boostsimplify, toxicblend_zadjust and toxicblend_simplegcodegenerator to generate gcode for v-carved text onto curved surfaces.
     
