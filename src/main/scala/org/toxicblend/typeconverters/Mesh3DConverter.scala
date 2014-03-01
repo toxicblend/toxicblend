@@ -32,18 +32,34 @@ import scala.collection.JavaConversions._
  */
 class Mesh3DConverter protected (protected val vertices:Buffer[ReadonlyVec3D], 
                                  protected val faces:Buffer[ArrayBuffer[Int]], 
-                                 protected val bounds:AABB, 
-                                 val name:String="") {
+                                 protected val bounds:AABB,
+                                 protected val vert2id:HashMap[ReadonlyVec3D,Int],
+                                 val name:String) {
   
-  protected lazy val vert2id = {
-    val map = new HashMap[ReadonlyVec3D,Int]()
-    (0 until vertices.size).foreach(i => map.put(vertices(i),i ))
-    map
-  }
-  
-  def this(name:String="mesh3d") = {
-    this(new ArrayBuffer[ReadonlyVec3D], new ArrayBuffer[ArrayBuffer[Int]], new AABB, name)  
-  }
+  def this(vertices:Buffer[ReadonlyVec3D], faces:Buffer[ArrayBuffer[Int]], name:String) = 
+    this(vertices=vertices, faces=faces, bounds={
+         if (vertices.size > 0) { 
+           val aabb = new AABB(vertices(0),0)
+           vertices.foreach(v => aabb.growToContainPoint(v) )
+           aabb
+         } else {
+           // this is really wrong, when default constructor of AABB is used it will permanently include origo (0,0,0) 
+           new AABB
+         }
+       }, vert2id = {
+         val map = new HashMap[ReadonlyVec3D,Int]()
+          (0 until vertices.size).foreach(i => map.put(vertices(i),i ))
+          map
+       }, name=name)
+       
+  def this(vertices:Buffer[ReadonlyVec3D], faces:Buffer[ArrayBuffer[Int]], bounds:AABB, name:String) = 
+    this(vertices=vertices, faces=faces, bounds=bounds, {
+         val map = new HashMap[ReadonlyVec3D,Int]()
+          (0 until vertices.size).foreach(i => map.put(vertices(i),i))
+          map
+       }, name=name)
+       
+  def this(name:String="mesh3d") = this(new ArrayBuffer[ReadonlyVec3D], new ArrayBuffer[ArrayBuffer[Int]], name)
   
   def getVertices:Seq[ReadonlyVec3D] = vertices
   def getFaces:Seq[Seq[Int]] = faces
@@ -340,19 +356,10 @@ object Mesh3DConverter {
    * Build a segmented line from a sequence of vertices, each segment will have it's own face structure
    */
   def apply(vertices:IndexedSeq[ReadonlyVec3D], name:String) = {
-    val aabb = {
-      // if possible, use the first vertex when creating the AABB
-      if (vertices.size >0 ) {
-        val firstVertex = vertices(0)
-        new AABB(new Vec3D(firstVertex.x, firstVertex.y, firstVertex.z), 0f)
-      } else
-        new AABB
-    }
     val vbuffer = new ArrayBuffer[ReadonlyVec3D](vertices.size)
     val fbuffer = new ArrayBuffer[ArrayBuffer[Int]](vertices.size+1)
     vertices.foreach( v=> {
       vbuffer+=new Vec3D(v) 
-      aabb.growToContainPoint(v)
     })
     (0 until vertices.size).sliding(2,1).foreach( v => {
       val edge = new ArrayBuffer[Int](2)
@@ -360,7 +367,7 @@ object Mesh3DConverter {
       edge += v(1)
       fbuffer += edge
     })
-    new Mesh3DConverter(vbuffer, fbuffer, aabb, name)
+    new Mesh3DConverter(vbuffer, fbuffer, name)
   }
   
   /** 
