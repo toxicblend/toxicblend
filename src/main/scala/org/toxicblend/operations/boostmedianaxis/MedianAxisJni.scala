@@ -205,7 +205,7 @@ object MedianAxisJni {
           System.err.println(segmentBuffer.mkString("{",",","}"))
           //System.err.println(data.mkString("{",",","}"))
         } else {
-          segmentBuffer.sliding(2,1).foreach(p2p => outBuffer.addMultipleEdges( p2p ))
+          segmentBuffer.sliding(2,1).foreach(p2p => outBuffer.addEdges( p2p ))
         }
         segmentBuffer.clear
       }

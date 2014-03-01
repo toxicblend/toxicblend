@@ -157,7 +157,7 @@ class MazeGenerator(val bounds:AABB) {
         // If the node on the opposite side isn't in the maze yet:
         //  Make the wall a passage and mark the node on the opposite side as part of the maze.
         
-        m3dc.addMultipleEdges(randomWall.aToB)
+        m3dc.addEdges(randomWall.aToB)
         partOfTheMaze.add(oppositeNodeIndex)
         
         //  Add the neighboring walls of the node to the wall list.

@@ -60,9 +60,9 @@ class BoostSimplifyOperation extends CommandProcessorTrait {
       segments._2.foreach(segment =>  {
         if (segment.size>2) {
           val simplifiedSegment = simplify3D(segment, simplifyLimit)
-          newMesh.addMultipleEdges(simplifiedSegment)
+          newMesh.addEdges(simplifiedSegment)
         } else {
-          newMesh.addMultipleEdges(segment)
+          newMesh.addEdges(segment)
         }
       })
       (newMesh,model._2)

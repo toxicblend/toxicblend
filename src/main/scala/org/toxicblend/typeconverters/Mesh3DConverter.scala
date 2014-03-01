@@ -99,6 +99,7 @@ class Mesh3DConverter protected (protected val vertices:Buffer[ReadonlyVec3D],
   
   /**
    * Adds a unique vertex to the vertices list. If a the vertex is already found the vertex id is returned 
+   * Not thread safe
    */
   @inline
   protected def addVertex(v:ReadonlyVec3D):Int = {
@@ -229,7 +230,8 @@ class Mesh3DConverter protected (protected val vertices:Buffer[ReadonlyVec3D],
   } 
   
   /**
-   * Adds an edge between two vertices. 
+   * Adds an edge between two vertices.
+   * Not thread safe
    */
   def addEdge(v1:ReadonlyVec3D, v2:ReadonlyVec3D) = {
     val v1index = addVertex(v1)
@@ -239,20 +241,21 @@ class Mesh3DConverter protected (protected val vertices:Buffer[ReadonlyVec3D],
   }
   
   /**
-   * Adds edges between a list of vertices (line segment). 
+   * Adds edges between a list of vertices (line segment).
+   * Not thread safe
    */
-  def addMultipleEdges(inVertices:IndexedSeq[ReadonlyVec3D]) = {
+  def addEdges(inVertices:IndexedSeq[ReadonlyVec3D]) = {
     if ( 1 == inVertices.size ) {
       System.err.println("addEdges: One single vertex does not build an edge: Debug me")
     }
     inVertices.sliding(2,1).foreach(edge => {
-      val v1 = edge(0)
-      val v1index = addVertex(v1)
-      val v2 = edge(1)
-      val v2index = addVertex(v2)
- 
-      val newFace = new ArrayBuffer[Int](2) += v1index += v2index
-      faces += newFace
+      val v1index = addVertex(edge(0))
+      val v2index = addVertex(edge(1))
+      if (v1index != v2index) {
+        // don't add edges from and to the same vertex
+        val newFace = new ArrayBuffer[Int](2) += v1index += v2index
+        faces += newFace
+      }
     })
     this
   }
@@ -400,11 +403,10 @@ object Mesh3DConverter {
       })
     })
     sequences.filter(s => s.size>=2).foreach(sequence => {
-      sequence.sliding(2,1).foreach( v => {
+      sequence.map(v => vMap(v)).sliding(2,1).filter(v=>v(0)!=v(1)).foreach( vi => {       
         val edge = new ArrayBuffer[Int](2)
-        // The vertices were all added to the map in the previous loop
-        edge += vMap(v(0))
-        edge += vMap(v(1))
+        edge += vi(0)
+        edge += vi(1)
         fbuffer += edge
       })
     })
@@ -474,7 +476,7 @@ object Mesh3DConverter {
     }))
     val segments = undoubled.findContinuousLineSegments._2
     val rv = new Mesh3DConverter(undoubled.name)
-    segments.foreach(segment => rv.addMultipleEdges(segment))
+    segments.foreach(segment => rv.addEdges(segment))
     rv
   }
 }
