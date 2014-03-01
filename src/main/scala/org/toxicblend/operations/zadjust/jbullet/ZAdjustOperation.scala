@@ -19,8 +19,13 @@ class ZAdjustOperation extends CommandProcessorTrait {
     if (inMessage.getModelsCount() < 2) {
       throw new ToxicblendException("At least two objects must be selected")
     }
-    val segments = Mesh3DConverter(inMessage.getModels(0),true).findContinuousLineSegments
-    if (segments._1.size > 0) throw new ToxicblendException("First object should only contain edges")
+    val segments = {
+      val s = Mesh3DConverter(inMessage.getModels(0),true).findContinuousLineSegments
+      if (s._1.size > 0) throw new ToxicblendException("First object should only contain edges")
+      s._2.filter( g => g.size <= 1).foreach(g => System.err.println("ZAdjustOperation:invalid input segment " + g))
+      s._2
+    }
+    // models = all models found in inMessage except the first one
     val models = inMessage.getModelsList().tail.toIndexedSeq.map(i=>Mesh3DConverter(i,true))
     
     val useMultiThreading = options.getOrElse("useMultiThreading", "FALSE").toUpperCase() match {
@@ -51,19 +56,21 @@ class ZAdjustOperation extends CommandProcessorTrait {
     println(options)
     val epsilon = 0.000002f
     println("sampleStep="+ sampleStep + " epsilon=" + epsilon)
+    //println("Input segment :" )
+    //segments.foreach( s => println(s.mkString("\n")) )
     val jbc = new JBulletCollision(models, sampleStep, epsilon) 
     val result = new MutableList[IndexedSeq[ReadonlyVec3D]]
     if (addDiff) {
-      segments._2.filter( s => s.size > 1).foreach(segment => {
+      segments.filter( s => s.size > 1).foreach(segment => {
         val collided = jbc.doRayTests(segment)
         result += jbc.adjustZLevel(segment,collided)
       })
     } else {
-      segments._2.filter( s => s.size > 1).foreach(segment => result += jbc.doRayTests(segment).flatten)
+      segments.filter( s => s.size > 1).foreach(segment => result += jbc.doRayTests(segment).flatten)
     } 
     
-    println("Result:")
-    result.foreach( s => {println; s.foreach(r => println(r))} )
+    //println("Result:")
+    //result.foreach( s => println(s.mkString("\n")) )
 
     jbc.cleanup
     val returnMessageBuilder = Message.newBuilder()

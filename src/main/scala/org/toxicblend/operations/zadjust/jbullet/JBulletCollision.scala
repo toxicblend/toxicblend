@@ -161,6 +161,7 @@ class JBulletCollision(val models:IndexedSeq[Mesh3DConverter], val sampleDelta:F
       toV.x = newToV.x; toV.y = newToV.y; toV.z = newToV.z;
 
       distanceToCoverSqr = JBulletUtil.distanceToSquaredInXYPlane(fromV,toV)
+      distanceCoveredSqr = 0d
       plane = TrianglePlaneIntersection.segmentToZPlane(fromV,toV)
       directionNormalized = {
         val d = toV.sub(fromV)
