@@ -25,6 +25,8 @@ import com.bulletphysics.linearmath.DefaultMotionState
 import com.bulletphysics.linearmath.VectorUtil
 import org.toxicblend.typeconverters.Mesh3DConverter
 import scala.collection.mutable.ArrayBuffer
+import javax.vecmath.AxisAngle4d
+import javax.vecmath.Matrix3d
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import javax.vecmath.Vector3d
@@ -44,8 +46,8 @@ class CollisionWrapper(val models:IndexedSeq[Mesh3DConverter]) {
   val totalVerts = models(0).getVertices.size
   val totalTriangles = models(0).getFaces.size
    
-  val gVertices = ByteBuffer.allocateDirect(totalVerts * 3 * CollisionWrapper.VERTEX_S).order(ByteOrder.nativeOrder());
-  val gIndices = ByteBuffer.allocateDirect(totalTriangles * 3 * CollisionWrapper.INDEX_S).order(ByteOrder.nativeOrder());
+  val gVertices = ByteBuffer.allocateDirect(totalVerts*vertStride).order(ByteOrder.nativeOrder());
+  val gIndices = ByteBuffer.allocateDirect(totalTriangles*indexStride).order(ByteOrder.nativeOrder());
   
   val aabbAllModels = {
     if (models.size > 0) {
@@ -83,9 +85,7 @@ class CollisionWrapper(val models:IndexedSeq[Mesh3DConverter]) {
   }
   
   val indexVertexArrays = new TriangleIndexVertexArray(totalTriangles, gIndices, indexStride, totalVerts, gVertices, vertStride)
-  
   val useQuantizedAabbCompression = true
-  
   val trimeshShape = new BvhTriangleMeshShape(indexVertexArrays, useQuantizedAabbCompression)
   collisionShapes.add(trimeshShape)
 
@@ -93,10 +93,8 @@ class CollisionWrapper(val models:IndexedSeq[Mesh3DConverter]) {
   val collisionConfiguration = new DefaultCollisionConfiguration()
   val dispatcher = new CollisionDispatcher(collisionConfiguration)
   val broadphase:BroadphaseInterface = if (true) {
-      val worldMin = JBulletUtil.convertVec3DToVector3d(aabbAllModels.getMin)
-      val worldMax = JBulletUtil.convertVec3DToVector3d(aabbAllModels.getMax)
-      //println("worldMin=" + worldMin)
-      //println("worldMax=" + worldMax)
+      val worldMin = JBulletUtil.vec3DToNewVector3d(aabbAllModels.getMin)
+      val worldMax = JBulletUtil.vec3DToNewVector3d(aabbAllModels.getMax)
       new AxisSweep3_32(worldMin, worldMax, 1500000/2);
     } else {
     new DbvtBroadphase
@@ -108,7 +106,18 @@ class CollisionWrapper(val models:IndexedSeq[Mesh3DConverter]) {
   startTransform.setIdentity();
   startTransform.origin.set(0f, 0f, 0f);
   val staticBody = localCreateCollisionObject(startTransform, groundShape)
-
+  
+  class ConeShapeZContainer (val radius:Double, val height:Double, margin:Double) {
+    val zAdjust = height/2d
+    // ConeShapeZ should be pointing down in Z
+    val rotation = {
+      val m = new Matrix3d; m.set(new AxisAngle4d(new Vector3d(1,0,0), math.Pi)); m
+    }
+    val shape = addConeShapeZ(radius-margin, height-margin, margin)  
+  }
+  
+  val coneShapeZ = new ConeShapeZContainer(0.01, 0.05, 0.001)
+  
   staticBody.setCollisionFlags(staticBody.getCollisionFlags() | CollisionFlags.STATIC_OBJECT);
 
   // enable custom material callback
@@ -123,14 +132,13 @@ class CollisionWrapper(val models:IndexedSeq[Mesh3DConverter]) {
     collisionobject
   }
   
-  def addVCutter(radius:Float, height:Float):ConvexShape = {
-    val margin = 0.02f;
-     val colShape:ConvexShape = new ConeShapeZ(2f, 2f);
-     colShape.setMargin(margin)
-     collisionShapes.add(colShape);
-     val convexShape = new UniformScalingShape(colShape, 1f)
-     convexShapes.append(convexShape)
-     convexShape
+  def addConeShapeZ(radius:Double, height:Double, margin:Double):ConvexShape = {
+    val colShape:ConvexShape = new ConeShapeZ(radius, height);
+    colShape.setMargin(margin)
+    collisionShapes.add(colShape);
+    val convexShape = new UniformScalingShape(colShape, 1f)
+    convexShapes.append(convexShape)
+    convexShape
   }
   
   def destroy = collisionWorld.destroy

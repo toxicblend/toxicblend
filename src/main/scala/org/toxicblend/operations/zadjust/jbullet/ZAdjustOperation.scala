@@ -62,11 +62,11 @@ class ZAdjustOperation extends CommandProcessorTrait {
     val result = new MutableList[IndexedSeq[ReadonlyVec3D]]
     if (addDiff) {
       segments.filter( s => s.size > 1).foreach(segment => {
-        val collided = jbc.doRayTests(segment)
+        val collided = jbc.doCollisionTests(segment)
         result += jbc.adjustZLevel(segment,collided)
       })
     } else {
-      segments.filter( s => s.size > 1).foreach(segment => result += jbc.doRayTests(segment).flatten)
+      segments.filter( s => s.size > 1).foreach(segment => result += jbc.doCollisionTests(segment).flatten)
     } 
     
     //println("Result:")

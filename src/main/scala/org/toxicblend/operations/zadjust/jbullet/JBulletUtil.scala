@@ -8,11 +8,11 @@ import toxi.geom.ReadonlyVec3D
  */
 object JBulletUtil {
   
-  /**
+   /**
     * returns the squared distance between two vertices in XY plane ( Z coordinate is ignored )
     */
    @inline
-   def distanceToSquaredInXYPlane(v0:ReadonlyVec3D, v1:ReadonlyVec3D) = {
+   def sqrXYDistance(v0:ReadonlyVec3D, v1:ReadonlyVec3D) = {
      val dx = (v0.x - v1.x)//.toDouble
      val dy = (v0.y - v1.y)//.toDouble
      dx*dx + dy*dy   
@@ -22,7 +22,7 @@ object JBulletUtil {
     * returns the squared distance between two vertices in XY plane ( Z coordinate is ignored )
     */
    @inline
-   def distanceToSquaredInXYPlane(v0:ReadonlyVec3D, v1:Vector3d) = {
+   def sqrXYDistance(v0:ReadonlyVec3D, v1:Vector3d) = {
      val dx = (v0.x - v1.x)//.toDouble
      val dy = (v0.y - v1.y)//.toDouble
      dx*dx + dy*dy   
@@ -32,7 +32,7 @@ object JBulletUtil {
    * copy a Vector3d into a new Vec3D
    */
   @inline
-  def convertVector3dToVec3D(input:Vector3d):Vec3D = new Vec3D(input.x.toFloat, input.y.toFloat, input.z.toFloat)
+  def vector3dToNewVec3D(input:Vector3d) = new Vec3D(input.x.toFloat, input.y.toFloat, input.z.toFloat)
   
   /**
    * copy the values of a Vector3d into a Vec3D
@@ -49,7 +49,7 @@ object JBulletUtil {
    * copy a ReadonlyVec3D into a new Vector3d
    */
   @inline
-  def convertVec3DToVector3d(input:ReadonlyVec3D):Vector3d = new Vector3d(input.x, input.y, input.z)
+  def vec3DToNewVector3d(input:ReadonlyVec3D) = new Vector3d(input.x, input.y, input.z)
   
   /**
    * copy the values of a Vec3D into a Vector3d
