@@ -33,7 +33,9 @@ class JBulletTest3 extends FlatSpec with Matchers {
   }
   
   val jbc = new JBulletCollision(models, 0.005f, 0.0001f)
-  "jbulletTest" should "collide just fine" in {    
+  
+  
+  "jbulletTest3-1" should "collide just fine" in {    
     val segment:Array[ReadonlyVec3D] = Array(new Vec3D(0f,-1f,1f), 
                                              new Vec3D(-1f,0f,1f),
                                              new Vec3D(0f,1f,1f),

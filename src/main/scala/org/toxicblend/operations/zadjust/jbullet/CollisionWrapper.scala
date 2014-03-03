@@ -108,7 +108,7 @@ class CollisionWrapper(val models:IndexedSeq[Mesh3DConverter]) {
   val staticBody = localCreateCollisionObject(startTransform, groundShape)
   
   class ConeShapeZContainer (val radius:Double, val height:Double, margin:Double) {
-    val zAdjust = height/2d
+    val zAdjust = -height/2d
     // ConeShapeZ should be pointing down in Z
     val rotation = {
       val m = new Matrix3d; m.set(new AxisAngle4d(new Vector3d(1,0,0), math.Pi)); m
@@ -116,7 +116,7 @@ class CollisionWrapper(val models:IndexedSeq[Mesh3DConverter]) {
     val shape = addConeShapeZ(radius-margin, height-margin, margin)  
   }
   
-  val coneShapeZ = new ConeShapeZContainer(0.01, 0.05, 0.001)
+  val coneShapeZ = new ConeShapeZContainer(0.001, 0.01, 0.0001)
   
   staticBody.setCollisionFlags(staticBody.getCollisionFlags() | CollisionFlags.STATIC_OBJECT);
 

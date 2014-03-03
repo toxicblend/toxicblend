@@ -28,12 +28,12 @@ class TrianglePlaneIntersectionTest extends FlatSpec with Matchers {
     TrianglePlaneIntersection.trianglePlaneIntersection(triangle, plane, lastPosition, direction, result)
     //println("Result: " + result)
     
-    result.hasForwardPoint should be (true)
-    result.hasRetroPoint should be (false)
+    result.hasForwardPoint should be (false)
+    result.hasRetroPoint should be (true)
     
-    result.forwardPoint.x should be ((0f) +- epsilon)
-    result.forwardPoint.y should be ((1f) +- epsilon)
-    result.forwardPoint.z should be ((1f) +- epsilon)
+    result.retroPoint.x should be ((0f) +- epsilon)
+    result.retroPoint.y should be ((1f) +- epsilon)
+    result.retroPoint.z should be ((1f) +- epsilon)
    
   }
   
