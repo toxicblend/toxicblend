@@ -2,30 +2,46 @@ package org.toxicblend.operations.zadjust.jbullet
 import javax.vecmath.Vector3d
 import toxi.geom.Vec3D
 import toxi.geom.ReadonlyVec3D
+import toxi.geom.ReadonlyVec2D
 
 /**
  * Simple conversion utilities
  */
 object JBulletUtil {
-  
+   
    /**
     * returns the squared distance between two vertices in XY plane ( Z coordinate is ignored )
     */
    @inline
-   def sqrXYDistance(v0:ReadonlyVec3D, v1:ReadonlyVec3D) = {
-     val dx = (v0.x - v1.x)//.toDouble
-     val dy = (v0.y - v1.y)//.toDouble
+   def sqrXYDistance(v0x:Double, v0y:Double, v1x:Double, v1y:Double):Double= {
+     val dx = (v0x - v0x)//.toDouble
+     val dy = (v0y- v0y)//.toDouble
      dx*dx + dy*dy   
    }
-  
-   /**
-    * returns the squared distance between two vertices in XY plane ( Z coordinate is ignored )
-    */
+   
    @inline
-   def sqrXYDistance(v0:ReadonlyVec3D, v1:Vector3d) = {
-     val dx = (v0.x - v1.x)//.toDouble
-     val dy = (v0.y - v1.y)//.toDouble
-     dx*dx + dy*dy   
+   def sqrXYDistance(v0:ReadonlyVec3D, v1:ReadonlyVec3D):Double = {
+     sqrXYDistance(v0.x, v0.y, v1.x, v1.y)
+   }
+   
+   @inline
+   def sqrXYDistance(v0:ReadonlyVec2D, v1:ReadonlyVec2D):Double = {
+     sqrXYDistance(v0.x, v0.y, v1.x, v1.y)   
+   }
+   
+   @inline
+   def sqrXYDistance(v0:ReadonlyVec2D, v1:ReadonlyVec3D):Double = {
+     sqrXYDistance(v0.x, v0.y, v1.x, v1.y)   
+   }
+   
+   @inline
+   def sqrXYDistance(v0:ReadonlyVec3D, v1:Vector3d):Double = {
+     sqrXYDistance(v0.x, v0.y, v1.x, v1.y)   
+   }
+   
+   @inline
+   def sqrXYDistance(v0:ReadonlyVec2D, v1:Vector3d):Double = {
+     sqrXYDistance(v0.x, v0.y, v1.x, v1.y)   
    }
    
   /**
