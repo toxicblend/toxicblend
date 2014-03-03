@@ -123,6 +123,32 @@ class JBulletTest2 extends FlatSpec with Matchers {
     
   }
   
+  "jbullet-edge-2" should "collide just fine" in {  
+    val segment:Array[ReadonlyVec3D] = Array(new Vec3D(1f,-1f,1f),
+                                             new Vec3D(0f,0f,1f),
+                                             new Vec3D(-1f,1f,1f))                                 
+    val result = doTheRayTests(segment)
+    //println("input Segment: " + segment.mkString("\n") )
+    //println("Result segments:\n" + result.mkString("\n"))
+    val firstI = segment(0)
+    val lastI = segment.last
+    val firstO = result(0)(0)
+    val lastO = result.last.last
+    //println("firstI: " +firstI + " firstO=" +firstO)
+    //println("lastI: " +lastI + " lastO=" +lastO)
+    
+    result.size should be (2)
+     
+    firstO.x should be (firstI.x)
+    firstO.y should be (firstI.y)
+    firstO.z should be ((0f) plusOrMinus 1e-5f) 
+    
+    lastO.x should be (lastI.x)
+    lastO.y should be (lastI.y)
+    lastO.z should be ((0f) plusOrMinus 1e-5f)
+    
+  }
+  
   "jbullet cleanup" should "not fail" in {
     jbc.cleanup
   }
