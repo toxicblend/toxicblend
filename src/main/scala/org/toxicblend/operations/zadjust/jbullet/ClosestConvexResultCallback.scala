@@ -1,6 +1,7 @@
 package org.toxicblend.operations.zadjust.jbullet
 
 import javax.vecmath.Vector3d
+import javax.vecmath.Point3d
 import com.bulletphysics.linearmath.VectorUtil
 import com.bulletphysics.collision.dispatch.CollisionObject
 import com.bulletphysics.collision.dispatch.CollisionWorld.LocalRayResult
@@ -17,7 +18,7 @@ class ClosestConvexResultCallback(val searchstate:SearchState, val fromT:Transfo
   def fromWorld:Vector3d = fromT.origin
   def toWorld:Vector3d = toT.origin
   
-  val hitPointWorld = new Vector3d();
+  val hitPointWorld = new Point3d();
   //var hitCollisionObject: CollisionObject = null
   //var triangleIndex:Int = -1
   
@@ -31,8 +32,8 @@ class ClosestConvexResultCallback(val searchstate:SearchState, val fromT:Transfo
     VectorUtil.setInterpolate3(hitPointWorld, fromWorld, toWorld, closestHitFraction)
     hitPointWorld.z += zAdjust
 
-    searchstate.currentC.setCollision(hitPointWorld, convexResult.localShapeInfo.triangleIndex)
-    return convexResult.hitFraction;
+    //searchstate.currentC.setCollision(hitPointWorld, convexResult.localShapeInfo.triangleIndex)
+    return closestHitFraction;
   }
   
   @inline def hasResult = closestHitFraction < 1d

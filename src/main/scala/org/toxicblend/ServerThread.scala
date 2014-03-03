@@ -17,7 +17,7 @@ import org.toxicblend.operations.boostsimplify.BoostSimplifyOperation
 import org.toxicblend.operations.simplegcodegenerator.SimpleGcodeGeneratorOperation
 import org.toxicblend.operations.simplegcodeparse.SimpleGcodeParseOperation
 import org.toxicblend.operations.saveobj.SaveObjOperation
-import org.toxicblend.operations.zadjust.jbullet.ZAdjustOperation
+import org.toxicblend.operations.zadjust.ZAdjustOperation
 import org.toxicblend.operations.generatemaze.GenerateMazeOperation
 import org.toxicblend.operations.intersectedges.IntersectEdgesOperation
 import org.toxicblend.operations.parametricmodels.ParametricCircleOperation

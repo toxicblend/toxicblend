@@ -126,9 +126,7 @@ class JBulletCollision(val models:IndexedSeq[Mesh3DConverter], val sampleDelta:F
      totalRayResult
    }
    
-   def cleanup = {
-     collisionWrapper.collisionWorld.destroy
-   }
+   def cleanup = collisionWrapper.collisionWorld.destroy
    
    /**
     * iterate over each vertice pair in segments, find the corresponding vertices in levels

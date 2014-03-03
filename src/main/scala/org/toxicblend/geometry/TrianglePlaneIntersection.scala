@@ -73,7 +73,7 @@ object TrianglePlaneIntersection {
    */
   @inline 
   def isCollinearXY(direction:ReadonlyVec3D, samplePoint:ReadonlyVec3D, lastPosition:ReadonlyVec3D):Boolean = {
-    direction.x*(samplePoint.x-lastPosition.x) + direction.y*(samplePoint.y-lastPosition.y) >= 0
+    direction.x*(samplePoint.x-lastPosition.x) + direction.y*(samplePoint.y-lastPosition.y) > 0
   }
   
   /**

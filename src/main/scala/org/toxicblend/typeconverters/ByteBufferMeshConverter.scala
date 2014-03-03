@@ -84,6 +84,7 @@ object ByteBufferMeshConverter {
             gIndices.putInt((index*3 + subIndex) * T_INDEX_SIZE, vertexIndex )
             subIndex += 1
           })
+          index +=1
         }
         // silently ignore edges and unconnected vertices
       })
