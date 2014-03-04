@@ -4,15 +4,31 @@ import org.toxicblend.protobuf.ToxicBlendProtos.Model
 import org.toxicblend.protobuf.ToxicBlendProtos.Face
 import javax.vecmath.Vector3d
 import javax.vecmath.Point3d
-import javax.vecmath.Matrix4d
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import scala.collection.JavaConversions._
 import org.toxicblend.ToxicblendException
 import com.bulletphysics.linearmath.AABB
+import com.bulletphysics.linearmath.Matrix4dE
 
 class ByteBufferMeshConverter(val totalVerts:Int, val totalTriangles:Int, val gVertices:ByteBuffer, val gIndices:ByteBuffer, val aabb:AABB, val name:String) {
   
+  /**
+   * transform each vertex in the ByteBuffer and the AABB
+   */
+  def transformVertices(m:Matrix4dE) = {
+    val point = new Point3d
+    (0 until totalVerts).foreach(index => {
+      point.x = gVertices.getDouble((index*3 + 0) * ByteBufferMeshConverter.VERTEX_SIZE)
+      point.y = gVertices.getDouble((index*3 + 1) * ByteBufferMeshConverter.VERTEX_SIZE)
+      point.z = gVertices.getDouble((index*3 + 2) * ByteBufferMeshConverter.VERTEX_SIZE)
+      m.transform(point)
+      gVertices.putDouble((index*3 + 0) * ByteBufferMeshConverter.VERTEX_SIZE, point.x)
+      gVertices.putDouble((index*3 + 1) * ByteBufferMeshConverter.VERTEX_SIZE, point.y)
+      gVertices.putDouble((index*3 + 2) * ByteBufferMeshConverter.VERTEX_SIZE, point.z)
+    })
+    m.transform(aabb)
+  }
 }
 
 object ByteBufferMeshConverter {
