@@ -77,10 +77,10 @@ class ZAdjustOperation extends CommandProcessorTrait {
     if (addDiff) {
       segments.filter( s => s.size > 1).foreach(segment => {
         val collided = collider.doCollisionTests(segment)
-        result += collider.adjustZLevel(segment,collided)
+        result += collider.adjustZLevel(segment.map(v => new Vec3D(v.x.toFloat,v.y.toFloat,v.z.toFloat)),collided)
       })
     } else {
-      segments.filter( s => s.size > 1).foreach(segment => result += collider.doCollisionTests(segment))
+      segments.filter( s => s.size > 1).foreach(segment => result += collider.doCollisionTests(segment).flatten)
       //println(result)
     } 
     
