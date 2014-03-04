@@ -122,7 +122,6 @@ class IntersectEdgesOperation extends CommandProcessorTrait {
     println("Smallest intersection distance = " + strD) 
     addAllNonIntersectingEdges(modelA, alreadyDrawnA, modelAVertices)
     addAllNonIntersectingEdges(modelB, alreadyDrawnB, modelBVertices)
-    
     rv
   }
   
@@ -131,22 +130,21 @@ class IntersectEdgesOperation extends CommandProcessorTrait {
    * Line3D.closestLineTo method. 
    * This methods tries to find a matrix that will center and scale the mesh to a more sane scale
    */
-  def getSanityScaling(modelA:Mesh3DConverter, modelB:Mesh3DConverter):Matrix4x4 = {
+  def getResonableScaling(modelA:Mesh3DConverter, modelB:Mesh3DConverter):Matrix4x4 = {
     val boundsA = modelA.getBounds
     val boundsB = modelB.getBounds
     
-    val maxExtent:ReadonlyVec3D = if (boundsA.getExtent.magSquared > boundsB.getExtent.magSquared) boundsA.getExtent else  boundsB.getExtent
+    val maxExtent:ReadonlyVec3D = if (boundsA.getExtent.magSquared > boundsB.getExtent.magSquared) boundsA.getExtent else boundsB.getExtent
     val maxOffset:ReadonlyVec3D = if (boundsA.magSquared > boundsB.magSquared) boundsA else boundsB
     val targetExtent = 1000f  // the new extent, is it too large?
     val scale = targetExtent/Math.max(Math.max(maxExtent.x,maxExtent.y),maxExtent.y)
     //println("maxOffset=" + maxOffset)
     //println("maxExtent=" + maxExtent)
     //println("scale=" + scale)
-    val matrix = new Matrix4x4Extension(maxOffset.scale(-1f), new Vec3D(scale,scale,scale)) 
+    val matrix = new Matrix4x4Extension(maxOffset.scale(-1f), new Vec3D(scale, scale, scale)) 
     //println("sanity matrix=" + matrix)
     matrix
   }
-  
   
   def processInput(inMessage:Message) = {
     val options = OptionConverter(inMessage)
@@ -174,7 +172,7 @@ class IntersectEdgesOperation extends CommandProcessorTrait {
     println(options)
     
     val returnMessageBuilder = Message.newBuilder()
-    val matrix = getSanityScaling(models(0), models(1))
+    val matrix = getResonableScaling(models(0), models(1))
     models.foreach( m => m.transform(matrix))
     val returnMeshConverter = intersectEdges(models(0), models(1))
     val intertedM = matrix.invert
