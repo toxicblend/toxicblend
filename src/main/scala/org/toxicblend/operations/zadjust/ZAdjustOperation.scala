@@ -29,29 +29,17 @@ class ZAdjustOperation extends CommandProcessorTrait {
   
   /**
    * Bullet (and jbullet) only works ok on objects of size 0.005 to 100 'units'
-   * This method computes a linear scaling and translation matrix that converts the vertices to
+   * This method computes a linear scaling and translation matrix that converts the AABB to
    * values in this range 
    */
   def getResonableScaling(aabb:AABB):Matrix4dE = {
-    val extent:Vector3dE = new Vector3dE(aabb.aabbMax.x-aabb.aabbMin.x,
-                                 aabb.aabbMax.y-aabb.aabbMin.y,
-                                 aabb.aabbMax.z-aabb.aabbMin.z)
-    val origin = new Vector3dE(aabb.aabbMax.x+aabb.aabbMin.x,
-                               aabb.aabbMax.y+aabb.aabbMin.y,
-                               aabb.aabbMax.z+aabb.aabbMin.z).scaleSelf(0.5)
-                              
-    
+    val extent:Vector3dE = new Vector3dE(aabb.aabbMax).subSelf(aabb.aabbMin)
+    val negativeOrigin = new Vector3dE(aabb.aabbMax).addSelf(aabb.aabbMin).scaleSelf(-0.5)
     val maxExtent:Double = math.max(math.max(extent.x,extent.y),extent.z)
-    assert(maxExtent>0)
-    //val maxOffset:Double = math.max(math.max(origin.x,origin.y),origin.z)
-    
-    val targetExtent = 300f // the new max extent, is it too large?
+    assert(maxExtent>0)    
+    val targetExtent = 300d // the new max extent, is it too large?
     val scale = targetExtent/maxExtent
-    //println("maxOffset=" + maxOffset)
-    //println("maxExtent=" + maxExtent)
-    //println("scale=" + scale)
-    val matrix = new Matrix4dE(origin.scaleSelf(-1f), scale) 
-    //println("sanity matrix=" + matrix)
+    val matrix = new Matrix4dE(negativeOrigin, scale) 
     matrix
   }
   
@@ -108,35 +96,47 @@ class ZAdjustOperation extends CommandProcessorTrait {
     segments.foreach(segment => segment.foreach( p=>bulletScaling.transform(p)))
     models.foreach(model => model.transformVertices(bulletScaling) )
     
-    val facade = new BulletFacade(models)
-    val collider = new Collider(facade, sampleStep, epsilon) 
-    
-    println("AABB max = " + collider.collisionWrapper.aabbAllModels.getMax )
-    println("AABB min = " + collider.collisionWrapper.aabbAllModels.getMin )
-
-    println("X size = " + (collider.collisionWrapper.aabbAllModels.getMax.x - collider.collisionWrapper.aabbAllModels.getMin.x) )
-    println("Y size = " + (collider.collisionWrapper.aabbAllModels.getMax.y - collider.collisionWrapper.aabbAllModels.getMin.y) )
-    println("Z size = " + (collider.collisionWrapper.aabbAllModels.getMax.z - collider.collisionWrapper.aabbAllModels.getMin.z) )
-
-    val result = new MutableList[IndexedSeq[Vec3D]]
-    if (addDiff) {
-      segments.filter( s => s.size > 1).foreach(segment => {
-        val collided = collider.doCollisionTests(segment)
-        result += collider.adjustZLevel(segment,collided).map( s2 => {
-                    bulletScalingInverse.transform(s2)
-                    new Vec3D(s2.x.toFloat, s2.y.toFloat, s2.z.toFloat)
-                  })
-      })
-    } else {
-      segments.filter( s => s.size > 1).foreach(segment => result += collider.doCollisionTests(segment).flatten.map( s2 => {
-                    bulletScalingInverse.transform(s2)
-                    new Vec3D(s2.x.toFloat, s2.y.toFloat, s2.z.toFloat)
-                  }))
-      //println(result)
-    } 
-    
-    //println("Result:")
-    //result.foreach( s => println(s.mkString("\n")) )
+    val result = {
+      val facade = new BulletFacade(models)
+      val collider = new Collider(facade, sampleStep, epsilon) 
+      
+      println("AABB max = " + facade.aabbAllModels.getMax )
+      println("AABB min = " + facade.aabbAllModels.getMin )
+  
+      println("X size = " + (facade.aabbAllModels.getMax.x - facade.aabbAllModels.getMin.x) )
+      println("Y size = " + (facade.aabbAllModels.getMax.y - facade.aabbAllModels.getMin.y) )
+      println("Z size = " + (facade.aabbAllModels.getMax.z - facade.aabbAllModels.getMin.z) )
+  
+     
+      val result = if (useMultiThreading) {
+        // this is wrong, each thread must have its own collider instance
+        segments.filter( s => s.size > 1)./*par.*/map(segment => 
+          collider.doCollisionTests(segment, addDiff).map( s2 => {
+            bulletScalingInverse.transform(s2)
+            new Vec3D(s2.x.toFloat, s2.y.toFloat, s2.z.toFloat)
+          })
+        )
+      } else {
+        segments.filter( s => s.size > 1).map(segment => 
+          collider.doCollisionTests(segment, addDiff).map( s2 => {
+            bulletScalingInverse.transform(s2)
+            new Vec3D(s2.x.toFloat, s2.y.toFloat, s2.z.toFloat)
+          })
+        )
+      } 
+      /*
+      val rv = new MutableList[IndexedSeq[Vec3D]]
+      segments.filter( s => s.size > 1).foreach(segment => 
+        rv += collider.doCollisionTests(segment, addDiff).map( s2 => {
+          bulletScalingInverse.transform(s2)
+          new Vec3D(s2.x.toFloat, s2.y.toFloat, s2.z.toFloat)
+        })
+      )*/
+      facade.destroy
+      result
+    }
+    println("Result:")
+    result.foreach( s => println(s.mkString("\n")) )
 
     //collider.cleanup
     val returnMessageBuilder = Message.newBuilder()

@@ -50,6 +50,7 @@ class ClosestConvexResultCallback(val rot:Matrix3d, val zAdjust:Double, val minZ
       hitPointWorld.y = fromT.origin.y
       hitPointWorld.z = minZ
     }
+    // should i use the x&y from hitPointWorld or should i use the actual sample coordinate?
     hitPointWorld
   }
   

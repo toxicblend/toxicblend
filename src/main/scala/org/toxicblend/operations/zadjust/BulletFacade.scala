@@ -111,6 +111,4 @@ class BulletFacade(val models:IndexedSeq[ByteBufferMeshConverter]) {
   }
   
   def destroy = collisionWorld.destroy
-  
-
 }
