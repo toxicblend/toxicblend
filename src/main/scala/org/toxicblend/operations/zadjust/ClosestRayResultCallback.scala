@@ -39,7 +39,7 @@ class ClosestRayResultCallback(val minZ:Double,val maxZ:Double) extends RayResul
     hitPointWorld
   }
   
-  def resetForReuse(samplePoint:Point2d) = {
+  def resetForReuse(samplePoint:Point3d) = {
     rayFromWorld.x = samplePoint.x
     rayFromWorld.y = samplePoint.y
     rayToWorld.x = samplePoint.x

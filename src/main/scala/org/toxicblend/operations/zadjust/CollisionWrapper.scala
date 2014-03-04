@@ -48,9 +48,9 @@ class CollisionWrapper(val models:IndexedSeq[ByteBufferMeshConverter]) {
   val collisionWorld = {
     val collisionConfiguration = new DefaultCollisionConfiguration
     val dispatcher = new CollisionDispatcher(collisionConfiguration)
-    val broadphase:BroadphaseInterface = if (false) {
+    val broadphase:BroadphaseInterface = if (true) {
         val aabb = new AABB(aabbAllModels); aabb.getMax.z += 1; ; aabb.getMin.z -= 1
-        new AxisSweep3_32(aabb.getMin, aabb.getMax, 1500000/2);
+        new AxisSweep3_32(aabb.getMin, aabb.getMax, 1500000);
       } else {
       new DbvtBroadphase
     }
@@ -90,9 +90,6 @@ class CollisionWrapper(val models:IndexedSeq[ByteBufferMeshConverter]) {
   
   val coneShapeZ = new ConeShapeZContainer(.0001, .0001, 0.00001)
   
-  val convexCallback = new ClosestConvexResultCallback(coneShapeZ.rotation,coneShapeZ.zAdjust,aabbAllModels.getMin.z-1, aabbAllModels.getMax.z+1)
-  val rayCallback = new ClosestRayResultCallback(aabbAllModels.getMin.z-1, aabbAllModels.getMax.z+1)
-  
   // enable custom material callback
   //staticBody.setCollisionFlags(staticBody.getCollisionFlags() | CollisionFlags.CUSTOM_MATERIAL_CALLBACK);
   
@@ -115,24 +112,5 @@ class CollisionWrapper(val models:IndexedSeq[ByteBufferMeshConverter]) {
   
   def destroy = collisionWorld.destroy
   
-  def collisionTestPoint(point:Point2d):Vec3D = {
-    rayCallback.resetForReuse(point)
-    collisionWorld.rayTest(rayCallback.rayFromWorld, rayCallback.rayToWorld, rayCallback)
-    val result = if (rayCallback.hasResult){
-      rayCallback.getResult
-    } else {
-      convexCallback.resetForReuse(point)
-      collisionWorld.convexSweepTest(coneShapeZ.shape, convexCallback.fromT, convexCallback.toT, convexCallback)
-      println("convexCallback hit " + convexCallback.hasResult)
-      convexCallback.getResult
-    }
-    new Vec3D(result.x.toFloat, result.y.toFloat, result.z.toFloat)
-  }
-  
-  def collisionTestSegment(point1:Point2d, point2:Point2d):IndexedSeq[Vec3D] = {
-    val rv = new ArrayBuffer[Vec3D]
-    rv += collisionTestPoint(point1)
-    rv += collisionTestPoint(point2)
-    rv
-  }
+
 }

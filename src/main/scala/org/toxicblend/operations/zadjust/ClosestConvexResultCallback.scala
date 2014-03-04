@@ -53,7 +53,7 @@ class ClosestConvexResultCallback(val rot:Matrix3d, val zAdjust:Double, val minZ
     hitPointWorld
   }
   
-  def resetForReuse(samplePoint:Point2d) = {
+  def resetForReuse(samplePoint:Point3d) = {
     fromT.origin.x = samplePoint.x
     fromT.origin.y = samplePoint.y
     toT.origin.x = samplePoint.x
