@@ -10,7 +10,7 @@ import toxi.geom.Vec3D
  * This is a 'per thread' object, everything that pertain to the state of a specific calculation thread should be stored here.
  * CollisionWrapper should contain the 'common to all threads' bits
  */
-class Collider( val collisionWrapper:CollisionWrapper, val sampleStep:Double, val epsilon:Double) {
+class Collider( val collisionWrapper:BulletFacade, val sampleStep:Double, val epsilon:Double) {
   
   val convexCallback = {
     val aabb = collisionWrapper.aabbAllModels

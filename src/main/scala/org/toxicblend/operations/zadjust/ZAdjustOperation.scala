@@ -63,7 +63,7 @@ class ZAdjustOperation extends CommandProcessorTrait {
     println("sampleStep="+ sampleStep + " epsilon=" + epsilon)
     //println("Input segment :" )
     //segments.foreach( s => println(s.mkString("\n")) )
-    val collisionWrapper = new CollisionWrapper(models)
+    val collisionWrapper = new BulletFacade(models)
     val collider = new Collider(collisionWrapper, sampleStep, epsilon) 
     
     println("AABB max = " + collider.collisionWrapper.aabbAllModels.getMax )

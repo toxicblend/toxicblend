@@ -42,8 +42,8 @@ class JBulletTest4 extends FlatSpec with Matchers {
                                              new Vec3D(1f,0f,1f),
                                              new Vec3D(0f,-1f,1f))                                       
     val result = doTheRayTests(segment)
-    //println("input Segment: " + segment )
-    //println("Result segments:\n" + result.mkString("\n"))
+    println("input Segment: " + segment.mkString("\n") )
+    println("Result segments:\n" + result.mkString("\n"))
     val first = result(0)(0)
     val last = result.last.last
     last.x should be (first.x)

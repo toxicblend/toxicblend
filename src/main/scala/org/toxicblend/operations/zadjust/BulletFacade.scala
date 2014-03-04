@@ -38,7 +38,7 @@ import com.bulletphysics.linearmath.AABB
 /**
  * Container for all things jbullet: collision objects, collisionWorld etc, etc
  */
-class CollisionWrapper(val models:IndexedSeq[ByteBufferMeshConverter]) {
+class BulletFacade(val models:IndexedSeq[ByteBufferMeshConverter]) {
   
   val collisionShapes = new ObjectArrayList[CollisionShape]();
   val convexShapes = new ArrayBuffer[ConvexShape]
