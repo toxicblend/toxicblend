@@ -10,16 +10,15 @@ import javax.vecmath.Point3d
 class ClosestRayResultCallback(val minZ:Double,val maxZ:Double) extends RayResultCallback {
   val rayFromWorld = new Vector3d; rayFromWorld.z = maxZ
   val rayToWorld = new Vector3d; rayToWorld.z = minZ
-  val hitPointWorld = new Point3d
-  var triangleIndex:Int = -1
+  val hitPointWorld = new HitPointWorld
      
   /**
    * callback from jbullet on collision
    */
   override def addSingleResult(rayResult:LocalRayResult, normalInWorldSpace:Boolean):Double = {
     closestHitFraction = rayResult.hitFraction      
-    triangleIndex = rayResult.localShapeInfo.triangleIndex
-    VectorUtil.setInterpolate3(hitPointWorld, rayFromWorld, rayToWorld, closestHitFraction)
+    hitPointWorld.triangleIndex = rayResult.localShapeInfo.triangleIndex
+    VectorUtil.setInterpolate3(hitPointWorld.point, rayFromWorld, rayToWorld, closestHitFraction)
     //searchstate.currentC.setCollision(hitPointWorld, rayResult.localShapeInfo.triangleIndex)
     //val triangle = searchstate.collisionWrapper.models(0).getFaces(searchstate.currentC.triangleIndex).toIndexedSeq.map(i => searchstate.collisionWrapper.models(0).getVertices(i))
     //TrianglePlaneIntersection.trianglePlaneIntersection(triangle, searchstate.segmentPlane, searchstate.currentC.collisionPoint, searchstate.directionNormalized, searchstate.currentC)
@@ -32,9 +31,8 @@ class ClosestRayResultCallback(val minZ:Double,val maxZ:Double) extends RayResul
    */
   @inline def getResult = {
     if (!hasResult) {
-      hitPointWorld.x = rayFromWorld.x
-      hitPointWorld.y = rayFromWorld.y
-      hitPointWorld.z = minZ
+      hitPointWorld.point.set(rayFromWorld.x, rayFromWorld.y, minZ)
+      // hitpointWorld.triangleIndex = -1 should already be done
     }
     hitPointWorld
   }
@@ -45,7 +43,7 @@ class ClosestRayResultCallback(val minZ:Double,val maxZ:Double) extends RayResul
     rayToWorld.x = samplePoint.x
     rayToWorld.y = samplePoint.y
     
-    triangleIndex = -1
+    hitPointWorld.triangleIndex = -1
     closestHitFraction = 1d
   }
 }

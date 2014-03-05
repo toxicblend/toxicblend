@@ -1,6 +1,7 @@
 package org.toxicblend.operations.zadjust
 
 import org.toxicblend.CommandProcessorTrait
+import org.toxicblend.util.Time
 import org.toxicblend.protobuf.ToxicBlendProtos.Message
 import org.toxicblend.typeconverters.OptionConverter
 import org.toxicblend.typeconverters.Mesh3DConverter
@@ -31,8 +32,9 @@ class ZAdjustOperation extends CommandProcessorTrait {
    * Bullet (and jbullet) only works ok on objects of size 0.005 to 100 'units'
    * This method computes a linear scaling and translation matrix that converts the AABB to
    * values in this range 
+   * returns a (scaling constant, scale & transform matrix)
    */
-  def getResonableScaling(aabb:AABB):Matrix4dE = {
+  def getResonableScaling(aabb:AABB):(Double,Matrix4dE) = {
     val extent:Vector3dE = new Vector3dE(aabb.aabbMax).subSelf(aabb.aabbMin)
     val negativeOrigin = new Vector3dE(aabb.aabbMax).addSelf(aabb.aabbMin).scaleSelf(-0.5)
     val maxExtent:Double = math.max(math.max(extent.x,extent.y),extent.z)
@@ -40,7 +42,7 @@ class ZAdjustOperation extends CommandProcessorTrait {
     val targetExtent = 300d // the new max extent, is it too large?
     val scale = targetExtent/maxExtent
     val matrix = new Matrix4dE(negativeOrigin, scale) 
-    matrix
+    (scale,matrix)
   }
   
   def processInput(inMessage:Message) = {
@@ -89,24 +91,23 @@ class ZAdjustOperation extends CommandProcessorTrait {
    
     val models = inMessage.getModelsList().tail.toIndexedSeq.map(i=>ByteBufferMeshConverter(i,true, unitScale))
     val aabbAllModels = new AABB(models.map(m=>m.aabb))
-    val bulletScaling = getResonableScaling(aabbAllModels)
-    val bulletScalingInverse = new Matrix4dE(bulletScaling).invertSelf
+    val (bulletScaling,bulletScalingM) = getResonableScaling(aabbAllModels)
+    val bulletScalingInverse = new Matrix4dE(bulletScalingM).invertSelf
       
     // transform the input segments and models in place 
-    segments.foreach(segment => segment.foreach( p=>bulletScaling.transform(p)))
-    models.foreach(model => model.transformVertices(bulletScaling) )
+    segments.foreach(segment => segment.foreach( p=>bulletScalingM.transform(p)))
+    models.foreach(model => model.transformVertices(bulletScalingM) )
     
-    val result = {
+    val result = Time.time("Collision calculation time: ", {
       val facade = new BulletFacade(models)
-      val collider = new Collider(facade, sampleStep, epsilon) 
+      val collider = new Collider(facade, sampleStep*bulletScaling, epsilon) 
       
-      println("AABB max = " + facade.aabbAllModels.getMax )
-      println("AABB min = " + facade.aabbAllModels.getMin )
+      //println("AABB max = " + facade.aabbAllModels.getMax )
+      //println("AABB min = " + facade.aabbAllModels.getMin )
   
-      println("X size = " + (facade.aabbAllModels.getMax.x - facade.aabbAllModels.getMin.x) )
-      println("Y size = " + (facade.aabbAllModels.getMax.y - facade.aabbAllModels.getMin.y) )
-      println("Z size = " + (facade.aabbAllModels.getMax.z - facade.aabbAllModels.getMin.z) )
-  
+      //println("X size = " + (facade.aabbAllModels.getMax.x - facade.aabbAllModels.getMin.x) )
+      //println("Y size = " + (facade.aabbAllModels.getMax.y - facade.aabbAllModels.getMin.y) )
+      //println("Z size = " + (facade.aabbAllModels.getMax.z - facade.aabbAllModels.getMin.z) )
      
       val result = if (useMultiThreading) {
         // this is wrong, each thread must have its own collider instance
@@ -123,27 +124,21 @@ class ZAdjustOperation extends CommandProcessorTrait {
             new Vec3D(s2.x.toFloat, s2.y.toFloat, s2.z.toFloat)
           })
         )
-      } 
-      /*
-      val rv = new MutableList[IndexedSeq[Vec3D]]
-      segments.filter( s => s.size > 1).foreach(segment => 
-        rv += collider.doCollisionTests(segment, addDiff).map( s2 => {
-          bulletScalingInverse.transform(s2)
-          new Vec3D(s2.x.toFloat, s2.y.toFloat, s2.z.toFloat)
-        })
-      )*/
+      }
       facade.destroy
       result
-    }
-    println("Result:")
-    result.foreach( s => println(s.mkString("\n")) )
+    })
+    //println("Result:")
+    //result.foreach( s => println(s.mkString("\n")) )
 
     //collider.cleanup
-    val returnMessageBuilder = Message.newBuilder()
-    val returnMeshConverter = new Mesh3DConverter("ray results") 
-    result.foreach(s1 => s1.sliding(2).foreach(s2 => returnMeshConverter.addEdge(s2(0), s2(1))))
-        
-    returnMessageBuilder.addModels(returnMeshConverter.toPBModel(None, None))
-    returnMessageBuilder
+    Time.time("Building resulting pBModel: ", {
+      val returnMessageBuilder = Message.newBuilder()
+      val returnMeshConverter = new Mesh3DConverter("ray results") 
+      result.foreach(s1 => s1.sliding(2).foreach(s2 => returnMeshConverter.addEdge(s2(0), s2(1))))
+          
+      returnMessageBuilder.addModels(returnMeshConverter.toPBModel(None, None))
+      returnMessageBuilder 
+    })
   }
 }

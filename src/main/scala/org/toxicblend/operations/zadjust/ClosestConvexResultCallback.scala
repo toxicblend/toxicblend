@@ -19,23 +19,19 @@ class ClosestConvexResultCallback(val rot:Matrix3d, val zAdjust:Double, val minZ
   
   val fromT = new Transform(rot); fromT.origin.z = maxZ
   val toT = new Transform(rot); toT.origin.z = minZ
-  val hitPointWorld = new Point3d
-  var hitCollisionObject: CollisionObject = null
-  var triangleIndex:Int = -1
-  
-  //def fromWorld:Vector3d = fromT.origin
-  //def toWorld:Vector3d = toT.origin
-  
+  val hitPointWorld = new HitPointWorld
+  //var hitCollisionObject: CollisionObject = null
+    
   @Override
   def addSingleResult(convexResult:LocalConvexResult, normalInWorldSpace:Boolean):Double = {
     // caller already does the filter on the m_closestHitFraction
     assert(convexResult.hitFraction <= closestHitFraction)
 
     closestHitFraction = convexResult.hitFraction
-    hitCollisionObject = convexResult.hitCollisionObject
-    VectorUtil.setInterpolate3(hitPointWorld, fromT.origin, toT.origin, closestHitFraction)
-    hitPointWorld.z += zAdjust
-    triangleIndex = convexResult.localShapeInfo.triangleIndex
+    //hitCollisionObject = convexResult.hitCollisionObject
+    VectorUtil.setInterpolate3(hitPointWorld.point, fromT.origin, toT.origin, closestHitFraction)
+    hitPointWorld.point.z += zAdjust
+    hitPointWorld.triangleIndex = convexResult.localShapeInfo.triangleIndex
     return convexResult.hitFraction;
   }
   
@@ -46,9 +42,7 @@ class ClosestConvexResultCallback(val rot:Matrix3d, val zAdjust:Double, val minZ
    */
   @inline def getResult = {
     if (!hasResult) {
-      hitPointWorld.x = fromT.origin.x
-      hitPointWorld.y = fromT.origin.y
-      hitPointWorld.z = minZ
+      hitPointWorld.point.set(fromT.origin.x, fromT.origin.y, minZ)
     }
     // should i use the x&y from hitPointWorld or should i use the actual sample coordinate?
     hitPointWorld
@@ -59,8 +53,8 @@ class ClosestConvexResultCallback(val rot:Matrix3d, val zAdjust:Double, val minZ
     fromT.origin.y = samplePoint.y
     toT.origin.x = samplePoint.x
     toT.origin.y = samplePoint.y
-    triangleIndex = -1
+    hitPointWorld.triangleIndex = -1
     closestHitFraction = 1d
-    hitCollisionObject = null
+    //hitCollisionObject = null
   }
 }

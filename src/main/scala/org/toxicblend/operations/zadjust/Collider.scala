@@ -10,13 +10,19 @@ import toxi.geom.Vec3D
 import toxi.geom.ReadonlyVec3D
 import com.bulletphysics.linearmath.Vector3dE
 import com.bulletphysics.linearmath.Point3dE
-
+import com.bulletphysics.linearmath.VectorUtil
 
 /**
  * This is a 'per thread' object, everything that pertain to the state of a specific calculation thread should be stored here.
  * CollisionWrapper should contain the 'common to all threads' bits
  */
 class Collider(val facade:BulletFacade, val sampleStep:Double, val epsilon:Double) {
+  
+  val direction = new Vector3dE
+  val directionIncrement = new Vector3dE
+  val samplePoint = new Point3dE
+  var distanceToCoverSqr = 0d
+  var distanceCoveredSqr = 0d
   
   val convexCallback = {
     val aabb = facade.aabbAllModels
@@ -32,19 +38,19 @@ class Collider(val facade:BulletFacade, val sampleStep:Double, val epsilon:Doubl
   /**
    * sample point 
    */
-  def collisionTestPoint(point:Point3dE):Point3dE = {
+  def collisionTestPoint(point:Point3dE):HitPointWorld = {
     rayCallback.resetForReuse(point)
     facade.collisionWorld.rayTest(rayCallback.rayFromWorld, rayCallback.rayToWorld, rayCallback)
     // result will just be a reference to a reused variable, must be copied
-    val result = if (rayCallback.hasResult ){
+    if (rayCallback.hasResult ){
       rayCallback.getResult
     } else {
+      // no hit, try convexSweep instead
       convexCallback.resetForReuse(point)
       facade.collisionWorld.convexSweepTest(facade.coneShapeZ.shape, convexCallback.fromT, convexCallback.toT, convexCallback)
       //println("convexCallback hit " + convexCallback.hasResult)
       convexCallback.getResult
     }
-    new Point3dE(result.x.toFloat, result.y.toFloat, result.z.toFloat)
   }
 
   /**
@@ -62,16 +68,33 @@ class Collider(val facade:BulletFacade, val sampleStep:Double, val epsilon:Doubl
      }
      
     val rv = new ArrayBuffer[Point3dE]
-    rv += collisionTestPoint(fromP)
-    rv += collisionTestPoint(toP)
+    direction.setSelf(toP).subSelf(fromP)
+    directionIncrement.setSelf(direction).normalizeSelf.scaleSelf(sampleStep)
+    samplePoint.setSelf(fromP)
+    distanceCoveredSqr = 0d
+    distanceToCoverSqr = fromP.xyDistance(toP)
+    val distanceToCover = math.sqrt(distanceToCoverSqr)
+    do {
+      rv += collisionTestPoint(samplePoint).copyHitpoint
+      samplePoint.addSelf(directionIncrement)
+      distanceCoveredSqr = fromP.xyDistance(samplePoint)
+      if (distanceCoveredSqr > distanceToCoverSqr){
+        samplePoint.set(toP)
+        rv += collisionTestPoint(samplePoint).copyHitpoint
+        distanceCoveredSqr = distanceToCoverSqr
+      }
+    } while (distanceCoveredSqr < distanceToCoverSqr)  
+      
     if (sumZ) {
       // Interpolate the Z values on a line between fromP and toP
-      val direction = new Vector3dE(toP).subSelf(fromP).normalizeSelf
+      adjustSample(rv.head, fromP)
       val interpolated = new Vector3dE
-      // .sliding(2).map(_.head) == all but last
-      rv.sliding(2).map(_.head).foreach(sample => {  
-        val xyDistance = fromP.xyDistance(sample) 
-        interpolated.setSelf(direction).scaleSelf(xyDistance).addSelf(fromP)
+      // iterator.sliding(2).map(_.head) == all but last
+      rv.tail.iterator.sliding(2).map(_.head).foreach(sample => {  
+      //(1 until rv.size -1).foreach(i => {
+        //val sample = rv(i)
+        val ratio = fromP.xyDistance(sample)/distanceToCover
+        VectorUtil.setInterpolate3(interpolated, fromP, toP, ratio)
         adjustSample(sample, interpolated)
       })
       // Don't interpolate the last position, it gives jagged edges. Just use the real thing
