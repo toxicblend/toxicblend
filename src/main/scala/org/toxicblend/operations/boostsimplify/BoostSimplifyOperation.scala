@@ -1,6 +1,8 @@
 package org.toxicblend.operations.boostsimplify
 
+import org.toxicblend.ToxicblendException
 import org.toxicblend.UnitSystem
+import org.toxicblend.util.Time
 import org.toxicblend.CommandProcessorTrait
 import org.toxicblend.util.Regex
 import org.toxicblend.protobuf.ToxicBlendProtos.Message
@@ -29,21 +31,19 @@ class BoostSimplifyOperation extends CommandProcessorTrait {
     }
     val unitIsMetric = options.getOrElse("unitSystem", "METRIC").toUpperCase() match {
       case "METRIC" => UnitSystem.Metric
-      case "NONE" => None
-      case "IMPERIAL" => UnitSystem.Imperial
-      case s:String => System.err.println("Unrecognizable 'unitSystem' property value: " +  s); None
-    } 
+      case "NONE" => throw new ToxicblendException("BoostSimplifyOperation:unitSystem=None but it's not supported"); None
+      case "IMPERIAL" => throw new ToxicblendException("BoostSimplifyOperation:unitSystem=IMPERIAL but it's not supported"); UnitSystem.Imperial
+      case s:String => System.err.println("BoostSimplifyOperation: Unrecognizable 'unitSystem' property value: " +  s ); None
+    }
     val simplifyLimit:Float = (options.getOrElse("simplifyLimit", "0.1") match {
       case Regex.FLOAT_REGEX(limit) => limit.toFloat
       case s:String => System.err.println("BoostSimplify: unrecognizable 'simplifyLimit' property value: " +  s); .1f
     } ) / 1000f  // convert from meter to mm
         
-    val returnMessageBuilder = Message.newBuilder()
     val inverseMatrixes = new ArrayBuffer[Option[Matrix4x4Converter]]
     
-    
     // Convert model vertices to world coordinates so that the simplify scaling makes sense
-    val models = inMessage.getModelsList().map(inModel => {
+    val models = inMessage.getModelsList.map(inModel => {
       (Mesh3DConverter(inModel,true), // Unit is now [meter]
       if (inModel.hasWorldOrientation()) {
         Option(Matrix4x4Converter(inModel.getWorldOrientation()))
@@ -53,7 +53,7 @@ class BoostSimplifyOperation extends CommandProcessorTrait {
     })
     
     // Perform the simplify operation
-    val result = models.map(model =>{      
+    val result = Time.time("Simplify calculation time: ", models.map(model =>{      
       val segments = model._1.findContinuousLineSegments
       val newMesh = new Mesh3DConverter(model._1.name + " boost simplify"); 
       segments._1.foreach(ngon => newMesh.addFace(ngon))
@@ -66,24 +66,27 @@ class BoostSimplifyOperation extends CommandProcessorTrait {
         }
       })
       (newMesh,model._2)
-    })
+    }))
     
-    // Convert the coordinate system back again (world orientation matrix.inverse)
-    result.foreach(mesh3d => {
-      val pbModel = 
-      if (mesh3d._2.isDefined) {
-        val worldOrientation = mesh3d._2.get
-        val worldOrientationI = worldOrientation.matrix.copy; worldOrientationI.invert
-        mesh3d._1.transform(worldOrientationI)
-        
-        val pbModel = mesh3d._1.toPBModel(None, None)
-        pbModel.setWorldOrientation(worldOrientation.toPBModel)
-        pbModel
-      } else {
-        mesh3d._1.toPBModel(None, None)
-      }
-      returnMessageBuilder.addModels(pbModel)
+    Time.time("Building resulting pBModel: ",{
+      val returnMessageBuilder = Message.newBuilder
+      // Convert the coordinate system back again (world orientation matrix.inverse)
+      result.foreach(mesh3d => {
+        val pbModel = 
+        if (mesh3d._2.isDefined) {
+          val worldOrientation = mesh3d._2.get
+          val worldOrientationI = worldOrientation.matrix.copy; worldOrientationI.invert
+          mesh3d._1.transform(worldOrientationI)
+          
+          val pbModel = mesh3d._1.toPBModel(None, None)
+          pbModel.setWorldOrientation(worldOrientation.toPBModel)
+          pbModel
+        } else {
+          mesh3d._1.toPBModel(None, None)
+        }
+        returnMessageBuilder.addModels(pbModel)
+      })
+      returnMessageBuilder
     })
-    returnMessageBuilder
   }
 }

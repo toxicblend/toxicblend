@@ -241,17 +241,17 @@ object MedianAxisJni {
     val jniresult = mal.simplify3D_(outBuffer.toArray, limit)
     val outData = fromJni3dArray(jniresult)(0)  // we are only expecting one segment out, pick the first one. TODO make a special method for this
     if (outData.head != inData.head ) {
-      System.err.println("0 differs")
+      System.err.println("simplify3D::0 differs, debug me")
       outData.insert(0,inData.last)
     }
     if (outData.last!=inData.last) {
-      System.err.println("last differs")
+      System.err.println("simplify3D::last differs, debug me")
       outData += inData.last
     }
     
     //println("input:" + inData.mkString(",") + "\npoints = " + inData.size)
     //println("output:" + outData.mkString(",") + "\npoints = " + outData.size)
-    println("simplify3D input:" + inData.size + " output:" + outData.size)
+    //println("simplify3D input:" + inData.size + " output:" + outData.size)
     
     outData
   }

@@ -155,9 +155,9 @@ class IntersectEdgesOperation extends CommandProcessorTrait {
     val models = inMessage.getModelsList().toIndexedSeq.map(i=>Mesh3DConverter(i,true))
     
     val useMultiThreading = options.getOrElse("useMultiThreading", "FALSE").toUpperCase() match {
-      case "TRUE" => true
+      case "TRUE" => System.err.println("IntersectEdgesOperation:useMultiThreading=True but it's not implemented yet"); true
       case "FALSE" => false
-      case s:String => System.err.println("IntersectEdgesOperation: Unrecognizable 'useMultiThreading' property value: " +  s ); false
+      case s:String => System.err.println("IntersectEdgesOperation: Unrecognizable 'useMultiThreading' property value: " + s); false
     }
     val unitScale:Float = options.getOrElse("unitScale", "1.0") match {
       case Regex.FLOAT_REGEX(limit) => limit.toFloat
@@ -165,10 +165,10 @@ class IntersectEdgesOperation extends CommandProcessorTrait {
     }
     val unitIsMetric = options.getOrElse("unitSystem", "METRIC").toUpperCase() match {
       case "METRIC" => UnitSystem.Metric
-      case "NONE" => None
-      case "IMPERIAL" => UnitSystem.Imperial
+      case "NONE" => throw new ToxicblendException("IntersectEdgesOperation:unitSystem=None but it's not supported"); None
+      case "IMPERIAL" => throw new ToxicblendException("IntersectEdgesOperation:unitSystem=IMPERIAL but it's not supported"); UnitSystem.Imperial
       case s:String => System.err.println("IntersectEdgesOperation: Unrecognizable 'unitSystem' property value: " +  s ); None
-    } 
+    }
     println(options)
     
     val returnMessageBuilder = Message.newBuilder()

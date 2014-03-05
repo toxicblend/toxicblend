@@ -1,10 +1,12 @@
 package org.toxicblend.operations.simplegcodegenerator
 
 import org.toxicblend.CommandProcessorTrait
+import org.toxicblend.ToxicblendException
 import org.toxicblend.UnitSystem
 import org.toxicblend.util.Regex
 import scala.collection.mutable.ArrayBuffer
 import toxi.geom.Vec3D
+import org.toxicblend.util.Time
 import org.toxicblend.protobuf.ToxicBlendProtos.Message
 import org.toxicblend.typeconverters.Mesh3DConverter
 import org.toxicblend.typeconverters.OptionConverter
@@ -25,14 +27,10 @@ class SimpleGcodeGeneratorOperation extends CommandProcessorTrait {
     val gcodeProperties = {
       val unitIsMetricProperty = options.getOrElse("unitSystem", "METRIC").toUpperCase() match {
         case "METRIC" => UnitSystem.Metric
-        case "NONE" => None
-        case "IMPERIAL" => UnitSystem.Imperial
-        case s:String => System.err.println("Unrecognizable 'unitSystem' property value: " +  s ); None
+        case "NONE" => throw new ToxicblendException("SimpleGcodeGeneratorOperation:unitSystem=None but it's not supported"); None
+        case "IMPERIAL" => throw new ToxicblendException("SimpleGcodeGeneratorOperation:unitSystem=IMPERIAL but it's not supported"); UnitSystem.Imperial
+        case s:String => System.err.println("SimpleGcodeGeneratorOperation: Unrecognizable 'unitSystem' property value: " +  s ); None
       }
-      if (unitIsMetricProperty != UnitSystem.Metric) {
-        System.err.println("SimpleGcodeOperation::processInput only metric is supported for now");
-      }
-      
       val outFilename:String = options.getOrElse("outFilename", "gcode.ngc")
       val safeZProperty:Float = options.getOrElse("safeZ", "10").toFloat
       val g0FeedrateProperty:Float = options.getOrElse("g0Feedrate", "10").toFloat
@@ -47,7 +45,7 @@ class SimpleGcodeGeneratorOperation extends CommandProcessorTrait {
           g1Feedrate=g1FeedrateProperty,g1PlungeFeedrate=g1PlungeFeedrateProperty,
           spindleSpeed=spindleSpeedProperty,g64Command=g64CommandProperty,customEndCommand=customEndCommandProperty,stepDown=stepDownProperty)
     }
-    { 
+    Time.time("Building " + gcodeProperties.outFilename + " :",{ 
       // translate every vertex into world coordinates
       val models = inMessage.getModelsList().map(inModel => Mesh3DConverter(inModel,true,unitScaleProperty))
       val gCodeGenerator = new GCodeGenerator(gcodeProperties)
@@ -63,16 +61,17 @@ class SimpleGcodeGeneratorOperation extends CommandProcessorTrait {
         })  
       }
       gCodeGenerator.saveGCode(gcodeProperties.outFilename, gCodeGenerator.gHeader, gcodeAsText, gCodeGenerator.gFooter)
-    }
-     
-    val returnMessageBuilder = Message.newBuilder()
-    try {
-      SimpleGcodeParseOperation.readGcodeIntoBuilder(gcodeProperties.outFilename, options, returnMessageBuilder)
-    } catch {
-      case e: java.io.FileNotFoundException => System.err.println("ParseGcodeOperationNo file not found:\"" + gcodeProperties.outFilename + "\""); throw e
-      case e: Exception => throw e
-    }
-      
-    returnMessageBuilder
+    })
+    
+    Time.time("Parsing " + gcodeProperties.outFilename + " :",{
+      val returnMessageBuilder = Message.newBuilder()
+      try {
+        SimpleGcodeParseOperation.readGcodeIntoBuilder(gcodeProperties.outFilename, options, returnMessageBuilder)
+      } catch {
+        case e: java.io.FileNotFoundException => System.err.println("ParseGcodeOperationNo file not found:\"" + gcodeProperties.outFilename + "\""); throw e
+        case e: Exception => throw e
+      }
+      returnMessageBuilder
+    })
   }
 }

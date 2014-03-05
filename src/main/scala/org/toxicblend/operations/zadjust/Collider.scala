@@ -90,9 +90,9 @@ class Collider(val facade:BulletFacade, val sampleStep:Double, val epsilon:Doubl
       adjustSample(rv.head, fromP)
       val interpolated = new Vector3dE
       // iterator.sliding(2).map(_.head) == all but last
-      rv.tail.iterator.sliding(2).map(_.head).foreach(sample => {  
-      //(1 until rv.size -1).foreach(i => {
-        //val sample = rv(i)
+      //rv.tail.iterator.sliding(2).map(_.head).foreach(sample => {  
+      (1 until rv.size -1).foreach(i => {
+        val sample = rv(i)
         val ratio = fromP.xyDistance(sample)/distanceToCover
         VectorUtil.setInterpolate3(interpolated, fromP, toP, ratio)
         adjustSample(sample, interpolated)

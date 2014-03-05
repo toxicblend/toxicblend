@@ -51,7 +51,7 @@ class ZAdjustOperation extends CommandProcessorTrait {
       throw new ToxicblendException("At least two objects must be selected")
     }    
     val useMultiThreading = options.getOrElse("useMultiThreading", "FALSE").toUpperCase() match {
-      case "TRUE" => true
+      case "TRUE" => System.err.println("ZAdjustOperation:useMultiThreading=True but it's not implemented yet"); true
       case "FALSE" => false
       case s:String => System.err.println("ZAdjustOperation: Unrecognizable 'useMultiThreading' property value: " +  s ); false
     }
@@ -61,8 +61,8 @@ class ZAdjustOperation extends CommandProcessorTrait {
     }
     val unitIsMetric = options.getOrElse("unitSystem", "METRIC").toUpperCase() match {
       case "METRIC" => UnitSystem.Metric
-      case "NONE" => None
-      case "IMPERIAL" => UnitSystem.Imperial
+      case "NONE" => throw new ToxicblendException("ZAdjustOperation:unitSystem=None but it's not supported"); None
+      case "IMPERIAL" => throw new ToxicblendException("ZAdjustOperation:unitSystem=IMPERIAL but it's not supported"); UnitSystem.Imperial
       case s:String => System.err.println("ZAdjustOperation: Unrecognizable 'unitSystem' property value: " +  s ); None
     }
     val sampleStep:Float = (options.getOrElse("sampleStep", "0.1") match {
@@ -75,21 +75,22 @@ class ZAdjustOperation extends CommandProcessorTrait {
       case s:String => System.err.println("ZAdjustOperation: Unrecognizable 'addDiff' property value: " +  s ); false
     }
     
-    println(options)
+    //println(options)
     val epsilon = 0.000002f
     println("sampleStep="+ sampleStep + " epsilon=" + epsilon)
     //println("Input segment :" )
     //segments.foreach( s => println(s.mkString("\n")) )
     // models = all models found in inMessage except the first one
     
-    val segments = {
+    val segments = Time.time("findContinuousLineSegments: ",{
       val s = Mesh3DConverter(inMessage.getModels(0),true).findContinuousLineSegments
       if (s._1.size > 0) throw new ToxicblendException("First object should only contain edges")
       s._2.filter( g => g.size <= 1).foreach(g => System.err.println("ZAdjustOperation:invalid input segment " + g))
       s._2.map( seg => seg.map(v => new Point3dE(v.x, v.y, v.z)))
-    }
+    })
    
-    val models = inMessage.getModelsList().tail.toIndexedSeq.map(i=>ByteBufferMeshConverter(i,true, unitScale))
+    val models = Time.time("Parse collision objects: ", 
+        inMessage.getModelsList.tail.toIndexedSeq.map(i=>ByteBufferMeshConverter(i,true, unitScale)))
     val aabbAllModels = new AABB(models.map(m=>m.aabb))
     val (bulletScaling,bulletScalingM) = getResonableScaling(aabbAllModels)
     val bulletScalingInverse = new Matrix4dE(bulletScalingM).invertSelf

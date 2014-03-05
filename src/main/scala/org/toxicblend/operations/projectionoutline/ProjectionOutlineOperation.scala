@@ -29,7 +29,7 @@ class ProjectionOutlineOperation extends CommandProcessorTrait {
     val multiThreadProperty = options.getOrElse("multiThreadProperty", "FALSE") match {
       case "FALSE" => false
       case "TRUE" => true
-      case s:String => System.err.println("ProjectionOutlineProcessor: Unknown multiThreadProperty property value: " +  s ); false
+      case s:String => System.err.println("ProjectionOutlineProcessor: Unknown multiThreadProperty property value: " +  s); false
     }
     
     println(options.options)
