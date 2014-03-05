@@ -4,14 +4,50 @@ import org.toxicblend.protobuf.ToxicBlendProtos.Model
 import org.toxicblend.protobuf.ToxicBlendProtos.Face
 import javax.vecmath.Vector3d
 import javax.vecmath.Point3d
+import javax.vecmath.Tuple3d
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import scala.collection.JavaConversions._
 import org.toxicblend.ToxicblendException
 import com.bulletphysics.linearmath.AABB
 import com.bulletphysics.linearmath.Matrix4dE
+import com.bulletphysics.linearmath.Triangle
 
 class ByteBufferMeshConverter(val totalVerts:Int, val totalTriangles:Int, val gVertices:ByteBuffer, val gIndices:ByteBuffer, val aabb:AABB, val name:String) {
+  
+  @inline
+  def readVertice(result:Tuple3d, index:Int) = {
+    result.x = gVertices.getDouble((index*3 + 0) * ByteBufferMeshConverter.VERTEX_SIZE)
+    result.y = gVertices.getDouble((index*3 + 1) * ByteBufferMeshConverter.VERTEX_SIZE)
+    result.z = gVertices.getDouble((index*3 + 2) * ByteBufferMeshConverter.VERTEX_SIZE)
+  }
+  
+  /**
+   * Don't try to modify any vertices in the middle of collision detection
+   */
+  @inline
+  def writeVertice(vertice:Tuple3d, index:Int) = {
+    gVertices.putDouble((index*3 + 0) * ByteBufferMeshConverter.VERTEX_SIZE, vertice.x)
+    gVertices.putDouble((index*3 + 1) * ByteBufferMeshConverter.VERTEX_SIZE, vertice.y)
+    gVertices.putDouble((index*3 + 2) * ByteBufferMeshConverter.VERTEX_SIZE, vertice.z)
+  }
+  
+  @inline
+  def readTriangle(triangle:Triangle, triangleIndex:Int) = {
+    var vertexIndex = gIndices.getInt((triangleIndex*3 + 0) * ByteBufferMeshConverter.T_INDEX_SIZE)
+    readVertice(triangle.a, vertexIndex)
+    vertexIndex = gIndices.getInt((triangleIndex*3 + 1) * ByteBufferMeshConverter.T_INDEX_SIZE)
+    readVertice(triangle.b, vertexIndex)
+    vertexIndex = gIndices.getInt((triangleIndex*3 + 2) * ByteBufferMeshConverter.T_INDEX_SIZE)
+    readVertice(triangle.c, vertexIndex)
+  }
+  
+  @inline
+  def readTriangle(result:Array[Int], triangleIndex:Int) = {
+    result(0) = gIndices.getInt((triangleIndex*3 + 0) * ByteBufferMeshConverter.T_INDEX_SIZE)
+    result(1) = gIndices.getInt((triangleIndex*3 + 1) * ByteBufferMeshConverter.T_INDEX_SIZE)
+    result(2) = gIndices.getInt((triangleIndex*3 + 2) * ByteBufferMeshConverter.T_INDEX_SIZE)
+  }
   
   /**
    * transform each vertex in the ByteBuffer and the AABB
@@ -19,13 +55,9 @@ class ByteBufferMeshConverter(val totalVerts:Int, val totalTriangles:Int, val gV
   def transformVertices(m:Matrix4dE) = {
     val point = new Point3d
     (0 until totalVerts).foreach(index => {
-      point.x = gVertices.getDouble((index*3 + 0) * ByteBufferMeshConverter.VERTEX_SIZE)
-      point.y = gVertices.getDouble((index*3 + 1) * ByteBufferMeshConverter.VERTEX_SIZE)
-      point.z = gVertices.getDouble((index*3 + 2) * ByteBufferMeshConverter.VERTEX_SIZE)
+      readVertice(point,index)
       m.transform(point)
-      gVertices.putDouble((index*3 + 0) * ByteBufferMeshConverter.VERTEX_SIZE, point.x)
-      gVertices.putDouble((index*3 + 1) * ByteBufferMeshConverter.VERTEX_SIZE, point.y)
-      gVertices.putDouble((index*3 + 2) * ByteBufferMeshConverter.VERTEX_SIZE, point.z)
+      writeVertice(point,index)
     })
     m.transform(aabb)
   }
@@ -90,17 +122,17 @@ object ByteBufferMeshConverter {
     }
     {
       // fill gIndices with data
-      var index = 0
+      var triangleIndex = 0
       pbModel.getFacesList.foreach(f => {
         if (f.getVerticesCount > 3 ) 
           throw new ToxicblendException("JBullet mesh must be triangulated")
         else if (f.getVerticesCount == 3) {
-          var subIndex = 0
+          var subTIndex = 0
           f.getVerticesList.foreach( vertexIndex => {
-            gIndices.putInt((index*3 + subIndex) * T_INDEX_SIZE, vertexIndex )
-            subIndex += 1
+            gIndices.putInt((triangleIndex*3 + subTIndex) * T_INDEX_SIZE, vertexIndex )
+            subTIndex += 1
           })
-          index +=1
+          triangleIndex +=1
         }
         // silently ignore edges and unconnected vertices
       })
