@@ -127,7 +127,7 @@ class Mesh3DConverter protected (protected val vertices:Buffer[ReadonlyVec3D],
       if (distincts.size != vertices.size) {
         if (distincts.size>1) {
           System.err.println("findContinuousLineSegmentsAsId:: This is terrible wrong, i know. But i just took the unique vertices of a face and added them to the result set.") // TODO: fix it
-          println("" + vertices.mkString("{",",","}") + " => " + distincts.mkString("{",",","}"))
+          //println("" + vertices.mkString("{",",","}") + " => " + distincts.mkString("{",",","}"))
           map.add(distincts, faceId)
         }
       } else {
