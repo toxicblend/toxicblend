@@ -16,15 +16,15 @@ object Server {
   def main(args: Array[String]): Unit = {
     val port = 9999
     try {
-      val listener = new ServerSocket(port);
-      println("Started service, listening to port " + port );
+      val listener = new ServerSocket(port)
+      println("Started service, listening to port " + port)
       while (true) {
-        val aSocket:Socket = listener.accept()
-        println("Opening connection to " + aSocket.getPort() + "->" + aSocket.getLocalPort());
-        new ServerThread(aSocket).start()
+        val aSocket:Socket = listener.accept
+        println("Opening connection to " + aSocket.getPort() + "->" + aSocket.getLocalPort)
+        new ServerThread(aSocket).start
       }
-      listener.close()
-      System.err.println("Closing connection to ." + listener.getLocalSocketAddress());
+      System.err.println("Closing connection to ." + listener.getLocalSocketAddress)
+      listener.close
     }
     catch {
       case e: IOException =>

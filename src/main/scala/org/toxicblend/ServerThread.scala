@@ -21,6 +21,7 @@ import org.toxicblend.operations.zadjust.ZAdjustOperation
 import org.toxicblend.operations.generatemaze.GenerateMazeOperation
 import org.toxicblend.operations.intersectedges.IntersectEdgesOperation
 import org.toxicblend.operations.parametricmodels.ParametricCircleOperation
+import org.toxicblend.util.Time
 
 import com.google.protobuf.{CodedInputStream,CodedOutputStream}
 import toxi.geom.AABB
@@ -31,28 +32,30 @@ object ServerThread {
 }
 
 case class ServerThread(socket: Socket) extends Thread("ServerThread") {
+  var lastActiveTime = System.nanoTime
   
   override def run(): Unit = {
-    val rand = new Random(System.currentTimeMillis());
+    //val rand = new Random(System.currentTimeMillis());
     var commandsReceived = 0 // the number of messages sent from the client on this specific connection
     
     try {
-      
       val out = new DataOutputStream(socket.getOutputStream())
       val in = new DataInputStream(socket.getInputStream())
       var inputData:Array[Byte] = new Array[Byte](100)
       
       while (true) {
         do {
-          // Receive data from client
-          val inLength = in.readInt()
-          if (inLength > inputData.length) {
-            inputData = new Array[Byte](inLength)
-          }
-          
-          in.readFully(inputData, 0, inLength)
-          val codedInputStream = CodedInputStream.newInstance(inputData,0,inLength);
-          val inMessage = Message.parseFrom(codedInputStream)
+          val (inMessage, inLength) = Time.time("Received command: ", {
+            // Receive data from client
+            val inLength = in.readInt
+            if (inLength > inputData.length) {
+              inputData = new Array[Byte](inLength)
+            }
+            in.readFully(inputData, 0, inLength)
+            val codedInputStream = CodedInputStream.newInstance(inputData,0,inLength);
+            val inMessage = Message.parseFrom(codedInputStream)
+            (inMessage,inLength)
+          })
           println("Server received command: \"" + inMessage.getCommand() + "\" of " + inLength + " bytes." )
           //println(inMessage)
           
@@ -77,7 +80,6 @@ case class ServerThread(socket: Socket) extends Thread("ServerThread") {
                   throw new ToxicblendException(errMsg)
                 }
               }
-            
               processor.processInput(inMessage)
             } catch {
               case e:Throwable => {
@@ -86,7 +88,7 @@ case class ServerThread(socket: Socket) extends Thread("ServerThread") {
                 optionBuilder.setKey("ERROR")
                 optionBuilder.setValue(e.toString)
                 message.addOptions(optionBuilder)
-                e.printStackTrace()
+                e.printStackTrace
                 message
               }
             }
@@ -98,24 +100,26 @@ case class ServerThread(socket: Socket) extends Thread("ServerThread") {
           out.write(output)
           out.flush()
           println("Response sent: " + output.length + " bytes")
+          lastActiveTime = System.nanoTime
           commandsReceived += 1
         } while (true)
           
-        Thread.sleep(100)
+        Thread.sleep(50)
       }
-      out.close()
-      in.close()
-      socket.close()
+      out.close
+      in.close
+      socket.close
     } catch {
       case e: SocketException =>
         () // avoid stack trace when stopping a client with Ctrl-C
       case e: EOFException =>
         if (commandsReceived==0){
-           e.printStackTrace();
+           e.printStackTrace
         }
+        println("Response received: "+(System.nanoTime-lastActiveTime)/1e6+"ms")
         println("Closing connection to " + socket.getPort() + "->" + socket.getLocalPort());
       case e: IOException =>
-        e.printStackTrace();
+        e.printStackTrace
     }
   }
 }

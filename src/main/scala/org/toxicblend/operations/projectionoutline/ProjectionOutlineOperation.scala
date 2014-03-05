@@ -37,7 +37,7 @@ class ProjectionOutlineOperation extends CommandProcessorTrait {
     val returnMessageBuilder = Message.newBuilder()
     val result = Mesh2DConverter(inModel, projectionPlane, true)
     
-    Time.time(result.mesh2d.projectionOutline(multiThreadProperty))
+    Time.time("projectionOutline ", result.mesh2d.projectionOutline(multiThreadProperty))
     
     val inverseMatrix = if (inModel.hasWorldOrientation()) {
       Option(Matrix4x4Converter(inModel.getWorldOrientation()))
