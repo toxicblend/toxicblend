@@ -93,8 +93,8 @@ class CollisionWrapper(val models:IndexedSeq[Mesh3DConverter]) {
   val collisionConfiguration = new DefaultCollisionConfiguration()
   val dispatcher = new CollisionDispatcher(collisionConfiguration)
   val broadphase:BroadphaseInterface = if (true) {
-      val worldMin = JBulletUtil.vec3DToNewVector3d(aabbAllModels.getMin)
-      val worldMax = JBulletUtil.vec3DToNewVector3d(aabbAllModels.getMax)
+      val worldMin = JBulletUtil.vec3DToNewPoint3d(aabbAllModels.getMin)
+      val worldMax = JBulletUtil.vec3DToNewPoint3d(aabbAllModels.getMax)
       new AxisSweep3_32(worldMin, worldMax, 1500000/2);
     } else {
     new DbvtBroadphase
