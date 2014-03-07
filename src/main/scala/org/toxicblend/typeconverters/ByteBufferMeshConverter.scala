@@ -54,9 +54,12 @@ class ByteBufferMeshConverter(val totalVerts:Int, val totalTriangles:Int, val gV
    */
   def transformVertices(m:Matrix4dE) = {
     val point = new Point3d
+    //aabb.aabbMin.set(AABB.UNINITIALIZED_AABBMIN)
+    //aabb.aabbMax.set(AABB.UNINITIALIZED_AABBMAX)
     (0 until totalVerts).foreach(index => {
       readVertice(point,index)
       m.transform(point)
+      //aabb.aabbExpand(point)
       writeVertice(point,index)
     })
     m.transform(aabb)
@@ -85,19 +88,7 @@ object ByteBufferMeshConverter {
     val gVertices = ByteBuffer.allocateDirect(totalVerts*VERTEX_STRIDE).order(ByteOrder.nativeOrder());
     val gIndices = ByteBuffer.allocateDirect(totalTriangles*T_INDEX_STRIDE).order(ByteOrder.nativeOrder());
     
-    val aabb = {
-      // initiate aabb with a sample from the first vertex
-      val firstVertex = getFirstVertex(pbModel)  
-      if (firstVertex.isDefined) {
-        val p = firstVertex.get
-        if (hasWorldTransformation) {
-          worldTransformation.get.matrix.transform(p)
-        }
-        new AABB(p)
-      } else {
-        new AABB
-      }
-    } 
+    val aabb = new AABB;
     {
       // fill gVertices with data
       var index = 0
@@ -138,18 +129,5 @@ object ByteBufferMeshConverter {
       })
     }
     new ByteBufferMeshConverter(totalVerts,totalTriangles,gVertices,gIndices, aabb, pbModel.getName)
-  }
-  
-  /**
-   * returns the first vertex found in the pbModel
-   */
-  def getFirstVertex(pbModel:Model):Option[Point3d] = {
-    val vertexList = pbModel.getVerticesList()
-    if (vertexList.size>0 ) {
-      val firstPBVertex = vertexList(0)
-      Option(new Point3d(firstPBVertex.getX, firstPBVertex.getY, firstPBVertex.getZ))
-    } else {
-      None
-    }
   }
 }
