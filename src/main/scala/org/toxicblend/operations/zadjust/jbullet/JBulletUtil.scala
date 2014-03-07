@@ -1,5 +1,7 @@
 package org.toxicblend.operations.zadjust.jbullet
+
 import javax.vecmath.Vector3d
+import javax.vecmath.Point3d
 import toxi.geom.Vec3D
 import toxi.geom.ReadonlyVec3D
 import toxi.geom.ReadonlyVec2D
@@ -13,9 +15,9 @@ object JBulletUtil {
     * returns the squared distance between two vertices in XY plane ( Z coordinate is ignored )
     */
    @inline
-   def sqrXYDistance(v0x:Double, v0y:Double, v1x:Double, v1y:Double):Double= {
-     val dx = (v0x - v0x)//.toDouble
-     val dy = (v0y- v0y)//.toDouble
+   def sqrXYDistance(v0x:Double, v0y:Double, v1x:Double, v1y:Double):Double = {
+     val dx = v0x - v0x
+     val dy = v0y- v0y
      dx*dx + dy*dy   
    }
    
@@ -66,6 +68,12 @@ object JBulletUtil {
    */
   @inline
   def vec3DToNewVector3d(input:ReadonlyVec3D) = new Vector3d(input.x, input.y, input.z)
+  
+  /**
+   * copy a ReadonlyVec3D into a new Point3d
+   */
+  @inline
+  def vec3DToNewPoint3d(input:ReadonlyVec3D) = new Point3d(input.x, input.y, input.z)
   
   /**
    * copy the values of a Vec3D into a Vector3d
