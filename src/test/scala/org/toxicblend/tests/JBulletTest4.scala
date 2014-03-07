@@ -4,8 +4,11 @@ import toxi.geom.mesh.TriangleMesh
 import toxi.geom.Vec3D
 import toxi.geom.ReadonlyVec3D
 import org.toxicblend.typeconverters.Mesh3DConverter
+import org.toxicblend.typeconverters.ByteBufferMeshConverter
 import scala.collection.mutable.MutableList
-import org.toxicblend.operations.zadjust.jbullet.JBulletCollision
+import org.toxicblend.operations.zadjust.BulletFacade
+import org.toxicblend.operations.zadjust.Collider
+import com.bulletphysics.linearmath.Point3dE
 import org.scalatest._
 import matchers.ShouldMatchers._
 
@@ -18,29 +21,30 @@ class JBulletTest4 extends FlatSpec with Matchers {
     val toximesh = new TriangleMesh
     toximesh.addFace(new Vec3D( 2,-2,0), new Vec3D(-2,-2,0), new Vec3D(-2, 2,0))
     toximesh.addFace(new Vec3D(-2, 2,0), new Vec3D( 2, 2,0), new Vec3D( 2,-2,0))
-    val model = Mesh3DConverter(toximesh,"JBulletTest2")
-    Array(model)
+    val modelMesh3D = Mesh3DConverter(toximesh,"JBulletTest4")
+    val bbModel = ByteBufferMeshConverter(modelMesh3D.toPBModel(None, None).build,false,1f)
+    Array(bbModel)
   }
   
-  def doTheRayTests(segment:Array[ReadonlyVec3D]) = {
-    val result = new MutableList[IndexedSeq[ReadonlyVec3D]]
+  def doTheRayTests(segment:Array[Point3dE]) = {
+    val result = new MutableList[IndexedSeq[Point3dE]]
     segment.sliding(2,1).foreach(s => {
-      val r = jbc.doCollisionTests(s)
+      val r = jbc.collisionTestSegment(s(0),s(1), false)
       //println("from: " + s(0) + " to:" + s(1) + " = " + r.mkString("\n   ","\n   ", ""))
-      result += r.flatten
+      result += r
     })
     result
   }
   
-  val jbc = new JBulletCollision(models, 0.005f, 0.0001f)
+  val facade = new BulletFacade(models)
+  val jbc = new Collider(facade, 0.005f, 0.0001f) 
   
-  
-  "jbulletTest3-1" should "collide just fine" in {    
-    val segment:Array[ReadonlyVec3D] = Array(new Vec3D(0f,-1f,1f), 
-                                             new Vec3D(-1f,0f,1f),
-                                             new Vec3D(0f,1f,1f),
-                                             new Vec3D(1f,0f,1f),
-                                             new Vec3D(0f,-1f,1f))                                       
+  "JBulletTest4-1" should "collide just fine" in {    
+    val segment = Array(new Point3dE(0f,-1f,1f), 
+                        new Point3dE(-1f,0f,1f),
+                        new Point3dE(0f,1f,1f),
+                        new Point3dE(1f,0f,1f),
+                        new Point3dE(0f,-1f,1f))                                       
     val result = doTheRayTests(segment)
     println("input Segment: " + segment.mkString("\n") )
     println("Result segments:\n" + result.mkString("\n"))
@@ -52,6 +56,6 @@ class JBulletTest4 extends FlatSpec with Matchers {
   }
   
   "jbullet cleanup" should "not fail" in {
-    jbc.cleanup
+    facade.destroy
   }
 }

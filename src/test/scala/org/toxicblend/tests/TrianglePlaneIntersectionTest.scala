@@ -7,7 +7,6 @@ import toxi.geom.Plane
 import toxi.geom.Triangle3D
 import org.toxicblend.typeconverters.Mesh3DConverter
 import scala.collection.mutable.MutableList
-import org.toxicblend.operations.zadjust.jbullet.JBulletCollision
 import org.scalatest._
 import org.toxicblend.geometry.TrianglePlaneIntersection
 import org.toxicblend.geometry.TrianglePlaneIntersectionResult
