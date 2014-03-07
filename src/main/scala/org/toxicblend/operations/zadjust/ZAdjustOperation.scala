@@ -102,14 +102,14 @@ class ZAdjustOperation extends CommandProcessorTrait {
     val result = Time.time("Collision calculation time: ", {
       val facade = new BulletFacade(models)
       val collider = new Collider(facade, sampleStep*bulletScaling, epsilon) 
-      
-      //println("AABB max = " + facade.aabbAllModels.getMax )
-      //println("AABB min = " + facade.aabbAllModels.getMin )
+      /*
+      println("AABB max = " + facade.aabbAllModels.getMax )
+      println("AABB min = " + facade.aabbAllModels.getMin )
   
-      //println("X size = " + (facade.aabbAllModels.getMax.x - facade.aabbAllModels.getMin.x) )
-      //println("Y size = " + (facade.aabbAllModels.getMax.y - facade.aabbAllModels.getMin.y) )
-      //println("Z size = " + (facade.aabbAllModels.getMax.z - facade.aabbAllModels.getMin.z) )
-     
+      println("X size = " + (facade.aabbAllModels.getMax.x - facade.aabbAllModels.getMin.x) )
+      println("Y size = " + (facade.aabbAllModels.getMax.y - facade.aabbAllModels.getMin.y) )
+      println("Z size = " + (facade.aabbAllModels.getMax.z - facade.aabbAllModels.getMin.z) )
+      */
       val result = if (useMultiThreading) {
         // this is wrong, each thread must have its own collider instance
         segments.filter( s => s.size > 1)./*par.*/map(segment => 

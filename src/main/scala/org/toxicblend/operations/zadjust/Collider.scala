@@ -30,30 +30,41 @@ class Collider(val facade:BulletFacade, val sampleStep:Double, val epsilon:Doubl
   val triangleData = Array(0,0,0)
   val zMin = facade.aabbAllModels.getMin.z-1
   val zMax = facade.aabbAllModels.getMax.z+1
-  
-  val convexCallback = {
-    val convexShape = facade.coneShapeZ
-    new ClosestConvexResultCallback(convexShape.rotation, convexShape.zAdjust, zMin, zMax)
-  }
-  
+  val interSectionResult = new Plane.IntersectionResult
+  val convexCallback = new ClosestConvexResultCallback(facade.coneShapeZ.rotation, facade.coneShapeZ.zAdjust, zMin, zMax)
   val rayCallback = new ClosestRayResultCallback(zMin, zMax)
   
   /**
-   * sample point 
+   * runs collision detection at the currentPos.origin point.
+   * If nothing is found with raytests a convex sweeep will be performed
    */
-  def collisionTestPoint(point:Point3dE):HitPointWorld = {
-    rayCallback.resetForReuse(point)
+  def testCurrentPos:HitPointWorld = {
+    rayCallback.resetForReuse(currentPos.origin)
     facade.collisionWorld.rayTest(rayCallback.rayFromWorld, rayCallback.rayToWorld, rayCallback)
     // result will just be a reference to a reused variable, must be copied
-    if (rayCallback.hasResult ){
+    val cp = if (rayCallback.hasResult ){
       rayCallback.getResult
     } else {
+      // no hit 
+       
       // no hit, try convexSweep instead
-      convexCallback.resetForReuse(point)
+      convexCallback.resetForReuse(currentPos.origin)
       facade.collisionWorld.convexSweepTest(facade.coneShapeZ.shape, convexCallback.fromT, convexCallback.toT, convexCallback)
-      //println("convexCallback hit " + convexCallback.hasResult)
+      if (convexCallback.hasResult) {
+        println("convexCallback hit at " + currentPos.origin + " " + convexCallback.hitPointWorld.point )
+      }
       convexCallback.getResult
+    } 
+    if (cp.hasTriangleIndex) {
+      facade.models(0).readTriangle(triangle, cp.triangleIndex)
+      currentPlane.getZIntersectionWithTriangle(triangle,currentPos,interSectionResult)
+    } else {
+      interSectionResult.hasResult = false
     }
+    if (!interSectionResult.hasResult) {
+      println("triangle miss at " + currentPos.origin)
+    }
+    cp
   }
 
   /**
@@ -71,22 +82,16 @@ class Collider(val facade:BulletFacade, val sampleStep:Double, val epsilon:Doubl
     }
     currentPos.setSelf(fromP,toP)
     currentPos.getZPlane(currentPlane)
-    
     val rv = new ArrayBuffer[Point3dE]
-    
     directionIncrement.setSelf(currentPos.dir).normalizeSelf.scaleSelf(sampleStep)
     distanceCoveredSqr = 0d
     distanceToCoverSqr = fromP.xyDistanceSqr(toP)
     val distanceToCover = math.sqrt(distanceToCoverSqr)
-    val interSectionResult = new Plane.IntersectionResult
+    
     //println("New segment" + fromP + " toP: " + toP)
     do {
-      val cp = collisionTestPoint(currentPos.origin)
-      if (cp.hasTriangleIndex) {
-        facade.models(0).readTriangle(triangle, cp.triangleIndex)
-        currentPlane.getZIntersectionWithTriangle(triangle,currentPos,interSectionResult)
-      }
-      if (cp.hasTriangleIndex && interSectionResult.hasResult) {
+      val cp = testCurrentPos
+      if (interSectionResult.hasResult) {
         // we hit something    
         val prevEdgePoint = interSectionResult.prevPoint
         val nextEdgePoint = interSectionResult.nextPoint
@@ -98,17 +103,30 @@ class Collider(val facade:BulletFacade, val sampleStep:Double, val epsilon:Doubl
           rv += new Point3dE(prevEdgePoint);
         }
         val dotP = new Vector3dE(nextEdgePoint).subSelf(fromP).normalizeSelf.xyDot(new Vector3dE(currentPos.dir).normalizeSelf)
-        if (dotP < 0) {
-           println("negative dotP: triangleidx:" + cp.triangleIndex + " nextEdgePoint: " + nextEdgePoint + " dotP=" + dotP + " prevPoint=" + interSectionResult.prevPoint )
-           println("dir: "+ currentPos.dir )
-        }
         val distanceSqr = fromP.xyDistanceSqr(nextEdgePoint)
+        if (dotP < 0) {
+           println("ignoring negative dotP:" + dotP + " triangleidx:" + cp.triangleIndex )
+           println(" currentPos.origin: " + currentPos.origin)
+           println(" nextEdgePoint: " + nextEdgePoint)
+           println(" prevEdgePoint: " + prevEdgePoint)
+           println(" distanceCoveredSqr:" + distanceCoveredSqr )
+           println(" distanceSqr:" + distanceSqr )
+           println(" distanceToCoverSqr:" + distanceToCoverSqr )
+           println(" prevPoint=" + interSectionResult.prevPoint)
+           println(" dir: "+ currentPos.dir )
+           println(" rv.size: "+ rv.size )
+           if (rv.size == 1) {
+             println(" rv(0): "+ rv(0) )
+           }
+           /*val junk = new Point3dE(prevEdgePoint); junk.z = zMax
+           rv += junk*/
+        }
 
-        if (distanceSqr > distanceCoveredSqr && distanceSqr < distanceToCoverSqr && dotP > 0) {
+        if (distanceSqr > distanceCoveredSqr && distanceSqr < distanceToCoverSqr /*&& dotP > 0*/) {
           //println("jumping ahead: " + nextEdgePoint + " distanceSqr: " + distanceSqr + " distanceCoveredSqr:" + distanceCoveredSqr+ " dotP:" + dotP)
           currentPos.origin.setSelf(nextEdgePoint)
           rv += new Point3dE(nextEdgePoint)
-        } else if (distanceSqr > distanceCoveredSqr && dotP > 0){
+        } else if (distanceSqr > distanceCoveredSqr /*&& dotP > 0*/){
           // just set the overshoot position, it will be adjusted later
           currentPos.origin.setSelf(nextEdgePoint)
         } else {
@@ -132,8 +150,7 @@ class Collider(val facade:BulletFacade, val sampleStep:Double, val epsilon:Doubl
       // adjust the position if it overshot the target
       if (distanceCoveredSqr > distanceToCoverSqr){
         currentPos.origin.set(toP)
-        // What about the Z coordinate??? this can't be correct
-        rv += collisionTestPoint(currentPos.origin).copyHitpoint
+        rv += testCurrentPos.copyHitpoint
         distanceCoveredSqr = distanceToCoverSqr
       }
     } while (distanceCoveredSqr < distanceToCoverSqr)  
