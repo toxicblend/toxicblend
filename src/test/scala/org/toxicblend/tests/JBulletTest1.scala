@@ -26,7 +26,7 @@ class JBulletTest1 extends FlatSpec with Matchers {
   }
   
   val facade = new BulletFacade(models)
-  val jbc = new Collider(facade, 0.005f, 0.0001f)
+  val jbc = new Collider(facade, 0.05, 0.004)
   
   def testCollider(segment:Array[Point3dE]) = {
     val result = new MutableList[IndexedSeq[Point3dE]]
