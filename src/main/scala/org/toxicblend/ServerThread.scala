@@ -39,8 +39,8 @@ case class ServerThread(socket: Socket) extends Thread("ServerThread") {
     var commandsReceived = 0 // the number of messages sent from the client on this specific connection
     
     try {
-      val out = new DataOutputStream(socket.getOutputStream())
-      val in = new DataInputStream(socket.getInputStream())
+      val out = new DataOutputStream(socket.getOutputStream)
+      val in = new DataInputStream(socket.getInputStream)
       var inputData:Array[Byte] = new Array[Byte](100)
       
       while (true) {
@@ -57,8 +57,7 @@ case class ServerThread(socket: Socket) extends Thread("ServerThread") {
             (inMessage,inLength)
           })
           println("Server received command: \"" + inMessage.getCommand() + "\" of " + inLength + " bytes." )
-          //println(inMessage)
-          
+         
           val outMessage = {
             try {
               val processor:CommandProcessorTrait = inMessage.getCommand() match {
