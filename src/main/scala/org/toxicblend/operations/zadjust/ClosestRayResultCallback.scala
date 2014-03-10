@@ -6,10 +6,12 @@ import com.bulletphysics.linearmath.VectorUtil
 import javax.vecmath.Vector3d
 import javax.vecmath.Point2d
 import javax.vecmath.Point3d
+import com.bulletphysics.linearmath.Point3dE
+import com.bulletphysics.linearmath.Vector3dE
 
 class ClosestRayResultCallback(val minZ:Double,val maxZ:Double) extends RayResultCallback {
-  val rayFromWorld = new Vector3d; rayFromWorld.z = maxZ
-  val rayToWorld = new Vector3d; rayToWorld.z = minZ
+  val rayFromWorld = new Vector3dE; rayFromWorld.z = maxZ
+  val rayToWorld = new Vector3dE; rayToWorld.z = minZ
   val hitPointWorld = new HitPointWorld
      
   /**
@@ -18,7 +20,7 @@ class ClosestRayResultCallback(val minZ:Double,val maxZ:Double) extends RayResul
   override def addSingleResult(rayResult:LocalRayResult, normalInWorldSpace:Boolean):Double = {
     closestHitFraction = rayResult.hitFraction      
     hitPointWorld.triangleIndex = rayResult.localShapeInfo.triangleIndex
-    VectorUtil.setInterpolate3(hitPointWorld.point, rayFromWorld, rayToWorld, closestHitFraction)
+    VectorUtil.setInterpolate3(hitPointWorld.collisionPoint, rayFromWorld, rayToWorld, closestHitFraction)
     //searchstate.currentC.setCollision(hitPointWorld, rayResult.localShapeInfo.triangleIndex)
     //val triangle = searchstate.collisionWrapper.models(0).getFaces(searchstate.currentC.triangleIndex).toIndexedSeq.map(i => searchstate.collisionWrapper.models(0).getVertices(i))
     //TrianglePlaneIntersection.trianglePlaneIntersection(triangle, searchstate.segmentPlane, searchstate.currentC.collisionPoint, searchstate.directionNormalized, searchstate.currentC)
@@ -31,7 +33,7 @@ class ClosestRayResultCallback(val minZ:Double,val maxZ:Double) extends RayResul
    */
   @inline def getResult = {
     if (!hasResult) {
-      hitPointWorld.point.set(rayFromWorld.x, rayFromWorld.y, minZ)
+      hitPointWorld.collisionPoint.set(rayFromWorld.x, rayFromWorld.y, minZ)
       // hitpointWorld.triangleIndex = -1 should already be done
     }
     hitPointWorld

@@ -76,8 +76,7 @@ class ZAdjustOperation extends CommandProcessorTrait {
     }
     
     //println(options)
-    val epsilon = 0.000002f
-    println("sampleStep="+ sampleStep + " epsilon=" + epsilon)
+    println("sampleStep="+ sampleStep)
     //println("Input segment :" )
     //segments.foreach( s => println(s.mkString("\n")) )
     // models = all models found in inMessage except the first one
@@ -101,7 +100,7 @@ class ZAdjustOperation extends CommandProcessorTrait {
     
     val result = Time.time("Collision calculation time: ", {
       val facade = new BulletFacade(models)
-      val collider = new Collider(facade, sampleStep*bulletScaling, epsilon) 
+      val collider = new Collider(facade, sampleStep*bulletScaling) 
       /*
       println("AABB max = " + facade.aabbAllModels.getMax )
       println("AABB min = " + facade.aabbAllModels.getMin )

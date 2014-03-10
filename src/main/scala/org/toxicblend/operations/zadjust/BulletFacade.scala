@@ -48,7 +48,7 @@ class BulletFacade(val models:IndexedSeq[ByteBufferMeshConverter]) {
   val collisionWorld = {
     val collisionConfiguration = new DefaultCollisionConfiguration
     val dispatcher = new CollisionDispatcher(collisionConfiguration)
-    val broadphase:BroadphaseInterface = if (true) {
+    val broadphase:BroadphaseInterface = if (false) {
         val aabb = new AABB(aabbAllModels); aabb.getMax.z += 1; ; aabb.getMin.z -= 1
         new AxisSweep3_32(aabb.getMin, aabb.getMax, 1500000);
       } else {

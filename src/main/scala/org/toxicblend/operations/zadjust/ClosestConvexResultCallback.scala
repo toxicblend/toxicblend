@@ -29,8 +29,8 @@ class ClosestConvexResultCallback(val rot:Matrix3d, val zAdjust:Double, val minZ
 
     closestHitFraction = convexResult.hitFraction
     //hitCollisionObject = convexResult.hitCollisionObject
-    VectorUtil.setInterpolate3(hitPointWorld.point, fromT.origin, toT.origin, closestHitFraction)
-    hitPointWorld.point.z += zAdjust
+    VectorUtil.setInterpolate3(hitPointWorld.collisionPoint, fromT.origin, toT.origin, closestHitFraction)
+    hitPointWorld.collisionPoint.z += zAdjust
     hitPointWorld.triangleIndex = convexResult.localShapeInfo.triangleIndex
     return convexResult.hitFraction;
   }
@@ -42,7 +42,7 @@ class ClosestConvexResultCallback(val rot:Matrix3d, val zAdjust:Double, val minZ
    */
   @inline def getResult = {
     if (!hasResult) {
-      hitPointWorld.point.set(fromT.origin.x, fromT.origin.y, minZ)
+      hitPointWorld.collisionPoint.set(fromT.origin.x, fromT.origin.y, minZ)
     }
     // should i use the x&y from hitPointWorld or should i use the actual sample coordinate?
     hitPointWorld
