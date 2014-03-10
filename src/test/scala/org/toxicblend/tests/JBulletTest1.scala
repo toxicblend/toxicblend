@@ -26,7 +26,7 @@ class JBulletTest1 extends FlatSpec with Matchers {
   }
   
   val facade = new BulletFacade(models)
-  val jbc = new Collider(facade, 0.05, 0.004)
+  val jbc = new Collider(facade, 0.05)
   
   def testCollider(segment:Array[Point3dE]) = {
     val result = new MutableList[IndexedSeq[Point3dE]]
@@ -41,7 +41,7 @@ class JBulletTest1 extends FlatSpec with Matchers {
   "JBulletTest1-1" should "collide just fine" in {
     val segment = Array(new Point3dE(-2d,-2d,2d), new Point3dE(2d,2d,2d))      
     val result = testCollider(segment)
-    println("Result: " + result)
+    //println("Result: " + result)
     result.size should be (1)
     val subResult = result(0)
     subResult.size should be (6)
@@ -75,7 +75,7 @@ class JBulletTest1 extends FlatSpec with Matchers {
     val segment = Array(new Point3dE(0d,-1d,2d), new Point3dE(0d,2d,2d))      
     val result = testCollider(segment)
     
-    println("Result: " + result)
+    //println("Result: " + result)
     result.size should be (1)
     val subResult = result(0)
     subResult.size should be (6)

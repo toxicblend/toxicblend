@@ -37,7 +37,7 @@ class JBulletTest4 extends FlatSpec with Matchers {
   }
   
   val facade = new BulletFacade(models)
-  val jbc = new Collider(facade, 0.005f, 0.0001f) 
+  val jbc = new Collider(facade, 0.005f) 
   
   "JBulletTest4-1" should "collide just fine" in {    
     val segment = Array(new Point3dE(0f,-1f,1f), 
@@ -46,8 +46,8 @@ class JBulletTest4 extends FlatSpec with Matchers {
                         new Point3dE(1f,0f,1f),
                         new Point3dE(0f,-1f,1f))                                       
     val result = doTheRayTests(segment)
-    println("input Segment: " + segment.mkString("\n") )
-    println("Result segments:\n" + result.mkString("\n"))
+    //println("input Segment: " + segment.mkString("\n") )
+    //println("Result segments:\n" + result.mkString("\n"))
     val first = result(0)(0)
     val last = result.last.last
     last.x should be (first.x)

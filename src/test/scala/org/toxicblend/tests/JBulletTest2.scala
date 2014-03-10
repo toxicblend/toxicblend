@@ -38,7 +38,7 @@ class JBulletTest2 extends FlatSpec with Matchers {
   }
   
   val facade = new BulletFacade(models)
-  val jbc = new Collider(facade, 0.005f, 0.0001f)
+  val jbc = new Collider(facade, 0.005f)
   
   "JBulletTest2-1" should "collide just fine" in {    
     val segment = Array(new Point3dE(0f,-1f,1f), 
