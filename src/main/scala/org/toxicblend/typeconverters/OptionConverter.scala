@@ -4,6 +4,9 @@ import org.toxicblend.protobuf.ToxicBlendProtos.Option
 import org.toxicblend.protobuf.ToxicBlendProtos.Message
 import scala.collection.JavaConversions._
 import collection.mutable.HashMap
+import org.toxicblend.util.Regex
+import toxi.geom.Vec3D
+import toxi.geom.ReadonlyVec3D
 
 class OptionConverter(val options:collection.mutable.Map[String,String]){
   
@@ -40,6 +43,25 @@ class OptionConverter(val options:collection.mutable.Map[String,String]){
   
   def getOrElse(key:String,default:String):String = {
     options.getOrElse(key,default)
+  }
+  
+  /**
+   * returns the cursor position stored in the cursorPosX, cursorPosY and cursorPosZ property values
+   */
+  def getCursorPos:ReadonlyVec3D = {
+    val cursorPosX:Float = options.getOrElse("cursorPosX", "0.0") match {
+      case Regex.FLOAT_REGEX(limit) => limit.toFloat
+      case s:String => System.err.println("OptionConverter: unrecognizable 'cursorPosX' property value: " +  s ); 0f
+    }
+    val cursorPosY:Float = options.getOrElse("cursorPosY", "0.0") match {
+      case Regex.FLOAT_REGEX(limit) => limit.toFloat
+      case s:String => System.err.println("OptionConverter: unrecognizable 'cursorPosY' property value: " +  s ); 0f
+    }
+    val cursorPosZ:Float = options.getOrElse("cursorPosZ", "0.0") match {
+      case Regex.FLOAT_REGEX(limit) => limit.toFloat
+      case s:String => System.err.println("OptionConverter: unrecognizable 'cursorPosZ' property value: " +  s ); 0f
+    }
+    new Vec3D(cursorPosX,cursorPosY,cursorPosZ)
   }
   
   override def toString() = options.toString

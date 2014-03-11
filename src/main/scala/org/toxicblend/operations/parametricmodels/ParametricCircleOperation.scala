@@ -37,7 +37,7 @@ class ParametricCircleOperation extends CommandProcessorTrait {
       }
     }
     
-    // each "cell" uses this angle 
+    // each "cell" occupies this number of radians 
     val deltaDegree = (2d*Math.PI) / circleData.size
     val decoRotation = deltaDegree*.08
     var degree = 0d
@@ -69,7 +69,7 @@ class ParametricCircleOperation extends CommandProcessorTrait {
         addEdgeWithOrigin(circleData.last.scale(radius),circle(0).scale(radius),origin,rv)
       }
       radius += deltaRadius
-      rotation.rotateZ(decoRotation)
+      //rotation.rotateZ(decoRotation)
       //circleData.foreach(v => rotation.applyToSelf(v))
       indexOffset-=1
     })
@@ -86,25 +86,13 @@ class ParametricCircleOperation extends CommandProcessorTrait {
     }
     val drawType = options.getOrElse("drawTypeProperty", "CIRCLE").toUpperCase() match {
       case "CIRCLE" => "CIRCLE"
+      case "BOX" => "BOX"
       case s:String => System.err.println("ParametricCircleOperation: Unrecognizable 'drawTypeProperty' property value: " +  s ); "CIRCLE"
     }
     val unitScale:Float = options.getOrElse("unitScale", "1.0") match {
       case Regex.FLOAT_REGEX(limit) => limit.toFloat
       case s:String => System.err.println("ParametricCircleOperation: unrecognizable 'unitScale' property value: " +  s ); 1f
     }
-    val cursorPosX:Float = options.getOrElse("cursorPosX", "0.0") match {
-      case Regex.FLOAT_REGEX(limit) => limit.toFloat
-      case s:String => System.err.println("ParametricCircleOperation: unrecognizable 'cursorPosX' property value: " +  s ); 0f
-    }
-    val cursorPosY:Float = options.getOrElse("cursorPosY", "0.0") match {
-      case Regex.FLOAT_REGEX(limit) => limit.toFloat
-      case s:String => System.err.println("ParametricCircleOperation: unrecognizable 'cursorPosY' property value: " +  s ); 0f
-    }
-    val cursorPosZ:Float = options.getOrElse("cursorPosZ", "0.0") match {
-      case Regex.FLOAT_REGEX(limit) => limit.toFloat
-      case s:String => System.err.println("ParametricCircleOperation: unrecognizable 'cursorPosZ' property value: " +  s ); 0f
-    }
-    val origin = new Vec3D(cursorPosX,cursorPosY,cursorPosZ)
     
     val unitIsMetric = options.getOrElse("unitSystem", "METRIC").toUpperCase() match {
       case "METRIC" => UnitSystem.Metric
@@ -112,12 +100,12 @@ class ParametricCircleOperation extends CommandProcessorTrait {
       case "IMPERIAL" => UnitSystem.Imperial
       case s:String => System.err.println("ParametricCircleOperation: Unrecognizable 'unitSystem' property value: " +  s ); None
     } 
-    println("ParametricCircleOperation options: " + options)
-    println("ParametricCircleOperation drawType: " + drawType)
+    //println("ParametricCircleOperation options: " + options)
+    //println("ParametricCircleOperation drawType: " + drawType)
     
     val returnMessageBuilder = Message.newBuilder()
     val returnMeshConverter = if (drawType == "CIRCLE"){
-      drawCircle(options, origin)
+      drawCircle(options, options.getCursorPos)
     } else {
       new Mesh3DConverter
     }
