@@ -25,9 +25,13 @@ class AddDragonCurve(bpy.types.Operator):
       
   def execute(self, context):
     imp.reload(toxicblend)
+    cursor_location = bpy.context.scene.cursor_location.copy()
     with toxicblend.ByteCommunicator("localhost", 9999) as c: 
       properties = {'iterations': str(self.iterations),\
-                    'edgeLength': str(self.edgeLength)}
+                    'edgeLength': str(self.edgeLength),
+                    'cursorPosX'            : str(cursor_location.x),
+                    'cursorPosY'            : str(cursor_location.y),
+                    'cursorPosZ'            : str(cursor_location.z)}
       c.sendOnlyCommand(self.bl_idname, properties) 
       c.receiveObjects()
       return {'FINISHED'}
