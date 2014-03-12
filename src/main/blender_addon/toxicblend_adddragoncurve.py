@@ -7,7 +7,7 @@ import toxicblend
 import imp
 
 bl_info = {
-  'name': "Toxicblend - Dragon curve",
+  'name': "Toxicblend - Add Dragon curve",
   'description': 'Generates a parametric dragon curve.',
   'author': 'EAD Fritz',
   'blender': (2, 69, 0),
@@ -33,7 +33,7 @@ class AddDragonCurve(bpy.types.Operator):
                     'cursorPosY'            : str(cursor_location.y),
                     'cursorPosZ'            : str(cursor_location.z)}
       c.sendOnlyCommand(self.bl_idname, properties) 
-      c.receiveObjects()
+      c.receiveObjects(setOriginToCursor=True)
       return {'FINISHED'}
 
 def register():

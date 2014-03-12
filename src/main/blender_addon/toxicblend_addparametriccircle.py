@@ -4,7 +4,7 @@ import toxicblend
 import imp
 
 bl_info = {
-  "name": "Toxicblend - Custom draw circle operation",
+  "name": "Toxicblend - Add Custom Circle",
   'description': 'An example on how parameteric geometry can be created in code',
   'author': 'EAD Fritz',
   'blender': (2, 69, 0),
@@ -12,9 +12,9 @@ bl_info = {
 }
        
 class ToxicBlend_ParametricCircle(bpy.types.Operator):
-  '''Custom draw circle operation'''
-  bl_idname = "object.toxicblend_parametriccircleoperation"
-  bl_label = "Toxicblend:Custom draw circle"
+  '''Add Custom Circle operation'''
+  bl_idname = "object.toxicblend_addparametriccircleoperation"
+  bl_label = "Toxicblend:Add Custom Circle"
   bl_options = {'REGISTER', 'UNDO'}  # enable undo for the operator.
   
   drawTypeProperty = bpy.props.EnumProperty(
@@ -61,7 +61,7 @@ class ToxicBlend_ParametricCircle(bpy.types.Operator):
                     'cursorPosZ'            : str(cursor_location.z)}
                      
       c.sendOnlyCommand(self.bl_idname, properties) 
-      c.receiveObjects()
+      c.receiveObjects(setOriginToCursor=True)
       return {'FINISHED'}
 
 def register():
