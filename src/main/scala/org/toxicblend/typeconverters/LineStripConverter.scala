@@ -1,13 +1,13 @@
 package org.toxicblend.typeconverters
 
 import org.toxicblend.protobuf.ToxicBlendProtos.{Model,Face}
-import toxi.geom.{Vec3D,LineStrip3D,AABB, Line3D}
-import scala.collection.JavaConversions._
+import toxi.geom.{ReadonlyVec3D,Vec3D,LineStrip3D,AABB, Line3D}
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
+import scala.collection.JavaConversions._
 
 /**
- * constructs the packet buffer from a toxi.geom.LineStrip3D construct
+ * Constructs the packet buffer from a toxi.geom.LineStrip3D construct
  */
 class LineStripConverter private (val lineStrips:Seq[LineStrip3D], val bounds:AABB, val name:String="") {
   
@@ -35,7 +35,6 @@ class LineStripConverter private (val lineStrips:Seq[LineStrip3D], val bounds:AA
     
   /**
    * Adds unique vertices to the vertex list of the model builder, also updates the faces
-   * TODO: fix the imperative:ness 
    */
   protected def addVertex(model:Model.Builder,face:Face.Builder,vmap:HashMap[Vec3D,Int], vertex:Vec3D) = {
     if (!vmap.contains(vertex)) {
@@ -55,7 +54,6 @@ class LineStripConverter private (val lineStrips:Seq[LineStrip3D], val bounds:AA
   
   /**
    * Adds unique vertices to the vertex list of the model builder, also updates the faces
-   * TODO: fix the imperative:ness 
    */
   protected def addEdgeNonUniqueVertex(model:Model.Builder,face:Face.Builder, line:Line3D, vIndex:Int) = {
      var index = vIndex
@@ -79,15 +77,16 @@ class LineStripConverter private (val lineStrips:Seq[LineStrip3D], val bounds:AA
   }
   
   /**
-   * Center the object and return a new instance
-   * TODO implement
+   * Center the object (modifies the vertices in place)
    */
-  def center() = {
-    LineStripConverter.this
+  def center(cursorPos:ReadonlyVec3D) = {
+    val newCenter = cursorPos.sub(bounds)
+    lineStrips.foreach( ls => ls.getVertices.foreach(v => v.addSelf(newCenter)))
+    this
   }
   
   /**
-   * TODO: fix the imperative:ness 
+   * generates a packet buffer model of these line strips
    */  
   def toPBModel(uniqueVertices:Boolean=true) = {
     val modelBuilder = org.toxicblend.protobuf.ToxicBlendProtos.Model.newBuilder()
@@ -112,16 +111,8 @@ class LineStripConverter private (val lineStrips:Seq[LineStrip3D], val bounds:AA
       })
     }
     modelBuilder.setName(name)
-    _root_.scala.Predef.println(bounds)
     modelBuilder
   } 
-  
-  def println() {
-    lineStrips.foreach(ls=>{
-      ls.getVertices().foreach(v=>print(v))
-      System.out.println("")
-    })
-  }
 }
 
 object LineStripConverter {
@@ -205,7 +196,12 @@ object LineStripConverter {
    * Constructs from some LineStrip3D
    */
   def apply(lineStrip:LineStrip3D, name:String="") = {
-    val bounds = new AABB() 
+    
+    val bounds = if (lineStrip.getVertices.size <= 0) {
+      new AABB() 
+    } else {
+      new AABB(lineStrip.getVertices.head,0f)
+    }
     lineStrip.getSegments().foreach(s=>{
       bounds.growToContainPoint(s.a) 
       bounds.growToContainPoint(s.b)
