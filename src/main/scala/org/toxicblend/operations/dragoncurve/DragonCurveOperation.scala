@@ -2,7 +2,9 @@ package org.toxicblend.operations.dragoncurve
 
 import org.toxicblend.CommandProcessorTrait
 import scala.collection.mutable.ArrayBuffer
-import toxi.geom.{Vec3D,LineStrip3D}
+import toxi.geom.Vec3D
+import toxi.geom.ReadonlyVec3D
+import toxi.geom.LineStrip3D
 import scala.collection.JavaConversions._
 import org.toxicblend.protobuf.ToxicBlendProtos.Message
 import org.toxicblend.typeconverters.LineStripConverter
@@ -26,15 +28,16 @@ class DragonCurveOperation extends CommandProcessorTrait {
       case s:String => System.err.println("BoostSimplify: unrecognizable 'edgeLength' property value: " +  s ); 1f
     }
     //println(options.options)
+    val cursorPos = options.getCursorPos
     val outMessage = Message.newBuilder()
-    outMessage.addModels(generate(iterations, edgeLength))
+    outMessage.addModels(generate(iterations, edgeLength, cursorPos))
     outMessage
   }
   
-  def generate(iterations:Int, edgeLength:Float) = {
+  def generate(iterations:Int, edgeLength:Float, cursorPos:ReadonlyVec3D) = {
     val dragon = DragonCurveOperation.draw(DragonCurveOperation.generateData(iterations), edgeLength)
     val model = LineStripConverter(dragon,"dragon curve") 
-    model.center().toPBModel(false)
+    model.center(cursorPos).toPBModel(false)
   }
 }
 
