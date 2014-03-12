@@ -72,7 +72,7 @@ case class ServerThread(socket: Socket) extends Thread("ServerThread") {
                 case "OBJECT_OT_toxicblend_zadjust" => new ZAdjustOperation
                 case "OBJECT_OT_toxicblend_generatemaze" => new GenerateMazeOperation
                 case "OBJECT_OT_toxicblend_intersectedges" => new IntersectEdgesOperation
-                case "OBJECT_OT_toxicblend_parametriccircleoperation" => new ParametricCircleOperation
+                case "OBJECT_OT_toxicblend_addparametriccircleoperation" => new ParametricCircleOperation
                 case s:String => {
                   val errMsg = "Unknown command: " + s
                   System.err.println(errMsg) 
