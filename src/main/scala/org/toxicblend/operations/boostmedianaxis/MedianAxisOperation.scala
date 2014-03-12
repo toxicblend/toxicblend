@@ -55,7 +55,7 @@ class MedianAxisOperation extends CommandProcessorTrait {
     }
     
     if ( calculationResolution < 100) {
-      throw new IllegalArgumentException("  must be positive and at least larger than 100")
+      throw new IllegalArgumentException("CalculationResolution must be positive and at least larger than 100")
     }
     
     val rings2D = Rings2DConverter(inModel, projectionPlane, applyWorldTransform=true)

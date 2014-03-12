@@ -110,8 +110,7 @@ class Rings2DConverter private (val mesh2d:Rings2D, val projectionPlane:Projecti
       modelBuilder.setWorldOrientation(finalTransformation.get.toPBModel)
     }
     modelBuilder
-  } 
-  
+  }
 }
 
 object Rings2DConverter {

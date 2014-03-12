@@ -8,14 +8,15 @@ import toxi.geom.ReadonlyVec2D
 import toxi.geom.Rect
 
 /**
- * @param ïnVerts is named this way because of the way scala handles constructor input parameters (non-var or val). 
+ * @param __inVerts is named this way because of the way scala handles constructor input parameters (non-var or val). 
  *     If the variable is, by accident, referenced anywhere in this object it will be retained as a 'private final' in bytecode
  */
-class Ring2D( val ma:MedianAxisJni, val name:String, ïnVerts:IndexedSeq[ReadonlyVec2D], var subRings:Array[Ring2D], val simplifyLimit:Float) {
+class Ring2D( val ma:MedianAxisJni, val name:String, __inVerts:IndexedSeq[ReadonlyVec2D], var subRings:Array[Ring2D], val simplifyLimit:Float) {
   
-  val ringId = ma.addRing(ïnVerts, simplifyLimit)
+  val ringId = ma.addRing(__inVerts, simplifyLimit)
   val verts = ma.getRing(ringId)
-  val bb = new Rect
+  assert(verts.size>1)
+  val bb = new Rect(verts(0),verts(1))
   verts.foreach(p => bb.growToContainPoint(p))
   
   override def toString:String = {
@@ -54,6 +55,8 @@ class Ring2D( val ma:MedianAxisJni, val name:String, ïnVerts:IndexedSeq[Readonl
       ma.ringContainsAllPoints(this.ringId, that.verts) 
     } else {
       //println("bb sayz ring %d isn't inside ring %d".format(this.ringId, that.ringId))
+      //println("this.bb = " + this.bb)
+      //println("that.bb = " + that.bb)
       false
     }
   }
