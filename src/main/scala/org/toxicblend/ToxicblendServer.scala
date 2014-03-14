@@ -1,20 +1,13 @@
 package org.toxicblend
 
 import java.io.IOException
-import java.net.InetAddress
 import java.net.ServerSocket
 import java.net.Socket
-import java.net.SocketException
-import java.nio.charset.Charset
-import java.nio.ByteBuffer
-import com.google.protobuf.{CodedInputStream,CodedOutputStream}
-import org.toxicblend.protobuf.ToxicBlendProtos.Message
-import org.toxicblend.protobuf.ToxicBlendProtos.Model
-import java.util.Scanner
 import java.io.DataInputStream
 import java.net.SocketTimeoutException 
 
-object Server {
+object ToxicblendServer {
+  
   class SocketListener(val port:Int) extends Thread("SocketListener") {
     var quit = false
     var isRunning = true
