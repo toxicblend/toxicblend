@@ -10,14 +10,14 @@ import toxi.geom.Matrix4x4
 import toxi.geom.Rect
 import org.toxicblend.geometry.ProjectionPlane
 import org.toxicblend.geometry.Rings2D
-import scala.collection.mutable.ArrayBuffer
-import scala.collection.mutable.Buffer
+import scala.collection.mutable.ListBuffer
+//import scala.collection.mutable.Buffer
 import scala.collection.JavaConverters._
 
 /**
  * A toxi.geom.Polygon2D decorator  
  */
-class Polygon2DConverter protected (val polygons:ArrayBuffer[Polygon2D],
+class Polygon2DConverter protected (val polygons:Seq[Polygon2D],
                                     val projectionPlane:ProjectionPlane.ProjectionPlane, 
                                     val name:String) {
   
@@ -30,16 +30,21 @@ class Polygon2DConverter protected (val polygons:ArrayBuffer[Polygon2D],
     modelBuilder.setName(name)
     val helper = new Vertex3DConverterHelper(modelBuilder, projectionPlane, finalTransformation)
     polygons.foreach(poly => {
-      helper.addVertex(poly.vertices.get(0))
+      val firstIndex = helper.addVertex(poly.vertices.get(0)) 
       poly.vertices.asScala.tail.foreach(v => helper.addVertexAndEdgeToPrevious(v))
-      //helper.closeLoop // TODO: do i need to close the loop? Will it even work?
+      helper.closeLoop(firstIndex)
     })
 
     if (finalTransformation.isDefined) {
       modelBuilder.setWorldOrientation(finalTransformation.get.toPBModel)
     }
+    //println("Polygon2DConverter pbmodel:" + modelBuilder.getFacesList())
     modelBuilder
-  }  
+  }
+  
+  override def toString = {
+    polygons.toString
+  }
 }
 
 object Polygon2DConverter {
@@ -48,8 +53,11 @@ object Polygon2DConverter {
    * Constructs from a Rings2D model
    */
   def apply(rings2d:Rings2D, projectionPlane:ProjectionPlane.ProjectionPlane, name:String):Polygon2DConverter = {
-    val polygons = new ArrayBuffer[Polygon2D]
-    rings2d.rings.foreach( ring => polygons.append(new Polygon2D(ring.map(i => rings2d.vertices(i)).iterator.asJava)) )
+    val polygons = new ListBuffer[Polygon2D]
+    rings2d.rings.foreach( ring => {
+      val p = new Polygon2D(ring.map(i => rings2d.vertices(i)).iterator.asJava)
+      polygons.append(p) 
+    })
     new Polygon2DConverter(polygons, projectionPlane, name)
   }
   
