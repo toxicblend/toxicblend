@@ -21,23 +21,23 @@ class BoostSimplifyOperation extends CommandProcessorTrait {
     val options = OptionConverter(inMessage)
     
     val useMultiThreading = options.getOrElse("useMultiThreading", "FALSE").toUpperCase() match {
-      case "TRUE" => System.err.println("BoostSimplifyOperation:useMultiThreading=True but it's not implemented yet"); true
+      case "TRUE" => System.err.println("BoostSimplifyOperation: useMultiThreading=True but it's not implemented yet"); true
       case "FALSE" => false
-      case s:String => System.err.println("Unrecognizable 'useMultiThreading' property value: " +  s ); false
+      case s:String => System.err.println("BoostSimplifyOperation: Unrecognizable 'useMultiThreading' property value: " +  s ); false
     }
     val unitScale:Float = options.getOrElse("unitScale", "1.0") match {
       case Regex.FLOAT_REGEX(limit) => limit.toFloat
-      case s:String => System.err.println("SimpleGcodeOperation: unrecognizable 'unitScale' property value: " +  s); 1f
+      case s:String => System.err.println("BoostSimplifyOperation: unrecognizable 'unitScale' property value: " +  s); 1f
     }
     val unitIsMetric = options.getOrElse("unitSystem", "METRIC").toUpperCase() match {
       case "METRIC" => UnitSystem.Metric
-      case "NONE" => throw new ToxicblendException("BoostSimplifyOperation:unitSystem=None but it's not supported"); None
-      case "IMPERIAL" => throw new ToxicblendException("BoostSimplifyOperation:unitSystem=IMPERIAL but it's not supported"); UnitSystem.Imperial
+      case "NONE" => throw new ToxicblendException("BoostSimplifyOperation: unitSystem=None but it's not supported"); None
+      case "IMPERIAL" => throw new ToxicblendException("BoostSimplifyOperation:u nitSystem=IMPERIAL but it's not supported"); UnitSystem.Imperial
       case s:String => System.err.println("BoostSimplifyOperation: Unrecognizable 'unitSystem' property value: " +  s ); None
     }
     val simplifyLimit:Float = (options.getOrElse("simplifyLimit", "0.1") match {
       case Regex.FLOAT_REGEX(limit) => limit.toFloat
-      case s:String => System.err.println("BoostSimplify: unrecognizable 'simplifyLimit' property value: " +  s); .1f
+      case s:String => System.err.println("BoostSimplifyOperation: unrecognizable 'simplifyLimit' property value: " +  s); .1f
     } ) / 1000f  // convert from meter to mm
         
     val inverseMatrixes = new ArrayBuffer[Option[Matrix4x4Converter]]
