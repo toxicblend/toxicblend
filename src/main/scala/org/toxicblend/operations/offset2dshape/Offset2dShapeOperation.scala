@@ -37,9 +37,14 @@ class Offset2dShapeOperation extends CommandProcessorTrait {
     }
     
     val useMultiThreading = options.getOrElse("useMultiThreading", "FALSE").toUpperCase() match {
-      case "TRUE" => System.err.println("Offset2dShapeOperation=True but it's not implemented yet"); true
+      case "TRUE" => System.err.println("Offset2dShapeOperation: useMultiThreading=True but it's not implemented yet"); true
       case "FALSE" => false
       case s:String => System.err.println("Unrecognizable 'useMultiThreading' property value: " +  s ); false
+    }
+    val useToOutline = options.getOrElse("useToOutline", "FALSE").toUpperCase() match {
+      case "TRUE" => true
+      case "FALSE" => false
+      case s:String => System.err.println("Unrecognizable 'useToOutline' property value: " +  s ); false
     }
     val unitScale:Float = options.getOrElse("unitScale", "1.0") match {
       case Regex.FLOAT_REGEX(limit) => limit.toFloat
@@ -65,8 +70,17 @@ class Offset2dShapeOperation extends CommandProcessorTrait {
     // Convert model vertices to world coordinates so that the offset value has correct unit
     val rings2D = Polygon2DConverter(Rings2DConverter(inModel, projectionPlane, applyWorldTransform=true))
     
+    //println("Input:" + rings2D)
+    
     // Perform the offset operation
     Time.time("Executing offsetShape : ", rings2D.polygons.foreach(p => p.offsetShape(offset)))
+    
+    if (useToOutline) {
+      // Perform the toOutline operation
+      Time.time("Executing toOutline : ", rings2D.polygons.foreach(p => p.toOutline))
+    }
+    
+    //println("Result:" + rings2D)
     
     Time.time("Building resulting pBModel: ",{
       val returnMessageBuilder = Message.newBuilder

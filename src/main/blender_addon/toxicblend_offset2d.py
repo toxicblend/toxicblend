@@ -26,7 +26,6 @@ class ToxicBlend_Offset2d(bpy.types.Operator):
     items=(("YZ_PLANE", "YZ",""),
            ("XZ_PLANE", "XZ",""), 
            ("XY_PLANE", "XY","")),
-           #update=mode_update_callback
            default="XY_PLANE"    
           )
   useMultiThreadingProperty = bpy.props.EnumProperty(
@@ -34,11 +33,17 @@ class ToxicBlend_Offset2d(bpy.types.Operator):
     name="Use mulithreading algorithm",
     items=(("TRUE", "True",""),
            ("FALSE", "False","")),
-           #update=mode_update_callback
            default="FALSE"    
           )
-          
-  offsetProperty = bpy.props.FloatProperty(name="Offset", description="The value (in mm) you want to shrink or expand an edge ring", default=2.0, min=-10000.0, max=10000.0)
+  useToOutlineProperty = bpy.props.EnumProperty(
+    description="Execute Polygon2D.toOutline on the result (toxiclibs). Useful when there are self-intersecting loops",
+    name="Use toOutline",
+    items=(("TRUE", "True",""),
+           ("FALSE", "False","")),
+           default="FALSE"    
+          )
+                    
+  offsetProperty = bpy.props.FloatProperty(name="Offset [mm]", description="The value (in mm) you want to shrink or expand an edge ring", default=2.0, min=-10000.0, max=10000.0)
 
   @classmethod
   def poll(cls, context):
@@ -52,7 +57,8 @@ class ToxicBlend_Offset2d(bpy.types.Operator):
       activeObject = context.scene.objects.active
       properties = {'projectionPlane'       : str(self.projectionPlaneProperty), 
                     'useMultiThreading'     : str(self.useMultiThreadingProperty),
-                    'offset'                :  str(self.offsetProperty),
+                    'useToOutline'          : str(self.useToOutlineProperty),
+                    'offset'                : str(self.offsetProperty),
                     'unitSystem'            : str(unitSystemProperty.system), 
                     'unitScale'             : str(unitSystemProperty.scale_length) }
                      
