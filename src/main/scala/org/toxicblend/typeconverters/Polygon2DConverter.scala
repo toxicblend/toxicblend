@@ -47,9 +47,16 @@ object Polygon2DConverter {
   /** 
    * Constructs from a Rings2D model
    */
-  def apply(rings2d:Rings2D, projectionPlane:ProjectionPlane.ProjectionPlane, name:String) = {
+  def apply(rings2d:Rings2D, projectionPlane:ProjectionPlane.ProjectionPlane, name:String):Polygon2DConverter = {
     val polygons = new ArrayBuffer[Polygon2D]
     rings2d.rings.foreach( ring => polygons.append(new Polygon2D(ring.map(i => rings2d.vertices(i)).iterator.asJava)) )
     new Polygon2DConverter(polygons, projectionPlane, name)
+  }
+  
+  /** 
+   * Constructs from a Rings2DConverter
+   */
+  def apply(r2dc:Rings2DConverter):Polygon2DConverter = {
+    apply(r2dc.mesh2d, r2dc.projectionPlane, r2dc.name)
   }
 }
