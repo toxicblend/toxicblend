@@ -23,11 +23,7 @@ protected[typeconverters] class Vertex3DConverterHelper(val modelBuilder:Model.B
   def addVertex(vertex:ReadonlyVec2D) = {
     val pbvertex = org.toxicblend.protobuf.ToxicBlendProtos.Vertex.newBuilder()
     pbvertex.setId(vertexIndex)
-    val vertex3d = projectionPlane match {
-      case ProjectionPlane.YZ_PLANE => new Vec3D(0f,vertex.x, vertex.y)
-      case ProjectionPlane.XZ_PLANE => new Vec3D(vertex.x, 0f, vertex.y)
-      case ProjectionPlane.XY_PLANE => new Vec3D(vertex.x, vertex.y, 0f)
-    }
+    val vertex3d = ProjectionPlane.convert(projectionPlane,vertex)
     if (inverseFinalTransformation.isDefined) {
       inverseFinalTransformation.get.applyToSelf(vertex3d)
     }
