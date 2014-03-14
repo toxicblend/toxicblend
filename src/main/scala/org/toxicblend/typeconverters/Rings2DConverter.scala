@@ -22,68 +22,6 @@ import scala.collection.JavaConverters._
  */
 class Rings2DConverter private (val mesh2d:Rings2D, val projectionPlane:ProjectionPlane.ProjectionPlane, val name:String="") {
   
-  protected class Vertex3DConverterHelper(val modelBuilder:Model.Builder, val finalTransformation:Option[Matrix4x4Converter]) {
-    val inverseFinalTransformation = 
-      if (finalTransformation.isDefined) 
-        Option[Matrix4x4]({val m=new Matrix4x4(finalTransformation.get.matrix); m.invert()} )
-      else 
-        None
-    protected var vertexIndex = 0
-    
-    def addVertex(vertex:ReadonlyVec2D) = {
-      val pbvertex = org.toxicblend.protobuf.ToxicBlendProtos.Vertex.newBuilder()
-      pbvertex.setId(vertexIndex)
-      val vertex3d = projectionPlane match {
-        case ProjectionPlane.YZ_PLANE => new Vec3D(0f,vertex.x, vertex.y)
-        case ProjectionPlane.XZ_PLANE => new Vec3D(vertex.x, 0f, vertex.y)
-        case ProjectionPlane.XY_PLANE => new Vec3D(vertex.x, vertex.y, 0f)
-      }
-      if (inverseFinalTransformation.isDefined) {
-        inverseFinalTransformation.get.applyToSelf(vertex3d)
-      }
-      pbvertex.setX(vertex3d.x)
-      pbvertex.setY(vertex3d.y)
-      pbvertex.setZ(vertex3d.z)
-      modelBuilder.addVertices(pbvertex)
-      vertexIndex += 1
-      vertexIndex
-    }
-    
-    def addVertexAndEdgeToPrevious(vertex:ReadonlyVec2D) = {
-      if (addVertex(vertex) > 1) {
-        val face = Face.newBuilder()
-        face.addVertices(vertexIndex-2) // vertexIndex -1 = this vertex
-        face.addVertices(vertexIndex-1) // vertexIndex -2 = previous vertex
-        modelBuilder.addFaces(face)
-      }
-    }
-    
-    def addFace(face:IndexedSeq[Int]) = {
-      val faceBuilder = Face.newBuilder()
-      face.foreach(f => faceBuilder.addVertices(f))
-      modelBuilder.addFaces(faceBuilder)
-    }
-    
-    /**
-     * convenience operator to add a single edge
-     */
-    def addFace(edgeVertex1:Int, edgeVertex2:Int) = {
-      val faceBuilder = Face.newBuilder()
-      faceBuilder.addVertices(edgeVertex1)
-      faceBuilder.addVertices(edgeVertex2)
-      modelBuilder.addFaces(faceBuilder)
-    }
-    
-    def closeLoop() = {
-      if (vertexIndex > 1) {
-        val face = Face.newBuilder()
-        face.addVertices(vertexIndex -1) // vertexIndex -1 = last vertex used
-        face.addVertices(0) // first one
-        modelBuilder.addFaces(face)
-      }
-    }
-  }
-  
   /**
    * Create a packet buffer model from this Rings2D.
    * The result will be a list of 2D points with edges between each point (n, n+1)
@@ -91,7 +29,7 @@ class Rings2DConverter private (val mesh2d:Rings2D, val projectionPlane:Projecti
   def toPBModel(noFaceOnlyEdges:Boolean=false, finalTransformation:Option[Matrix4x4Converter] ) = {
     val modelBuilder = org.toxicblend.protobuf.ToxicBlendProtos.Model.newBuilder()
     modelBuilder.setName(name)
-    val helper = new Vertex3DConverterHelper(modelBuilder, finalTransformation)
+    val helper = new Vertex3DConverterHelper(modelBuilder, projectionPlane, finalTransformation)
     mesh2d.vertices.foreach(v => helper.addVertex(v)) 
     if (noFaceOnlyEdges)
       mesh2d.faces.foreach(f => {
