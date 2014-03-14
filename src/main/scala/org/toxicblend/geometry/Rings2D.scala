@@ -8,6 +8,7 @@ import scala.annotation.tailrec
 
 /**
  * A container of 2D vertices that only has two neighbours
+ * The rings are implicitly closed (the closing edge is assumed)
  */
 class Rings2D(vertices:ArrayBuffer[ReadonlyVec2D], edges:ArrayBuffer[ArrayBuffer[Int]]) extends Mesh2D(vertices,edges) {
   
@@ -74,7 +75,7 @@ class Rings2D(vertices:ArrayBuffer[ReadonlyVec2D], edges:ArrayBuffer[ArrayBuffer
         }
       }
     })
-    println("rings:" + rv.size + " individual sizes:" + rv.map( r => r.size ).mkString(",") )
+    //println("rings:" + rv.size + " individual sizes:" + rv.map( r => r.size ).mkString(",") )
     rv
   }
   
@@ -84,16 +85,6 @@ class Rings2D(vertices:ArrayBuffer[ReadonlyVec2D], edges:ArrayBuffer[ArrayBuffer
 }
 
 object Rings2D {
-  /**
-   * Deep copy ?
-   */
-  def apply(oldRings2D:Rings2D) = {
-    //val newVertices = new ArrayBuffer[ReadonlyVec2D](oldRings2D.vertices.size)
-    //val newFaces = new ArrayBuffer[ArrayBuffer[Int]](oldRings2D.faces.size)
-    //oldRings2D.vertices.foreach(v => newVertices += v.copy )
-    //oldRings2D.faces.foreach( f => newFaces += f.clone )
-    new Rings2D(oldRings2D.vertices.map(v => v), oldRings2D.faces.map( f => f.map( v => v)))
-  }
   
   def apply( vertices:ArrayBuffer[ReadonlyVec2D], faces:ArrayBuffer[ArrayBuffer[Int]]) = {
     new Rings2D(vertices, faces)
