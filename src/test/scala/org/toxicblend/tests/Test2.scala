@@ -4,7 +4,6 @@ import org.toxicblend.geometry.Mesh2D
 import toxi.geom.Vec2D
 import toxi.geom.ReadonlyVec2D
 import scala.collection.mutable.ArrayBuffer
-import org.toxicblend.typeconverters.SeqShift
 
 object Test2 {
   def mTestData = {
