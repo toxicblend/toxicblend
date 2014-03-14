@@ -64,13 +64,10 @@ object Rings2DConverter {
     var aabb:Option[Rect] = None
     vertexList.foreach (pbVertex => {
       val new3dVertex = new Vec3D(pbVertex.getX, pbVertex.getY, pbVertex.getZ)
-      if (applyWorldTransform) matrixConverter.matrix.applyToSelf(new3dVertex)
-      
-      val new2dVertex = projectionPlane match {
-        case ProjectionPlane.YZ_PLANE => new Vec2D(new3dVertex.y, new3dVertex.z)
-        case ProjectionPlane.XZ_PLANE => new Vec2D(new3dVertex.x, new3dVertex.z)
-        case ProjectionPlane.XY_PLANE => new Vec2D(new3dVertex.x, new3dVertex.y)
+      if (applyWorldTransform) {
+        matrixConverter.matrix.applyToSelf(new3dVertex)
       }
+      val new2dVertex = ProjectionPlane.convert(projectionPlane,new3dVertex)
       if (aabb.isEmpty) {
         aabb = Option(new Rect(new2dVertex,new2dVertex))
       }
