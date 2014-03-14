@@ -20,8 +20,7 @@ import scala.collection.JavaConverters._
  * This class and companion object is practically identical to Mesh2DConverter. TODO: fix that
  * (one axle is not used)
  */
-class Rings2DConverter private (val mesh2d:Rings2D, val projectionPlane:ProjectionPlane.ProjectionPlane, val name:String="") 
-{
+class Rings2DConverter private (val mesh2d:Rings2D, val projectionPlane:ProjectionPlane.ProjectionPlane, val name:String="") {
   
   protected class Vertex3DConverterHelper(val modelBuilder:Model.Builder, val finalTransformation:Option[Matrix4x4Converter]) {
     val inverseFinalTransformation = 
@@ -123,22 +122,25 @@ object Rings2DConverter {
     val points2D = new Array[ReadonlyVec2D](vertexList.size).to[ArrayBuffer] // buffer initiated and filled
     val matrixConverter =  Matrix4x4Converter(pbModel)
     
-    println("Rings2DConverter received " + vertexList.size()  + " vertices")
-    val aabb = new Rect
+    //println("Rings2DConverter received " + vertexList.size()  + " vertices")
+    var aabb:Option[Rect] = None
     vertexList.foreach (pbVertex => {
       val new3dVertex = new Vec3D(pbVertex.getX, pbVertex.getY, pbVertex.getZ)
       if (applyWorldTransform) matrixConverter.matrix.applyToSelf(new3dVertex)
-         
+      
       val new2dVertex = projectionPlane match {
         case ProjectionPlane.YZ_PLANE => new Vec2D(new3dVertex.y, new3dVertex.z)
         case ProjectionPlane.XZ_PLANE => new Vec2D(new3dVertex.x, new3dVertex.z)
         case ProjectionPlane.XY_PLANE => new Vec2D(new3dVertex.x, new3dVertex.y)
       }
-      aabb.growToContainPoint(new2dVertex)
+      if (aabb.isEmpty) {
+        aabb = Option(new Rect(new2dVertex,new2dVertex))
+      }
+      aabb.get.growToContainPoint(new2dVertex)
       points2D(pbVertex.getId()) = new2dVertex
     })
     
-    println("aabb getBottomLeft= " + aabb.getBottomLeft() + " getTopRight=" + aabb.getTopRight())
+    //println("aabb getBottomLeft= " + aabb.get.getBottomLeft + " getTopRight=" + aabb.get.getTopRight)
     
     val faces2D = pbModel.getFacesList().map(f => {
       f.getVerticesList().map( p => p.toInt ).to[ArrayBuffer]  

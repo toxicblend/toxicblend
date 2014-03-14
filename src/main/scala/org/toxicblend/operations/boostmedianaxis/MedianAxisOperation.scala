@@ -98,7 +98,7 @@ class MedianAxisOperation extends CommandProcessorTrait {
       val (inModel, rings2D, worldTransformation, zEpsilon, dotProductLimit, calculationResolution, simplifyLimit, objectName, projectionPlane, useMultiThreading) = 
         manageInput(inMessage)   
       val result = computeMedianAxis(majni, rings2D, zEpsilon, dotProductLimit, calculationResolution, simplifyLimit, objectName, useMultiThreading)
-      println("MedianAxisProcessor found " + result.getFaces.size + " sets of edges")
+      //println("MedianAxisProcessor found " + result.getFaces.size + " sets of edges")
       val returnPbOutputModel = result.toPBModel(worldTransformation, Option(projectionPlane))
       returnPbOutputModel.setName(inModel.getName + " median axis output")   
       
