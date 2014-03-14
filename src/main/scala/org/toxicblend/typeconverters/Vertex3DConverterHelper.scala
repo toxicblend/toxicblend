@@ -16,11 +16,15 @@ protected[typeconverters] class Vertex3DConverterHelper(val modelBuilder:Model.B
   
   val inverseFinalTransformation = 
     if (finalTransformation.isDefined) 
-      Option[Matrix4x4]({val m=new Matrix4x4(finalTransformation.get.matrix); m.invert()} )
+      Option({
+        val m=new Matrix4x4(finalTransformation.get.matrix)
+        m.invert
+      })
     else 
       None
   
   def addVertex(vertex:ReadonlyVec2D) = {
+    val rv = vertexIndex
     val pbvertex = org.toxicblend.protobuf.ToxicBlendProtos.Vertex.newBuilder()
     pbvertex.setId(vertexIndex)
     val vertex3d = ProjectionPlane.convert(projectionPlane,vertex)
@@ -32,16 +36,15 @@ protected[typeconverters] class Vertex3DConverterHelper(val modelBuilder:Model.B
     pbvertex.setZ(vertex3d.z)
     modelBuilder.addVertices(pbvertex)
     vertexIndex += 1
-    vertexIndex
+    rv
   }
   
   def addVertexAndEdgeToPrevious(vertex:ReadonlyVec2D) = {
-    if (addVertex(vertex) > 1) {
-      val face = Face.newBuilder()
-      face.addVertices(vertexIndex-2) // vertexIndex -1 = this vertex
-      face.addVertices(vertexIndex-1) // vertexIndex -2 = previous vertex
-      modelBuilder.addFaces(face)
+    val rv = addVertex(vertex)
+    if ( rv > 0) {
+      addFace(rv-1, rv)
     }
+    rv
   }
   
   def addFace(face:IndexedSeq[Int]) = {
@@ -53,6 +56,7 @@ protected[typeconverters] class Vertex3DConverterHelper(val modelBuilder:Model.B
   /**
    * convenience operator to add a single edge
    */
+  @inline
   def addFace(edgeVertex1:Int, edgeVertex2:Int) = {
     val faceBuilder = Face.newBuilder()
     faceBuilder.addVertices(edgeVertex1)
@@ -60,12 +64,12 @@ protected[typeconverters] class Vertex3DConverterHelper(val modelBuilder:Model.B
     modelBuilder.addFaces(faceBuilder)
   }
   
-  def closeLoop = {
-    if (vertexIndex > 1) {
-      val face = Face.newBuilder()
-      face.addVertices(vertexIndex -1) // vertexIndex -1 = last vertex used
-      face.addVertices(0) // first one
-      modelBuilder.addFaces(face)
+  def closeLoop(firstVertexIndex:Int):Unit = {
+    if (vertexIndex > 1 && firstVertexIndex != (vertexIndex-1)) {
+      addFace(vertexIndex-1,firstVertexIndex)
+      //println("Closing vertex:"+ (vertexIndex-1) + " to:" + firstVertexIndex )
     }
   }
+  
+  def closeLoop():Unit = closeLoop(0)
 }
