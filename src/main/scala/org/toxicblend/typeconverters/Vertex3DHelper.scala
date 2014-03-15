@@ -9,8 +9,9 @@ import org.toxicblend.protobuf.ToxicBlendProtos.Face
 import org.toxicblend.geometry.ProjectionPlane
 
 
-protected[typeconverters] class Vertex3DConverterHelper(val modelBuilder:Model.Builder, 
-                                                        val projectionPlane:ProjectionPlane.ProjectionPlane, 
+protected[typeconverters] class Vertex3DHelper(val modelBuilder:Model.Builder,
+                                                        val convertTo3d:(ReadonlyVec2D) => Vec3D,
+                                                        //val projectionPlane:ProjectionPlane.ProjectionPlane, 
                                                         val finalTransformation:Option[Matrix4x4Converter]) {
   protected var vertexIndex = 0
   
@@ -27,7 +28,7 @@ protected[typeconverters] class Vertex3DConverterHelper(val modelBuilder:Model.B
     val rv = vertexIndex
     val pbvertex = org.toxicblend.protobuf.ToxicBlendProtos.Vertex.newBuilder()
     pbvertex.setId(vertexIndex)
-    val vertex3d = ProjectionPlane.convert(projectionPlane,vertex)
+    val vertex3d = convertTo3d(vertex)  //ProjectionPlane.convert(projectionPlane,vertex)
     if (inverseFinalTransformation.isDefined) {
       inverseFinalTransformation.get.applyToSelf(vertex3d)
     }
