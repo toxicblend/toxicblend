@@ -20,14 +20,6 @@ class ToxicBlend_Offset2d(bpy.types.Operator):
   bl_label = "Toxicblend:Offset2D"
   bl_options = {'REGISTER', 'UNDO'}  # enable undo for the operator.
   
-  projectionPlaneProperty = bpy.props.EnumProperty(
-    name="Choose 2D plane projection",
-    description = "For now manual projection selection will be used.",
-    items=(("YZ_PLANE", "YZ",""),
-           ("XZ_PLANE", "XZ",""), 
-           ("XY_PLANE", "XY","")),
-           default="XY_PLANE"    
-          )
   useMultiThreadingProperty = bpy.props.EnumProperty(
     description="Each continous ring segment will be processed in a separate thread",
     name="Use mulithreading algorithm",
@@ -55,14 +47,13 @@ class ToxicBlend_Offset2d(bpy.types.Operator):
       # bpy.context.selected_objects,
       unitSystemProperty = context.scene.unit_settings
       activeObject = context.scene.objects.active
-      properties = {'projectionPlane'       : str(self.projectionPlaneProperty), 
-                    'useMultiThreading'     : str(self.useMultiThreadingProperty),
+      properties = {'useMultiThreading'     : str(self.useMultiThreadingProperty),
                     'useToOutline'          : str(self.useToOutlineProperty),
                     'offset'                : str(self.offsetProperty),
                     'unitSystem'            : str(unitSystemProperty.system), 
                     'unitScale'             : str(unitSystemProperty.scale_length) }
                      
-      c.sendSingleBlenderObject(activeObject, self.bl_idname, properties) 
+      c.sendMultipleBlenderObjects(bpy.context.selected_objects, self.bl_idname, properties) 
       c.receiveObjects()
       return {'FINISHED'}
 
