@@ -19,6 +19,25 @@ class Matrix4x4Extension( __v11:Double, __v12:Double, __v13:Double, __v14:Double
                                    __ext.matrix(2)(0), __ext.matrix(2)(1), __ext.matrix(2)(2), __ext.matrix(2)(3),
                                    __ext.matrix(3)(0), __ext.matrix(3)(1), __ext.matrix(3)(2), __ext.matrix(3)(3))
   
+                                   
+  /**
+   * Coordinate system switching matrix
+   */
+  def this(__v1:ReadonlyVec3D, __v2:ReadonlyVec3D, __v3:ReadonlyVec3D, __translate:ReadonlyVec3D ) = 
+    this (__v1.x, __v1.y, __v1.z, __translate.x,
+          __v2.x, __v2.y, __v2.z, __translate.y,
+          __v3.x, __v3.y, __v3.z, __translate.z,
+              0f,     0f,     0f,            1f)
+  
+  /**
+   * Coordinate system switching matrix
+   */
+  def this(__v1:ReadonlyVec3D, __v2:ReadonlyVec3D, __v3:ReadonlyVec3D ) = 
+    this (__v1.x, __v1.y, __v1.z, 0f,
+          __v2.x, __v2.y, __v2.z, 0f,
+          __v3.x, __v3.y, __v3.z, 0f,
+              0f,     0f,     0f, 1f)
+              
   /**
    * Constructs this matrix as a scale and translate matrix 
    */                                 
@@ -63,5 +82,14 @@ class Matrix4x4Extension( __v11:Double, __v12:Double, __v13:Double, __v14:Double
                     0,       0,       0,           1)
             
     this
+  }
+  
+  /**
+   * Sets the translate values of this instance
+   */
+  def setTranslate(translate:ReadonlyVec3D) = {
+    matrix(0)(3) = translate.x
+    matrix(1)(3) = translate.y
+    matrix(2)(3) = translate.z
   }
 }
