@@ -16,7 +16,7 @@ import org.toxicblend.typeconverters.Polygon2DConverter
 import org.toxicblend.typeconverters.Matrix4x4Converter
 import org.toxicblend.operations.boostmedianaxis.MedianAxisJni.simplify3D
 import toxi.geom.Vec3D
-import toxi.geom.LineStrip3D
+import toxi.geom.Polygon2D
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.JavaConversions._
 
@@ -24,18 +24,10 @@ class Offset2dShapeOperation extends CommandProcessorTrait {
   
   def processInput(inMessage:Message) = {
     // we are only using the first model as input
-    val inModel = inMessage.getModelsList().get(0)
+    //val inModel = inMessage.getModelsList().get(0)
     
     val options = OptionConverter(inMessage)
-    
-    val projectionPlane = options.getOrElse("projectionPlane", "None") match {
-      case "YZ_PLANE" => YZ_PLANE
-      case "XZ_PLANE" => XZ_PLANE
-      case "XY_PLANE" => XY_PLANE
-      case _ => throw new IllegalArgumentException("No projection plane specified")
-      //case s:String => System.err.println("Unknown projection: " +  s ); None
-    }
-    
+        
     val useMultiThreading = options.getOrElse("useMultiThreading", "FALSE").toUpperCase() match {
       case "TRUE" => System.err.println("Offset2dShapeOperation: useMultiThreading=True but it's not implemented yet"); true
       case "FALSE" => false
@@ -61,30 +53,41 @@ class Offset2dShapeOperation extends CommandProcessorTrait {
       case s:String => System.err.println("Offset2dShapeOperation: unrecognizable 'simplifyLimit' property value: " +  s); .1f
     } ) / 1000f  // convert from meter to mm
                
-    val worldOrientationMatrix = if (inModel.hasWorldOrientation()) {
-      Option(Matrix4x4Converter(inModel.getWorldOrientation))
-    } else {
-      None
-    }
+    // Convert model vertices to world coordinates so that the simplify scaling makes sense
+    val models = inMessage.getModelsList.map(inModel => {
+      (Mesh3DConverter(inModel,true), // Unit is now [meter]
+      if (inModel.hasWorldOrientation()) {
+        Option(Matrix4x4Converter(inModel.getWorldOrientation()))
+      } else {
+        None
+      })
+    })
     
-    // Convert model vertices to world coordinates so that the offset value has correct unit
-    val rings2D = Polygon2DConverter(Rings2DConverter(inModel, projectionPlane, applyWorldTransform=true))
-    
-    //println("Input:" + rings2D)
+    val returnPolygons = new ArrayBuffer[Polygon2DConverter]
+    // Perform the simplify operation
+    Time.time("FindContinuousLineSegments calculation time: ", models.map(model =>{      
+     val segments = model._1.findContinuousLineSegments._2
+     
+     val (polygons, transforms) = Polygon2DConverter.toPolygon2D(segments)
+     val newMesh = new Polygon2DConverter(polygons, transforms, "Offset shapes"); 
+     returnPolygons.append(newMesh)
+    }))
+       
+    //println("Input:" + returnPolygons.mkString(","))
     
     // Perform the offset operation
-    Time.time("Executing offsetShape : ", rings2D.polygons.foreach(p => p.offsetShape(offset)))
+    Time.time("Executing offsetShape : ", returnPolygons.foreach(pc => pc.polygons.foreach(p=>p.offsetShape(offset))))
     
     if (useToOutline) {
       // Perform the toOutline operation
-      Time.time("Executing toOutline : ", rings2D.polygons.foreach(p => p.toOutline))
+      Time.time("Executing toOutline : ", returnPolygons.foreach(pc => pc.polygons.foreach(p=>p.toOutline)))
     }
     
-    //println("Result:" + rings2D)
+    //println("Result:" + returnPolygons.mkString(","))
     
     Time.time("Building resulting pBModel: ",{
       val returnMessageBuilder = Message.newBuilder
-       returnMessageBuilder.addModels(rings2D.toPBModel(worldOrientationMatrix))
+      returnPolygons.foreach(pc => returnMessageBuilder.addModels(pc.toPBModel(None)))
       returnMessageBuilder
     })
   }

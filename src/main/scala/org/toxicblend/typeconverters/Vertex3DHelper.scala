@@ -1,18 +1,20 @@
 package org.toxicblend.typeconverters
 
 import toxi.geom.Vec3D
-import toxi.geom.ReadonlyVec2D
-import toxi.geom.Vec2D
+//import toxi.geom.ReadonlyVec2D
+import toxi.geom.ReadonlyVec3D
+//import toxi.geom.Vec2D
 import toxi.geom.Matrix4x4
 import org.toxicblend.protobuf.ToxicBlendProtos.Model
 import org.toxicblend.protobuf.ToxicBlendProtos.Face
 import org.toxicblend.geometry.ProjectionPlane
 
 
+/**
+ * A helper class with a turtle like draw functionality 
+ */
 protected[typeconverters] class Vertex3DHelper(val modelBuilder:Model.Builder,
-                                                        val convertTo3d:(ReadonlyVec2D) => Vec3D,
-                                                        //val projectionPlane:ProjectionPlane.ProjectionPlane, 
-                                                        val finalTransformation:Option[Matrix4x4Converter]) {
+                                               val finalTransformation:Option[Matrix4x4Converter]) {
   protected var vertexIndex = 0
   
   val inverseFinalTransformation = 
@@ -24,11 +26,11 @@ protected[typeconverters] class Vertex3DHelper(val modelBuilder:Model.Builder,
     else 
       None
   
-  def addVertex(vertex:ReadonlyVec2D) = {
+  def addVertex(vertex:ReadonlyVec3D) = {
     val rv = vertexIndex
     val pbvertex = org.toxicblend.protobuf.ToxicBlendProtos.Vertex.newBuilder()
     pbvertex.setId(vertexIndex)
-    val vertex3d = convertTo3d(vertex)  //ProjectionPlane.convert(projectionPlane,vertex)
+    val vertex3d = vertex.copy
     if (inverseFinalTransformation.isDefined) {
       inverseFinalTransformation.get.applyToSelf(vertex3d)
     }
@@ -40,7 +42,7 @@ protected[typeconverters] class Vertex3DHelper(val modelBuilder:Model.Builder,
     rv
   }
   
-  def addVertexAndEdgeToPrevious(vertex:ReadonlyVec2D) = {
+  def addVertexAndEdgeToPrevious(vertex:ReadonlyVec3D) = {
     val rv = addVertex(vertex)
     if ( rv > 0) {
       addFace(rv-1, rv)
