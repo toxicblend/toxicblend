@@ -29,8 +29,8 @@ class Rings2DConverter private (val mesh2d:Rings2D, val projectionPlane:Projecti
   def toPBModel(noFaceOnlyEdges:Boolean=false, finalTransformation:Option[Matrix4x4Converter] ) = {
     val modelBuilder = org.toxicblend.protobuf.ToxicBlendProtos.Model.newBuilder()
     modelBuilder.setName(name)
-    val helper = new Vertex3DHelper(modelBuilder, ProjectionPlane.convert(projectionPlane,_), finalTransformation)
-    mesh2d.vertices.foreach(v => helper.addVertex(v)) 
+    val helper = new Vertex3DHelper(modelBuilder, finalTransformation)
+    mesh2d.vertices.foreach(v => helper.addVertex(ProjectionPlane.convert(projectionPlane,v))) 
     if (noFaceOnlyEdges)
       mesh2d.faces.foreach(f => {
         f.sliding(2).foreach(e => 
