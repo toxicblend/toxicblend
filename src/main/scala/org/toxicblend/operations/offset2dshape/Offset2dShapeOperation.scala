@@ -61,46 +61,36 @@ class Offset2dShapeOperation extends CommandProcessorTrait {
       })
     })
     
-    //val returnPolygons = new ArrayBuffer[Polygon2DConverter]
-    // Perform the simplify operation
-    val returnPolygons = Time.time("FindContinuousLineSegments calculation time: ", {
-      def calc( model:(Mesh3DConverter,Option[Matrix4x4Converter]) ) = {
-        val segments = model._1.findContinuousLineSegments._2
+    val returnPolygons = Time.time("FindPlanes calculation time: ", {
+      def findSequenceOfPolygons( model:(Mesh3DConverter,Option[Matrix4x4Converter]) ) = {
+        val segments = model._1.findContinuousLineSegments._2.filter(seq => seq.size>2)
+        if (segments.size ==0) {
+          println("No edge sequence found in input model.")  
+        }
 	      val pt = Polygon2DConverter.toPolygon2D(segments)
 	      new Polygon2DConverter(pt.map(p => p._1), pt.map(t => t._2), "Offset shapes")
       }
       if (useMultiThreading) {
-        models.map(model => calc(model))
+        models.par.map(model => findSequenceOfPolygons(model))
       } else {
-        models.par.map(model => calc(model))
+        models.map(model => findSequenceOfPolygons(model))
       }
     })
-       
-    //println("Input:" + returnPolygons.mkString(","))
-    
-    // Perform the offset operation
-    Time.time("Executing offsetShape : ", 
-      if (useMultiThreading) {
-        returnPolygons.par.foreach(pc => pc.polygons.foreach(p=>p.offsetShape(offset)))
-      } else {
-        returnPolygons.foreach(pc => pc.polygons.foreach(p=>p.offsetShape(offset)))
-      }
-    )
+           
+    Time.time("Executing offsetShape : ", returnPolygons.foreach(pc => pc.polygons.foreach(p=>p.offsetShape(offset) )))
     
     if (useToOutline) {
-	    // Perform the toOutline operation
-	    Time.time("Executing toOutline : ", 
-		    if (useMultiThreading){
-		      returnPolygons.par.foreach(pc => pc.polygons.foreach(p=>p.toOutline))
-		    } else {
-		      returnPolygons.foreach(pc => pc.polygons.foreach(p=>p.toOutline))
-		    }
-	    )
+	    Time.time("Executing toOutline : ", returnPolygons.foreach(pc => pc.polygons.foreach(p=>p.toOutline)))
     }
         
     Time.time("Building resulting pBModel: ",{
       val returnMessageBuilder = Message.newBuilder
-      returnPolygons.foreach(pc => returnMessageBuilder.addModels(pc.toPBModel(None)))
+      if (useMultiThreading){
+        // convert the .par sequence back to a normal sequence
+        returnPolygons.toIndexedSeq.foreach(pc => returnMessageBuilder.addModels(pc.toPBModel(None)))
+      } else {
+        returnPolygons.foreach(pc => returnMessageBuilder.addModels(pc.toPBModel(None)))
+      }
       returnMessageBuilder
     })
   }

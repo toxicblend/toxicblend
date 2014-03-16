@@ -10,6 +10,7 @@ import toxi.geom.Plane
 import toxi.geom.AABB
 import toxi.geom.Vec2D
 import toxi.geom.Matrix4x4
+import toxi.geom.Matrix3d
 import toxi.geom.Rect
 import org.toxicblend.geometry.ProjectionPlane
 import org.toxicblend.geometry.Matrix4x4Extension
@@ -85,10 +86,9 @@ object Polygon2DConverter {
   }
   
   /**
-   * 
+   * Try to calculate the plane normal from a few samples 
    */
-  protected def getPlaneAndMatrix(segment:IndexedSeq[ReadonlyVec3D]):Option[(Plane,Matrix4x4)] = {
-
+  protected def getPlaneQuick(segment:IndexedSeq[ReadonlyVec3D]):(Plane,ReadonlyVec3D) = {
     val aabb = new AABB(segment.head, 0f)
     segment.foreach(s => aabb.growToContainPoint(s))
     
@@ -96,13 +96,10 @@ object Polygon2DConverter {
     var vecB = segment(1).sub(aabb)
     var quality = vecA.cross(vecB).magSquared
     
-    val step = {
-      // Only sample at most 15 vertices to figure out the normal 
-      val s = segment.size/15
-      if (s <= 0) 1 else s
-    }
+    val step = math.max(segment.size/15,1).toInt
+
     //println("Step=" + step + " size=" + segment.size)
-    val plane = { (2 until segment.size-1 by step).foreach(i => {
+    val plane = { (1 until segment.size-1 by step).foreach(i => {
           val q1=segment(i).sub(aabb).crossSelf(vecB).magSquared
           if (q1 > quality) {
             quality = q1
@@ -117,14 +114,116 @@ object Polygon2DConverter {
       var normal = vecA.cross(vecB)
       new Plane(aabb, normal)  // normal will be normalized inside Plane constructor
     }
+    (plane,vecA)
+  }
+  
+  /**
+   * Ported from http://missingbytes.blogspot.com/2012/06/fitting-plane-to-point-cloud.html
+   */
+  @inline
+  protected def findLargestMatrixEntry(m:Matrix3d):Double = {
+    var le = math.abs(m.m00)
+    le = math.max(le,math.abs(m.m01))
+    le = math.max(le,math.abs(m.m02))
+    le = math.max(le,math.abs(m.m10))
+    le = math.max(le,math.abs(m.m11))
+    le = math.max(le,math.abs(m.m12))
+    le = math.max(le,math.abs(m.m20))
+    le = math.max(le,math.abs(m.m21))
+    math.max(le,math.abs(m.m22))
+  }
+  
+  /**
+   * Ported from http://missingbytes.blogspot.com/2012/06/fitting-plane-to-point-cloud.html
+   * note: This function will perform badly if the largest eigenvalue is complex
+   */
+  protected def findEigenVectorAssociatedWithLargestEigenValue(m:Matrix3d):ReadonlyVec3D = {
+   //pre-condition
+   val mc = new Matrix3d(m)
+   mc.mul(1.0/findLargestMatrixEntry(m))
+  
+   mc.mul(mc)
+   mc.mul(mc)
+   mc.mul(mc)
+  
+   val v = new Vec3D(1,1,1)
+   val lastV = v.copy
+   var i=0
+   do {
+     lastV.set(v)
+     mc.transform(v); v.normalize          
+     i+=1
+   } while (i<100 && v.distanceToSquared(lastV) > 1.e-26 )
+   //println("Found normal:" + v + " with i=" + i + " distance=" + v.distanceToSquared(lastV))
+   v
+  }
+ 
+  /**
+   * Ported from http://missingbytes.blogspot.com/2012/06/fitting-plane-to-point-cloud.html 
+   */
+  protected def getLLSQPlane(segment:IndexedSeq[ReadonlyVec3D]):Option[(Plane,ReadonlyVec3D)] = {
     
+    val center = segment.foldLeft(new Vec3D)((b,a) => b.addSelf(a)).scaleSelf(1.0f/segment.size)
+    var sumxx,sumxy,sumxz,sumyy,sumyz,sumzz = .0
+
+    segment.foreach(p => {
+      val dx = (p.x-center.x).toDouble
+      val dy = (p.y-center.y).toDouble 
+      val dz = (p.z-center.z).toDouble 
+      sumxx += dx*dx
+      sumxy += dx*dy
+      sumxz += dx*dz
+      sumyy += dy*dy
+      sumyz += dy*dz
+      sumzz += dz*dz
+    })
+    
+    val symmetricM = new Matrix3d( sumxx, sumxy, sumxz,
+                                   sumxy, sumyy, sumyz,
+                                   sumxz, sumyz, sumzz)
+    val det=symmetricM.determinant
+    if(det==0.0){
+      //println("getLLSQPlane: Found NO normal with center = " + center + " det=" + det)
+      //println(symmetricM)
+      None
+    } else {
+      //println("getLLSQPlane: Found normal with center = " + center + " det=" + det)
+      //println(symmetricM)
+      symmetricM.invert
+      val destNormal=findEigenVectorAssociatedWithLargestEigenValue(symmetricM)
+      
+      val forward = {
+        val segmentIterator = segment.iterator
+        val candidate = new Vec3D
+        do {
+          candidate.set(segmentIterator.next).subSelf(center)
+        } while (segmentIterator.hasNext && candidate.isZeroVector )
+        candidate.normalize
+        // All vectors in the segment can't be equal to center, can they? 
+      }
+      //println("getLLSQPlane found normal:" + destNormal + " with center = " + center + " forward=" + forward + " forward.dot(normal)=" + forward.dot(destNormal))
+      Option(new Plane(center,destNormal), forward)
+    }
+  }
+  
+  /**
+   * 
+   */
+  protected def getPlaneAndMatrix(segment:IndexedSeq[ReadonlyVec3D]):Option[(Plane,Matrix4x4)] = {
+    //val (plane, forward) = getPlaneQuick(segment)
+    val llsq = getLLSQPlane(segment)
+    val (plane, forward) = if (llsq.isDefined) {
+       llsq.get
+    } else {
+      getPlaneQuick(segment)    
+    }
     if (plane.normal.isZeroVector) {
       System.err.println("Polygon2DConverter:Normal was zero, ignoring")
       None
     } else {
       //val mt = (new Matrix4x4).identity().rotateAroundAxis(Vec3D.Z_AXIS,math.Pi)
       //println("mt="+ mt)
-      val c1 = vecA.copy.normalize
+      val c1 = forward.copy.normalize
       val c2 = plane.normal.cross(c1).normalize
       //println("c1=" + c1)
       //println("c2=" + c2)
@@ -139,7 +238,7 @@ object Polygon2DConverter {
       //println("plane.origin=" + plane.scale(1f) + "transposed=" + center)
       //println("matrix=" + matrix)
       //segment.foreach(s => println("" + s + " => " + matrix.applyTo(s) ))
-      //segment.foreach(s => println("" + s + " => " + plane.containsPoint(s)))
+      //segment.foreach(s => if (!plane.containsPoint(s)) println("" + s + " is NOT part of the plane. Distance =" + plane.getDistanceToPoint(s) ))
       
       Option((plane,matrix))
     }
@@ -152,7 +251,7 @@ object Polygon2DConverter {
    */
   def toPolygon2D(segments:IndexedSeq[IndexedSeq[ReadonlyVec3D]]):IndexedSeq[(Polygon2D,Matrix4x4)] = {
     val rv = segments.par.filter(s => s.size>2).map(segment => {
-      getPlane(segment).map(pm => {
+      getPlaneAndMatrix(segment).map(pm => {
         //println("Segment " + segment.mkString(",") + " has plane:"+ pm._1 + " does that make sense?" )
 
         val matrix = pm._2
