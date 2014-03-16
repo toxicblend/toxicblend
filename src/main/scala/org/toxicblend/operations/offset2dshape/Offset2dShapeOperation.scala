@@ -23,15 +23,13 @@ import scala.collection.JavaConversions._
 class Offset2dShapeOperation extends CommandProcessorTrait {
   
   def processInput(inMessage:Message) = {
-    // we are only using the first model as input
-    //val inModel = inMessage.getModelsList().get(0)
     
     val options = OptionConverter(inMessage)
         
     val useMultiThreading = options.getOrElse("useMultiThreading", "FALSE").toUpperCase() match {
       case "TRUE" => true
       case "FALSE" => false
-      case s:String => System.err.println("Unrecognizable 'useMultiThreading' property value: " +  s ); false
+      case s:String => System.err.println("Offset2dShapeOperation: Unrecognizable 'useMultiThreading' property value: " +  s ); false
     }
     val useToOutline = options.getOrElse("useToOutline", "FALSE").toUpperCase() match {
       case "TRUE" => true
@@ -53,11 +51,11 @@ class Offset2dShapeOperation extends CommandProcessorTrait {
       case s:String => System.err.println("Offset2dShapeOperation: unrecognizable 'simplifyLimit' property value: " +  s); .1f
     } ) / 1000f  // convert from meter to mm
                
-    // Convert model vertices to world coordinates so that the simplify scaling makes sense
+    // Convert model vertices to world coordinates so that the offset unit makes sense
     val models = inMessage.getModelsList.map(inModel => {
       (Mesh3DConverter(inModel,true), // Unit is now [meter]
       if (inModel.hasWorldOrientation()) {
-        Option(Matrix4x4Converter(inModel.getWorldOrientation()))
+        Option(Matrix4x4Converter(inModel.getWorldOrientation))
       } else {
         None
       })
@@ -99,9 +97,7 @@ class Offset2dShapeOperation extends CommandProcessorTrait {
 		    }
 	    )
     }
-    
-    //println("Result:" + returnPolygons.mkString(","))
-    
+        
     Time.time("Building resulting pBModel: ",{
       val returnMessageBuilder = Message.newBuilder
       returnPolygons.foreach(pc => returnMessageBuilder.addModels(pc.toPBModel(None)))

@@ -84,9 +84,12 @@ object Polygon2DConverter {
     apply(r2dc.mesh2d, r2dc.projectionPlane, r2dc.name)
   }
   
-  protected def getPlane(segment:IndexedSeq[ReadonlyVec3D]):Option[(Plane,Matrix4x4)] ={
+  /**
+   * 
+   */
+  protected def getPlaneAndMatrix(segment:IndexedSeq[ReadonlyVec3D]):Option[(Plane,Matrix4x4)] = {
 
-    val aabb = new AABB(segment.head,0f)
+    val aabb = new AABB(segment.head, 0f)
     segment.foreach(s => aabb.growToContainPoint(s))
     
     var vecA = segment(0).sub(aabb)
@@ -100,33 +103,33 @@ object Polygon2DConverter {
     }
     //println("Step=" + step + " size=" + segment.size)
     val plane = { (2 until segment.size-1 by step).foreach(i => {
-        val q1=segment(i).sub(aabb).crossSelf(vecB).magSquared
-        if (q1 > quality) {
-          quality = q1
-          vecA = segment(i).sub(aabb)
-        }
-        val q2=segment(i+1).sub(aabb).crossSelf(vecA).magSquared
-        if (q2 > quality) {
-          quality = q2
-          vecB = segment(i+1).sub(aabb)
-        }
-      })
+          val q1=segment(i).sub(aabb).crossSelf(vecB).magSquared
+          if (q1 > quality) {
+            quality = q1
+            vecA = segment(i).sub(aabb)
+          }
+          val q2=segment(i+1).sub(aabb).crossSelf(vecA).magSquared
+          if (q2 > quality) {
+            quality = q2
+            vecB = segment(i+1).sub(aabb)
+          }
+        })
       var normal = vecA.cross(vecB)
-      new Plane(aabb,normal)  // normal will be normalized inside Plane constructor
+      new Plane(aabb, normal)  // normal will be normalized inside Plane constructor
     }
     
     if (plane.normal.isZeroVector) {
-      println("Normal was zero, ignoring")
+      System.err.println("Polygon2DConverter:Normal was zero, ignoring")
       None
     } else {
       //val mt = (new Matrix4x4).identity().rotateAroundAxis(Vec3D.Z_AXIS,math.Pi)
       //println("mt="+ mt)
-      val c1 = (new Vec3D(vecA)).normalize
+      val c1 = vecA.copy.normalize
       val c2 = plane.normal.cross(c1).normalize
       //println("c1=" + c1)
       //println("c2=" + c2)
       //println("n=" + plane.normal + " c1.dot(c2)=" + c1.dot(c2) + " c1.dot(n)=" + c1.dot(plane.normal))
-      val matrix = new Matrix4x4Extension(c1,c2,plane.normal)
+      val matrix = new Matrix4x4Extension(c1, c2, plane.normal)
       val center =  matrix.applyTo(plane)
       //println("b4" + matrix + " center=" + center)
       matrix.setTranslate(center.scaleSelf(-1f))
@@ -137,6 +140,7 @@ object Polygon2DConverter {
       //println("matrix=" + matrix)
       //segment.foreach(s => println("" + s + " => " + matrix.applyTo(s) ))
       //segment.foreach(s => println("" + s + " => " + plane.containsPoint(s)))
+      
       Option((plane,matrix))
     }
   }
