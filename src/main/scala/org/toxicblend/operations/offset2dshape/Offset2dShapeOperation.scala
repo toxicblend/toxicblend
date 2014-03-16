@@ -23,15 +23,13 @@ import scala.collection.JavaConversions._
 class Offset2dShapeOperation extends CommandProcessorTrait {
   
   def processInput(inMessage:Message) = {
-    // we are only using the first model as input
-    //val inModel = inMessage.getModelsList().get(0)
     
     val options = OptionConverter(inMessage)
         
     val useMultiThreading = options.getOrElse("useMultiThreading", "FALSE").toUpperCase() match {
       case "TRUE" => System.err.println("Offset2dShapeOperation: useMultiThreading=True but it's not implemented yet"); true
       case "FALSE" => false
-      case s:String => System.err.println("Unrecognizable 'useMultiThreading' property value: " +  s ); false
+      case s:String => System.err.println("Offset2dShapeOperation: Unrecognizable 'useMultiThreading' property value: " +  s ); false
     }
     val useToOutline = options.getOrElse("useToOutline", "FALSE").toUpperCase() match {
       case "TRUE" => true
@@ -53,11 +51,11 @@ class Offset2dShapeOperation extends CommandProcessorTrait {
       case s:String => System.err.println("Offset2dShapeOperation: unrecognizable 'simplifyLimit' property value: " +  s); .1f
     } ) / 1000f  // convert from meter to mm
                
-    // Convert model vertices to world coordinates so that the simplify scaling makes sense
+    // Convert model vertices to world coordinates so that the offset unit makes sense
     val models = inMessage.getModelsList.map(inModel => {
       (Mesh3DConverter(inModel,true), // Unit is now [meter]
       if (inModel.hasWorldOrientation()) {
-        Option(Matrix4x4Converter(inModel.getWorldOrientation()))
+        Option(Matrix4x4Converter(inModel.getWorldOrientation))
       } else {
         None
       })
@@ -65,16 +63,14 @@ class Offset2dShapeOperation extends CommandProcessorTrait {
     
     val returnPolygons = new ArrayBuffer[Polygon2DConverter]
     // Perform the simplify operation
-    Time.time("FindContinuousLineSegments calculation time: ", models.map(model =>{      
+    Time.time("FindContinuousLineSegments calculation time: ", models.foreach(model =>{      
      val segments = model._1.findContinuousLineSegments._2
      
      val (polygons, transforms) = Polygon2DConverter.toPolygon2D(segments)
      val newMesh = new Polygon2DConverter(polygons, transforms, "Offset shapes"); 
      returnPolygons.append(newMesh)
     }))
-       
-    //println("Input:" + returnPolygons.mkString(","))
-    
+           
     // Perform the offset operation
     Time.time("Executing offsetShape : ", returnPolygons.foreach(pc => pc.polygons.foreach(p=>p.offsetShape(offset))))
     
@@ -82,9 +78,7 @@ class Offset2dShapeOperation extends CommandProcessorTrait {
       // Perform the toOutline operation
       Time.time("Executing toOutline : ", returnPolygons.foreach(pc => pc.polygons.foreach(p=>p.toOutline)))
     }
-    
-    //println("Result:" + returnPolygons.mkString(","))
-    
+        
     Time.time("Building resulting pBModel: ",{
       val returnMessageBuilder = Message.newBuilder
       returnPolygons.foreach(pc => returnMessageBuilder.addModels(pc.toPBModel(None)))
