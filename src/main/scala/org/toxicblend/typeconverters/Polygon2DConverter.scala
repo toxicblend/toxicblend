@@ -144,7 +144,7 @@ object Polygon2DConverter {
   def toPolygon2D(segments:IndexedSeq[IndexedSeq[ReadonlyVec3D]]):(IndexedSeq[Polygon2D],IndexedSeq[Matrix4x4]) = {
     val polygonRv = new ArrayBuffer[Polygon2D]
     val matrixRv = new ArrayBuffer[Matrix4x4]
-    segments.filter(s => s.size>2).foreach(segment => {
+    segments.filter(s => s.size>2).par.foreach(segment => {
       getPlane(segment).foreach(pm => {
         //println("Segment " + segment.mkString(",") + " has plane:"+ pm._1 + " does that make sense?" )
 
@@ -161,6 +161,9 @@ object Polygon2DConverter {
         val polygon = new Polygon2D(mapped2DPoints)
         
         //println("polygon: " + polygon)
+        if (!polygon.isClockwise) {
+          polygon.flipVertexOrder
+        }
         polygonRv.append(polygon)
         matrixRv.append(matrix.invert())
       })
