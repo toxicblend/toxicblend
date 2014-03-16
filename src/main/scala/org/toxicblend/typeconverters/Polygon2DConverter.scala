@@ -23,8 +23,12 @@ import scala.collection.JavaConverters._
  */
 class Polygon2DConverter (val polygons:Seq[Polygon2D],
                           val transforms:Seq[Matrix4x4],
-                          /*val projectionPlane:Option[ProjectionPlane.ProjectionPlane], */
                           val name:String) {
+  assert(polygons!=null)
+  polygons.foreach(p=>assert(p!=null))
+  assert(transforms!=null)
+  transforms.foreach(t=>assert(t!=null))
+  assert(name!=null)
   
   /**
    * Create a packet buffer model from this Rings2D.
@@ -33,16 +37,17 @@ class Polygon2DConverter (val polygons:Seq[Polygon2D],
   def toPBModel(finalTransformation:Option[Matrix4x4Converter] ) = {
     val modelBuilder = org.toxicblend.protobuf.ToxicBlendProtos.Model.newBuilder
     modelBuilder.setName(name)
-    //val helper = if (projectionPlane.isDefined){
-    //  new Vertex3DHelper(modelBuilder, /*ProjectionPlane.convert(projectionPlane.get, _),*/ finalTransformation)
-    //} else {
-      // TODO
-    //  new Vertex3DHelper(modelBuilder, /*ProjectionPlane.convert(projectionPlane.get, _),*/ finalTransformation)
-    //}
-    val helper = new Vertex3DHelper(modelBuilder, /*ProjectionPlane.convert(projectionPlane.get, _),*/ finalTransformation)
+
+    val helper = new Vertex3DHelper(modelBuilder, finalTransformation)
     polygons.zip(transforms).foreach( pt => {
-      val firstIndex = helper.addVertex(pt._2.applyToSelf(ProjectionPlane.convert(ProjectionPlane.XY_PLANE,pt._1.vertices.get(0))))
-      pt._1.vertices.asScala.tail.foreach(v => helper.addVertexAndEdgeToPrevious(pt._2.applyToSelf(ProjectionPlane.convert(ProjectionPlane.XY_PLANE,v))))
+      val firstIndex = {
+        val firstVertex = pt._2.applyToSelf(ProjectionPlane.convert(ProjectionPlane.XY_PLANE,pt._1.vertices.get(0)))
+        helper.addVertex(firstVertex)
+      }
+      pt._1.vertices.asScala.tail.foreach(v2d => {
+        val v3d = pt._2.applyToSelf(ProjectionPlane.convert(ProjectionPlane.XY_PLANE,v2d))
+        helper.addVertexAndEdgeToPrevious(v3d)
+      })
       helper.closeLoop(firstIndex)
     })
 
@@ -141,11 +146,9 @@ object Polygon2DConverter {
    * together with the transformation matrix that can convert the Polygon2D back into 3D space.
    * Silently ignore the shape if the vertices do not reside on a single plane
    */
-  def toPolygon2D(segments:IndexedSeq[IndexedSeq[ReadonlyVec3D]]):(IndexedSeq[Polygon2D],IndexedSeq[Matrix4x4]) = {
-    val polygonRv = new ArrayBuffer[Polygon2D]
-    val matrixRv = new ArrayBuffer[Matrix4x4]
-    segments.filter(s => s.size>2).par.foreach(segment => {
-      getPlane(segment).foreach(pm => {
+  def toPolygon2D(segments:IndexedSeq[IndexedSeq[ReadonlyVec3D]]):IndexedSeq[(Polygon2D,Matrix4x4)] = {
+    val rv = segments.par.filter(s => s.size>2).map(segment => {
+      getPlane(segment).map(pm => {
         //println("Segment " + segment.mkString(",") + " has plane:"+ pm._1 + " does that make sense?" )
 
         val matrix = pm._2
@@ -156,18 +159,26 @@ object Polygon2DConverter {
         //println("mapped3DPoints: " + mapped3DPoints.mkString(","))
         val mapped2DPoints =  {
           val m2d:IndexedSeq[ReadonlyVec2D] = mapped3DPoints.map(v => ProjectionPlane.convert(ProjectionPlane.XY_PLANE,v))
-          m2d.iterator.asJava
+          m2d
         }
-        val polygon = new Polygon2D(mapped2DPoints)
-        
-        //println("polygon: " + polygon)
-        if (!polygon.isClockwise) {
-          polygon.flipVertexOrder
+        if ( mapped2DPoints.size > 2 ) {
+	        val polygon = new Polygon2D(mapped2DPoints.iterator.asJava)
+	        
+	        //println("polygon: " + polygon)
+	        if (!polygon.isClockwise) {
+	          polygon.flipVertexOrder
+	        }
+	        assert(polygon!=null)
+          val inverted= matrix.invert
+	        assert(inverted!=null)
+	        Option(polygon,inverted)
+	
+        } else {
+          System.err.println("debug me! Could not find any 2d points out of : " + mapped3DPoints)
+          None
         }
-        polygonRv.append(polygon)
-        matrixRv.append(matrix.invert())
       })
-    })
-    (polygonRv,matrixRv)
+    }.filter(r => r.isDefined).map(r => r.get))
+    rv.filter(r => r.isDefined).map(r => r.get).toIndexedSeq
   }
 }

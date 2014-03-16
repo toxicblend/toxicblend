@@ -29,7 +29,7 @@ class Offset2dShapeOperation extends CommandProcessorTrait {
     val options = OptionConverter(inMessage)
         
     val useMultiThreading = options.getOrElse("useMultiThreading", "FALSE").toUpperCase() match {
-      case "TRUE" => System.err.println("Offset2dShapeOperation: useMultiThreading=True but it's not implemented yet"); true
+      case "TRUE" => true
       case "FALSE" => false
       case s:String => System.err.println("Unrecognizable 'useMultiThreading' property value: " +  s ); false
     }
@@ -63,24 +63,41 @@ class Offset2dShapeOperation extends CommandProcessorTrait {
       })
     })
     
-    val returnPolygons = new ArrayBuffer[Polygon2DConverter]
+    //val returnPolygons = new ArrayBuffer[Polygon2DConverter]
     // Perform the simplify operation
-    Time.time("FindContinuousLineSegments calculation time: ", models.map(model =>{      
-     val segments = model._1.findContinuousLineSegments._2
-     
-     val (polygons, transforms) = Polygon2DConverter.toPolygon2D(segments)
-     val newMesh = new Polygon2DConverter(polygons, transforms, "Offset shapes"); 
-     returnPolygons.append(newMesh)
-    }))
+    val returnPolygons = Time.time("FindContinuousLineSegments calculation time: ", {
+      def calc( model:(Mesh3DConverter,Option[Matrix4x4Converter]) ) = {
+        val segments = model._1.findContinuousLineSegments._2
+	      val pt = Polygon2DConverter.toPolygon2D(segments)
+	      new Polygon2DConverter(pt.map(p => p._1), pt.map(t => t._2), "Offset shapes")
+      }
+      if (useMultiThreading) {
+        models.map(model => calc(model))
+      } else {
+        models.par.map(model => calc(model))
+      }
+    })
        
     //println("Input:" + returnPolygons.mkString(","))
     
     // Perform the offset operation
-    Time.time("Executing offsetShape : ", returnPolygons.foreach(pc => pc.polygons.foreach(p=>p.offsetShape(offset))))
+    Time.time("Executing offsetShape : ", 
+      if (useMultiThreading) {
+        returnPolygons.par.foreach(pc => pc.polygons.foreach(p=>p.offsetShape(offset)))
+      } else {
+        returnPolygons.foreach(pc => pc.polygons.foreach(p=>p.offsetShape(offset)))
+      }
+    )
     
     if (useToOutline) {
-      // Perform the toOutline operation
-      Time.time("Executing toOutline : ", returnPolygons.foreach(pc => pc.polygons.foreach(p=>p.toOutline)))
+	    // Perform the toOutline operation
+	    Time.time("Executing toOutline : ", 
+		    if (useMultiThreading){
+		      returnPolygons.par.foreach(pc => pc.polygons.foreach(p=>p.toOutline))
+		    } else {
+		      returnPolygons.foreach(pc => pc.polygons.foreach(p=>p.toOutline))
+		    }
+	    )
     }
     
     //println("Result:" + returnPolygons.mkString(","))
