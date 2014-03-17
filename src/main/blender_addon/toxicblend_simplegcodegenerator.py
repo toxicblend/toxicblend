@@ -31,8 +31,8 @@ class ToxicBlend_SimpleGcodeGenerator(bpy.types.Operator):
   g1FeedrateProperty = bpy.props.FloatProperty(name="G1 feedrate [mm/min]", default=300, min=0, max=5000, description="Feedrate")
   g1PlungeFeedrateProperty = bpy.props.FloatProperty(name="plunge feedrate [mm/min]", default=100, min=0, max=5000, description="Plunge feedrate")
   spindleSpeedProperty = bpy.props.FloatProperty(name="Spindle speed [rpm]", default=5000, min=50, max=150000, description="Spingle speed")
-  g64CommandProperty = bpy.props.StringProperty(name="Path blending command", default="G64 P0.02 Q0.02", description="Path blending command (G64)")
-  customEndCommandProperty = bpy.props.StringProperty(name="Custom end command", default="M101", description="Custom end of run command (turn off spindle, send sms, etc. etc). Leave empty if not applicable")
+  g64CommandProperty = bpy.props.StringProperty(name="Path blending command", default="G64 P0.02 Q0.02", description="Path blending command (G64). Leave empty if not applicable")
+  customEndCommandProperty = bpy.props.StringProperty(name="Custom end command", default="M101", description="Custom end of run command (turn off coolant, notify operator, etc. etc). Leave empty if not applicable")
   filenameProperty = bpy.props.StringProperty(name="outFilename", default="gcode.ngc", description="the filename of the gcode file. Usually a .ngc file")
   
   @classmethod
