@@ -37,7 +37,7 @@ class GenerateMazeOperation extends CommandProcessorTrait {
       val mazegenerator = new MazeGenerator(model._1.getBounds)
       val segments = model._1.findContinuousLineSegments
       if (segments._2.size < 2) {
-        throw new ToxicblendException("The object must contain simple edges, try removing faces (and only faces)")
+        throw new ToxicblendException("The object must only contain simple edges, try removing faces (while keeping the edges)")
       }
       segments._2.foreach(segment =>  {
         if (segment.size>=2) {
