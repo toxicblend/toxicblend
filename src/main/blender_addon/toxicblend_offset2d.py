@@ -1,21 +1,18 @@
 #!/usr/bin/python   
 import bpy
 import toxicblend
-
-# import site; site.getsitepackages()
-
 import imp
 
 bl_info = {
   "name": "Toxicblend - Offset 2D",
-  'description': 'Toxiclibs.Polygon2d.offset',
+  'description': 'Toxiclibs.Polygon2d.offset: Shrinks or expands edge rings (in 2D)',
   'author': 'EAD Fritz',
   'blender': (2, 69, 0),
   "category": "Object",
 }
        
 class ToxicBlend_Offset2d(bpy.types.Operator):
-  '''Naive implementation of median axis'''
+  '''Calls toxiclibs.polygon2d.offset '''
   bl_idname = "object.toxicblend_offset2d"
   bl_label = "Toxicblend:Offset2D"
   bl_options = {'REGISTER', 'UNDO'}  # enable undo for the operator.
@@ -43,20 +40,23 @@ class ToxicBlend_Offset2d(bpy.types.Operator):
 
   def execute(self, context):
     imp.reload(toxicblend)
-    with toxicblend.ByteCommunicator("localhost", 9999) as c: 
-      # bpy.context.selected_objects,
-      unitSystemProperty = context.scene.unit_settings
-      activeObject = context.scene.objects.active
-      properties = {'useMultiThreading'     : str(self.useMultiThreadingProperty),
-                    'useToOutline'          : str(self.useToOutlineProperty),
-                    'offset'                : str(self.offsetProperty),
-                    'unitSystem'            : str(unitSystemProperty.system), 
-                    'unitScale'             : str(unitSystemProperty.scale_length) }
+    try:
+      with toxicblend.ByteCommunicator("localhost", 9999) as bc: 
+        unitSystemProperty = context.scene.unit_settings
+        activeObject = context.scene.objects.active
+        properties = {'useMultiThreading' : str(self.useMultiThreadingProperty),
+                      'useToOutline'      : str(self.useToOutlineProperty),
+                      'offset'            : str(self.offsetProperty),
+                      'unitSystem'        : str(unitSystemProperty.system), 
+                      'unitScale'         : str(unitSystemProperty.scale_length) }
                      
-      c.sendMultipleBlenderObjects(bpy.context.selected_objects, self.bl_idname, properties) 
-      c.receiveObjects()
-      return {'FINISHED'}
-
+        bc.sendMultipleBlenderObjects(bpy.context.selected_objects, self.bl_idname, properties) 
+        bc.receiveObjects()
+        return {'FINISHED'}
+    except toxicblend.ToxicblendException as e:
+      self.report({'ERROR'}, e.message)
+      return {'CANCELLED'}
+  
 def register():
   bpy.utils.register_class(ToxicBlend_Offset2d)
 

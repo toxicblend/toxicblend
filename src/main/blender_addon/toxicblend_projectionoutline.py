@@ -1,9 +1,6 @@
 #!/usr/bin/python   
 import bpy
 import toxicblend
-
-# import site; site.getsitepackages()
-
 import imp
 
 bl_info = {
@@ -25,14 +22,12 @@ class NaiveConvexHull(bpy.types.Operator):
     items=(("YZ_PLANE", "YZ",""),
            ("XZ_PLANE", "XZ",""), 
            ("XY_PLANE", "XY","")),
-           #update=mode_update_callback
            default="XY_PLANE"    
           )
   multiThreadProperty = bpy.props.EnumProperty(
     name="Use experimental multi threading",
     items=(("TRUE", "True",""),
            ("FALSE", "False","")),
-           #update=mode_update_callback
            default="TRUE"    
           )
   @classmethod
@@ -41,15 +36,18 @@ class NaiveConvexHull(bpy.types.Operator):
 
   def execute(self, context):
     imp.reload(toxicblend)
-    with toxicblend.ByteCommunicator("localhost", 9999) as c: 
-      # bpy.context.selected_objects,
-      activeObject = context.scene.objects.active
-      properties = {'projectionPlane': str(self.projectionPlaneProperty), 
-                     'multiThread' : str(self.multiThreadProperty)}
-      c.sendSingleBlenderObject(activeObject, self.bl_idname, properties) 
-      c.receiveObjects()
-      return {'FINISHED'}
-
+    try:
+      with toxicblend.ByteCommunicator("localhost", 9999) as bc: 
+        activeObject = context.scene.objects.active
+        properties = {'projectionPlane': str(self.projectionPlaneProperty), 
+                      'multiThread'    : str(self.multiThreadProperty)}
+        bc.sendSingleBlenderObject(activeObject, self.bl_idname, properties) 
+        bc.receiveObjects()
+        return {'FINISHED'}
+    except toxicblend.ToxicblendException as e:
+      self.report({'ERROR'}, e.message)
+      return {'CANCELLED'}
+  
 def register():
   bpy.utils.register_class(NaiveConvexHull)
 

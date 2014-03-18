@@ -45,6 +45,7 @@ class ToxicBlend_MoveToZeroZOperator(bpy.types.Operator):
     if self.moveXYProperty=="TRUE":
       activeObject.location[0] = activeObject.location[0]-lowestPoint.x
       activeObject.location[1] = activeObject.location[1]-lowestPoint.y
+      
     activeObject.location[2] = activeObject.location[2]-highestPoint.z
     return {'FINISHED'}
 

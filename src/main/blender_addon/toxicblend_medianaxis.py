@@ -1,10 +1,7 @@
 #!/usr/bin/python   
 import bpy
 import toxicblend
-
-# import site; site.getsitepackages()
-
-import imp
+import imp # needed when reloading toxicblend site-packages, won't be used in a release version
 
 bl_info = {
   "name": "Toxicblend - Median axis",
@@ -26,7 +23,6 @@ class ToxicBlend_MedianAxis(bpy.types.Operator):
     items=(("YZ_PLANE", "YZ",""),
            ("XZ_PLANE", "XZ",""), 
            ("XY_PLANE", "XY","")),
-           #update=mode_update_callback
            default="XY_PLANE"    
           )
   useMultiThreadingProperty = bpy.props.EnumProperty(
@@ -34,7 +30,6 @@ class ToxicBlend_MedianAxis(bpy.types.Operator):
     name="Use mulithreading algorithm",
     items=(("TRUE", "True",""),
            ("FALSE", "False","")),
-           #update=mode_update_callback
            default="FALSE"    
           )
           
@@ -49,23 +44,26 @@ class ToxicBlend_MedianAxis(bpy.types.Operator):
 
   def execute(self, context):
     imp.reload(toxicblend)
-    with toxicblend.ByteCommunicator("localhost", 9999) as c: 
-      # bpy.context.selected_objects,
-      unitSystemProperty = context.scene.unit_settings
-      activeObject = context.scene.objects.active
-      properties = {'projectionPlane'       : str(self.projectionPlaneProperty), 
-                    'useMultiThreading'     : str(self.useMultiThreadingProperty),
-                    #'simplifyLimit'         : str(self.simplifyLimitProperty),
-                    'zEpsilon'              : str(self.zEpsilonProperty),
-                    'dotProductLimit'       : str(self.dotProductLimitProperty),
-                    'calculationResolution' : str(self.calculationResolutionProperty),
-                    'unitSystem'            : str(unitSystemProperty.system), 
-                    'unitScale'             : str(unitSystemProperty.scale_length) }
-                     
-      c.sendSingleBlenderObject(activeObject, self.bl_idname, properties) 
-      c.receiveObjects()
-      return {'FINISHED'}
-
+    try:
+      with toxicblend.ByteCommunicator("localhost", 9999) as bc:
+        unitSystemProperty = context.scene.unit_settings
+        activeObject = context.scene.objects.active
+        properties = {'projectionPlane'       : str(self.projectionPlaneProperty), 
+                      'useMultiThreading'     : str(self.useMultiThreadingProperty),
+                      #'simplifyLimit'         : str(self.simplifyLimitProperty),
+                      'zEpsilon'              : str(self.zEpsilonProperty),
+                      'dotProductLimit'       : str(self.dotProductLimitProperty),
+                      'calculationResolution' : str(self.calculationResolutionProperty),
+                      'unitSystem'            : str(unitSystemProperty.system), 
+                      'unitScale'             : str(unitSystemProperty.scale_length) }
+                       
+        bc.sendSingleBlenderObject(activeObject, self.bl_idname, properties) 
+        bc.receiveObjects()
+        return {'FINISHED'}
+    except toxicblend.ToxicblendException as e:
+      self.report({'ERROR'}, e.message)
+      return {'CANCELLED'}
+  
 def register():
   bpy.utils.register_class(ToxicBlend_MedianAxis)
 

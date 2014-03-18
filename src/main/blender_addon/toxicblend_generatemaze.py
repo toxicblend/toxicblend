@@ -1,7 +1,7 @@
 #!/usr/bin/python   
 import bpy
 import toxicblend
-import imp
+import imp # needed when reloading toxicblend site-packages, won't be used in a release version
 
 bl_info = {
   "name": "Toxicblend - Generate maze",
@@ -24,23 +24,26 @@ class ToxicBlend_GenerateMaze(bpy.types.Operator):
            ("RANDOM", "Random","")),
            default="RANDOM"    
           )
-              
+
   @classmethod
   def poll(cls, context):
     return context.active_object is not None
 
   def execute(self, context):
     imp.reload(toxicblend)
-    with toxicblend.ByteCommunicator("localhost", 9999) as c: 
-      # bpy.context.selected_objects,
-      unitSystemProperty = context.scene.unit_settings
-      activeObject = context.scene.objects.active
-      properties = {'unitSystem'            : str(unitSystemProperty.system), 
-                    'unitScale'             : str(unitSystemProperty.scale_length),
-                    'startPoint'            : str(self.startPointProperty)}
-      c.sendSingleBlenderObject(activeObject, self.bl_idname, properties) 
-      c.receiveObjects()
-      return {'FINISHED'}
+    try:
+      with toxicblend.ByteCommunicator("localhost", 9999) as bc: 
+        unitSystemProperty = context.scene.unit_settings
+        activeObject = context.scene.objects.active
+        properties = {'unitSystem': str(unitSystemProperty.system),
+                      'unitScale' : str(unitSystemProperty.scale_length),
+                      'startPoint': str(self.startPointProperty)}
+        bc.sendSingleBlenderObject(activeObject, self.bl_idname, properties)
+        bc.receiveObjects()
+        return {'FINISHED'}
+    except toxicblend.ToxicblendException as e:
+      self.report({'ERROR'}, e.message)
+      return {'CANCELLED'}
 
 def register():
   bpy.utils.register_class(ToxicBlend_GenerateMaze)

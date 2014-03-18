@@ -21,6 +21,7 @@ class ToxicBlend_DebugObj(bpy.types.Operator):
     return context.active_object is not None
 
   def execute(self, context):
+    problemFound = False
     activeObject = context.scene.objects.active
     bm = bmesh.new()
     bm.from_mesh(activeObject.data)
@@ -32,7 +33,8 @@ class ToxicBlend_DebugObj(bpy.types.Operator):
       if v.index == voi:
         print("%d:(%f, %f, %f)" % (v.index, v.co.x, v.co.y, v.co.z))
       else:
-        print("%d:(%f, %f, %f) %s %d" % (v.index, v.co.x, v.co.y, v.co.z, "index does not match position:", voi))  
+        print("%d:(%f, %f, %f) %s %d" % (v.index, v.co.x, v.co.y, v.co.z, "index does not match position:", voi))
+        problemFound = True
     
     if len(bm.faces)==0:
       print("No faces")
@@ -44,7 +46,6 @@ class ToxicBlend_DebugObj(bpy.types.Operator):
             indices.append(str(v.index))
           print(",".join(indices))
     
-    
     if len(bm.edges)==0:
       print("No edges")
     else:
@@ -55,7 +56,8 @@ class ToxicBlend_DebugObj(bpy.types.Operator):
           for v in e.verts:
             indices.append(str(v.index))
           if len(indices)!=2 or indices[0]==indices[1]:
-            print("%s %s"%(",".join(indices), "problematic!!" ))  
+            print("%s %s"%(",".join(indices), "problematic!!" ))
+            problemFound = True  
           else:
             lowI = min(int(indices[0]),int(indices[1]))
             highI = max(int(indices[0]),int(indices[1]))
@@ -63,10 +65,14 @@ class ToxicBlend_DebugObj(bpy.types.Operator):
             key = "%d-%d" % (lowI,highI)
             if key in edgeMap:
               print("%s %s"%(",".join(indices), "double edge!!" ))  
+              problemFound = True
             else:
               print(",".join(indices))
             edgeMap[key] = True    
-            
+    if problemFound:
+      self.report({'WARNING'}, "Problems were detected, check console")
+    else:
+      self.report({'INFO'}, "No problems detected")     
     return {'FINISHED'}
 
 def register():

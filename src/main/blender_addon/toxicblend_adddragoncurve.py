@@ -1,10 +1,7 @@
 #!/usr/bin/python   
 import bpy
 import toxicblend
-
-# import site; site.getsitepackages()
-
-import imp
+import imp # needed when reloading toxicblend site-packages, won't be used in a release version
 
 bl_info = {
   'name': "Toxicblend - Add Dragon curve",
@@ -26,16 +23,20 @@ class AddDragonCurve(bpy.types.Operator):
   def execute(self, context):
     imp.reload(toxicblend)
     cursor_location = bpy.context.scene.cursor_location.copy()
-    with toxicblend.ByteCommunicator("localhost", 9999) as c: 
-      properties = {'iterations': str(self.iterations),\
-                    'edgeLength': str(self.edgeLength),
-                    'cursorPosX'            : str(cursor_location.x),
-                    'cursorPosY'            : str(cursor_location.y),
-                    'cursorPosZ'            : str(cursor_location.z)}
-      c.sendOnlyCommand(self.bl_idname, properties) 
-      c.receiveObjects(setOriginToCursor=True)
-      return {'FINISHED'}
-
+    try:
+      with toxicblend.ByteCommunicator("localhost", 9999) as bc: 
+        properties = {'iterations': str(self.iterations),\
+                      'edgeLength': str(self.edgeLength),
+                      'cursorPosX'            : str(cursor_location.x),
+                      'cursorPosY'            : str(cursor_location.y),
+                      'cursorPosZ'            : str(cursor_location.z)}
+        bc.sendOnlyCommand(self.bl_idname, properties) 
+        bc.receiveObjects(setOriginToCursor=True)
+        return {'FINISHED'}
+    except toxicblend.ToxicblendException as e:
+      self.report({'ERROR'}, e.message)
+      return {'CANCELLED'}
+  
 def register():
   bpy.utils.register_class(AddDragonCurve)
 

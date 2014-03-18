@@ -1,10 +1,7 @@
 #!/usr/bin/python   
 import bpy
 import toxicblend
-
-# import site; site.getsitepackages()
-
-import imp
+import imp # needed when reloading toxicblend site-packages, won't be used in a release version
 
 bl_info = {
   "name": "Toxicblend - Toxiclibs volume",
@@ -26,7 +23,6 @@ class ToxicLibsVolume(bpy.types.Operator):
             "Use a round sphere voxel"),
            ("BOX", "Box brush",
             "Use a box voxel brush")),
-           #update=mode_update_callback
            default="SPHERE"    
           )
   voxelBrushMode = bpy.props.EnumProperty(
@@ -40,7 +36,6 @@ class ToxicLibsVolume(bpy.types.Operator):
            "Use the replace mode"),
            ("MODE_PEAK", "Peak",
            "Use the replace mode. Lower density values don't overwrite existing higher ones")
-            #update=mode_update_callback
           ), default="MODE_PEAK")
   voxelBrushSize = bpy.props.FloatProperty(name="Volumetric brush size", description="The size of the brush (in pixels)", default=1, min=0.001, max=25)
   voxelResolution = bpy.props.FloatProperty(name="Voxel resolution", description="The resolution of the brush, if nothing is shown this value needs to be increased", default=32, min=1, max=512)
@@ -54,25 +49,26 @@ class ToxicLibsVolume(bpy.types.Operator):
 
   def execute(self, context):
     imp.reload(toxicblend)
-    unitSystemProperty = context.scene.unit_settings
-    
-    with toxicblend.ByteCommunicator("localhost", 9999) as c: 
-      # bpy.context.selected_objects,
-      activeObject = context.scene.objects.active
-      properties = {'voxelBrushSize'     : str(self.voxelBrushSize),
-                    'voxelResolution'    : str(self.voxelResolution),
-                    'voxelIsoValue'      : str(self.voxelIsoValue),
-                    'voxelBrushDrawStep' : str(self.voxelBrushDrawStep),
-                    'voxelBrushType'     : str(self.voxelBrushType),
-                    'voxelBrushMode'     : str(self.voxelBrushMode),
-                    'laplacianIterations': str(self.laplacianIterations),
-                    'unitSystem'         : str(unitSystemProperty.system), 
-                    'unitScale'          : str(unitSystemProperty.scale_length) }
-      #print(str(self.voxelBrushType))               
-      c.sendSingleBlenderObject(activeObject, self.bl_idname, properties) 
-      c.receiveObjects()
-      return {'FINISHED'}
-
+    try:
+      with toxicblend.ByteCommunicator("localhost", 9999) as bc: 
+        activeObject = context.scene.objects.active
+        unitSystemProperty = context.scene.unit_settings
+        properties = {'voxelBrushSize'     : str(self.voxelBrushSize),
+                      'voxelResolution'    : str(self.voxelResolution),
+                      'voxelIsoValue'      : str(self.voxelIsoValue),
+                      'voxelBrushDrawStep' : str(self.voxelBrushDrawStep),
+                      'voxelBrushType'     : str(self.voxelBrushType),
+                      'voxelBrushMode'     : str(self.voxelBrushMode),
+                      'laplacianIterations': str(self.laplacianIterations),
+                      'unitSystem'         : str(unitSystemProperty.system), 
+                      'unitScale'          : str(unitSystemProperty.scale_length)}
+        bc.sendSingleBlenderObject(activeObject, self.bl_idname, properties) 
+        bc.receiveObjects()
+        return {'FINISHED'}
+    except toxicblend.ToxicblendException as e:
+      self.report({'ERROR'}, e.message)
+      return {'CANCELLED'}
+  
 def register():
   bpy.utils.register_class(ToxicLibsVolume)
 

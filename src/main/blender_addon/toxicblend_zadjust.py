@@ -21,13 +21,11 @@ class ToxicBlend_ZAdjust(bpy.types.Operator):
     name="Use experimental multi threading",
     items=(("TRUE", "True",""),
            ("FALSE", "False","")),
-           #update=mode_update_callback
            default="TRUE")       
   addDiffProperty = bpy.props.EnumProperty(
     name="Add diff",
     items=(("TRUE", "True",""),
            ("FALSE", "False","")),
-           #update=mode_update_callback
            default="FALSE" )
                      
   @classmethod
@@ -35,22 +33,23 @@ class ToxicBlend_ZAdjust(bpy.types.Operator):
     return context.active_object is not None
 
   def execute(self, context):
-    imp.reload(toxicblend) # needed when reloading toxicblend site-packages, won't be used in a release version
-    with toxicblend.ByteCommunicator("localhost", 9999) as c: 
-
-      activeObject = context.scene.objects.active
-      unitSystemProperty = context.scene.unit_settings
-      
-      properties = {'sampleStep'        : str(self.sampleStepProperty),
-                    'useMultiThreading' : str(self.multiThreadProperty),
-                    'addDiff'           : str(self.addDiffProperty),
-                    'unitSystem'        : str(unitSystemProperty.system), 
-                    'unitScale'         : str(unitSystemProperty.scale_length) }
-          
-      c.sendMultipleBlenderObjects(bpy.context.selected_objects, self.bl_idname, properties) 
-      c.receiveObjects()
-      return {'FINISHED'}
-
+    imp.reload(toxicblend) 
+    try:
+      with toxicblend.ByteCommunicator("localhost", 9999) as bc: 
+        activeObject = context.scene.objects.active
+        unitSystemProperty = context.scene.unit_settings
+        properties = {'sampleStep'        : str(self.sampleStepProperty),
+                      'useMultiThreading' : str(self.multiThreadProperty),
+                      'addDiff'           : str(self.addDiffProperty),
+                      'unitSystem'        : str(unitSystemProperty.system),
+                      'unitScale'         : str(unitSystemProperty.scale_length)}
+        bc.sendMultipleBlenderObjects(bpy.context.selected_objects, self.bl_idname, properties) 
+        bc.receiveObjects()
+        return {'FINISHED'}
+    except toxicblend.ToxicblendException as e:
+      self.report({'ERROR'}, e.message)
+      return {'CANCELLED'}
+  
 def register():
   # Check Blender version
   req = [2, 69, 0]

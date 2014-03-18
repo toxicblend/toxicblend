@@ -41,29 +41,33 @@ class ToxicBlend_SimpleGcodeGenerator(bpy.types.Operator):
 
   def execute(self, context):
     imp.reload(toxicblend) # needed when reloading toxicblend site-packages, won't be used in a release version
-    with toxicblend.ByteCommunicator("localhost", 9999) as c: 
-      # bpy.context.selected_objects,
-      activeObject = context.scene.objects.active
-      unitSystemProperty = context.scene.unit_settings
+    try:
+      with toxicblend.ByteCommunicator("localhost", 9999) as bc: 
+        # bpy.context.selected_objects,
+        activeObject = context.scene.objects.active
+        unitSystemProperty = context.scene.unit_settings
       
-      properties = {#'useMultiThreading'     : str(self.useMultiThreadingProperty),
-                    #'simplifyLimit'         : str(self.simplifyLimitProperty),
-                    'unitSystem'            : str(unitSystemProperty.system), 
-                    'unitScale'             : str(unitSystemProperty.scale_length),
-                    'safeZ'                 : str(self.safeZProperty),
-                    'stepDown'              : self.stepdownProperty,
-                    'g0Feedrate'            : str(self.g0FeedrateProperty),
-                    'g1Feedrate'            : str(self.g1FeedrateProperty),
-                    'g1PlungeFeedrate'      : str(self.g1PlungeFeedrateProperty),
-                    'spindleSpeed'          : str(self.spindleSpeedProperty),
-                    'g64Command'            : self.g64CommandProperty,
-                    'customEndCommand'      : self.customEndCommandProperty,
-                    'filename'              : self.filenameProperty}
+        properties = {#'useMultiThreading'     : str(self.useMultiThreadingProperty),
+                      #'simplifyLimit'         : str(self.simplifyLimitProperty),
+                      'unitSystem'            : str(unitSystemProperty.system), 
+                      'unitScale'             : str(unitSystemProperty.scale_length),
+                      'safeZ'                 : str(self.safeZProperty),
+                      'stepDown'              : self.stepdownProperty,
+                      'g0Feedrate'            : str(self.g0FeedrateProperty),
+                      'g1Feedrate'            : str(self.g1FeedrateProperty),
+                      'g1PlungeFeedrate'      : str(self.g1PlungeFeedrateProperty),
+                      'spindleSpeed'          : str(self.spindleSpeedProperty),
+                      'g64Command'            : self.g64CommandProperty,
+                      'customEndCommand'      : self.customEndCommandProperty,
+                      'filename'              : self.filenameProperty}
                     
-      c.sendSingleBlenderObject(activeObject, self.bl_idname, properties) 
-      c.receiveObjects()
-      return {'FINISHED'}
-
+        bc.sendSingleBlenderObject(activeObject, self.bl_idname, properties) 
+        bc.receiveObjects()
+        return {'FINISHED'}
+    except toxicblend.ToxicblendException as e:
+      self.report({'ERROR'}, e.message)
+      return {'CANCELLED'}
+  
 def register():
   # Check Blender version
   req = [2, 69, 0]

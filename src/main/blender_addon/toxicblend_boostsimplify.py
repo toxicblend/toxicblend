@@ -1,10 +1,7 @@
 #!/usr/bin/python   
 import bpy
 import toxicblend
-
-# import site; site.getsitepackages()
-
-import imp
+import imp # needed when reloading toxicblend site-packages, won't be used in a release version
 
 bl_info = {
   "name": "Toxicblend - Boost simplify",
@@ -24,7 +21,6 @@ class ToxicBlend_BoostSimplify(bpy.types.Operator):
     name="Use experimental mulithreading algorithm",
     items=(("TRUE", "True",""),
            ("FALSE", "False","")),
-           #update=mode_update_callback
            default="FALSE"    
           )
           
@@ -36,20 +32,23 @@ class ToxicBlend_BoostSimplify(bpy.types.Operator):
 
   def execute(self, context):
     imp.reload(toxicblend)
-    with toxicblend.ByteCommunicator("localhost", 9999) as c: 
-      # bpy.context.selected_objects,
-      unitSystemProperty = context.scene.unit_settings
-      activeObject = context.scene.objects.active
-      properties = {'useMultiThreading'     : str(self.useMultiThreadingProperty),
-                    'simplifyLimit'         : str(self.simplifyLimitProperty),
-                    'unitSystem'            : str(unitSystemProperty.system), 
-                    'unitScale'             : str(unitSystemProperty.scale_length) }
+    try:
+      with toxicblend.ByteCommunicator("localhost", 9999) as bc: 
+        unitSystemProperty = context.scene.unit_settings
+        activeObject = context.scene.objects.active
+        properties = {'useMultiThreading'     : str(self.useMultiThreadingProperty),
+                      'simplifyLimit'         : str(self.simplifyLimitProperty),
+                      'unitSystem'            : str(unitSystemProperty.system), 
+                      'unitScale'             : str(unitSystemProperty.scale_length) }
                      
-      c.sendSingleBlenderObject(activeObject, self.bl_idname, properties) 
-      # remove doubles with mm as unit and half the resolution of the simplify operation
-      c.receiveObjects(removeDoublesThreshold=self.simplifyLimitProperty/2000.)
-      return {'FINISHED'}
-
+        bc.sendSingleBlenderObject(activeObject, self.bl_idname, properties) 
+        # remove doubles with mm as unit and half the resolution of the simplify operation
+        bc.receiveObjects(removeDoublesThreshold=self.simplifyLimitProperty/(unitSystemProperty.scale_length*2000.))
+        return {'FINISHED'}
+    except toxicblend.ToxicblendException as e:
+      self.report({'ERROR'}, e.message)
+      return {'CANCELLED'}
+  
 def register():
   bpy.utils.register_class(ToxicBlend_BoostSimplify)
 

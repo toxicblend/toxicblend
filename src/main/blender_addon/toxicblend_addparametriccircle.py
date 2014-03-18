@@ -1,7 +1,7 @@
 #!/usr/bin/python   
 import bpy
 import toxicblend
-import imp
+import imp # needed when reloading toxicblend site-packages, won't be used in a release version
 
 bl_info = {
   "name": "Toxicblend - Add Custom Circle",
@@ -23,7 +23,6 @@ class ToxicBlend_ParametricCircle(bpy.types.Operator):
     items=(("CIRCLE", "CIRCLE",""),
            ("BOX", "BOX",""), 
            ("SPHERE", "SPHERE","")),
-           #update=mode_update_callback
            default="CIRCLE"    
           )
             
@@ -32,7 +31,6 @@ class ToxicBlend_ParametricCircle(bpy.types.Operator):
     name="Use mulithreading algorithm",
     items=(("TRUE", "True",""),
            ("FALSE", "False","")),
-           #update=mode_update_callback
            default="FALSE"    
           )
           
@@ -43,27 +41,30 @@ class ToxicBlend_ParametricCircle(bpy.types.Operator):
   
   def execute(self, context):
     imp.reload(toxicblend)
-    with toxicblend.ByteCommunicator("localhost", 9999) as c: 
-      # bpy.context.selected_objects,
-      unitSystemProperty = context.scene.unit_settings
-      activeObject = context.scene.objects.active
+    try:
+      with toxicblend.ByteCommunicator("localhost", 9999) as bc:
+        unitSystemProperty = context.scene.unit_settings
+        activeObject = context.scene.objects.active
       
-      cursor_location = bpy.context.scene.cursor_location.copy()
-      properties = {'drawTypeProperty'      : str(self.drawTypeProperty), 
-                    'useMultiThreading'     : str(self.useMultiThreadingProperty),
-                    'simplifyLimit'         : str(self.simplifyLimitProperty),
-                    'zEpsilon'              : str(self.zEpsilonProperty),
-                    'dotProductLimit'       : str(self.dotProductLimitProperty),
-                    'unitSystem'            : str(unitSystemProperty.system), 
-                    'unitScale'             : str(unitSystemProperty.scale_length),
-                    'cursorPosX'            : str(cursor_location.x),
-                    'cursorPosY'            : str(cursor_location.y),
-                    'cursorPosZ'            : str(cursor_location.z)}
+        cursor_location = bpy.context.scene.cursor_location.copy()
+        properties = {'drawTypeProperty'      : str(self.drawTypeProperty), 
+                      'useMultiThreading'     : str(self.useMultiThreadingProperty),
+                      'simplifyLimit'         : str(self.simplifyLimitProperty),
+                      'zEpsilon'              : str(self.zEpsilonProperty),
+                      'dotProductLimit'       : str(self.dotProductLimitProperty),
+                      'unitSystem'            : str(unitSystemProperty.system), 
+                      'unitScale'             : str(unitSystemProperty.scale_length),
+                      'cursorPosX'            : str(cursor_location.x),
+                      'cursorPosY'            : str(cursor_location.y),
+                      'cursorPosZ'            : str(cursor_location.z)}
                      
-      c.sendOnlyCommand(self.bl_idname, properties) 
-      c.receiveObjects(setOriginToCursor=True)
-      return {'FINISHED'}
-
+        bc.sendOnlyCommand(self.bl_idname, properties) 
+        bc.receiveObjects(setOriginToCursor=True)
+        return {'FINISHED'}
+    except toxicblend.ToxicblendException as e:
+      self.report({'ERROR'}, e.message)
+      return {'CANCELLED'}
+  
 def register():
   bpy.utils.register_class(ToxicBlend_ParametricCircle)
 

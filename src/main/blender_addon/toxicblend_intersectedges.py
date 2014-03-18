@@ -21,27 +21,35 @@ class ToxicBlend_IntersectEdges(bpy.types.Operator):
     items=(("TRUE", "True",""),
            ("FALSE", "False","")),
            #update=mode_update_callback
-           default="TRUE")       
+           default="TRUE")
                      
   @classmethod
   def poll(cls, context):
-    return context.active_object is not None
+    return context.active_object is not None and len(bpy.context.selected_objects) > 1
 
   def execute(self, context):
-    imp.reload(toxicblend) # needed when reloading toxicblend site-packages, won't be used in a release version
-    with toxicblend.ByteCommunicator("localhost", 9999) as c: 
-
-      activeObject = context.scene.objects.active
-      unitSystemProperty = context.scene.unit_settings
-      
-      properties = {'useMultiThreading' : str(self.multiThreadProperty),
-                    'unitSystem'        : str(unitSystemProperty.system), 
-                    'unitScale'         : str(unitSystemProperty.scale_length) }
-          
-      c.sendMultipleBlenderObjects(bpy.context.selected_objects, self.bl_idname, properties) 
-      c.receiveObjects(removeDoublesThreshold=0.00001)
-      return {'FINISHED'}
-
+    if len(bpy.context.selected_objects) < 2:
+      self.report({'ERROR'}, 'You must select more than one object.')
+      return {'CANCELLED'}
+     
+    try:
+      imp.reload(toxicblend) # needed when reloading toxicblend site-packages, won't be used in a release version
+      with toxicblend.ByteCommunicator("localhost", 9999) as bc: 
+        
+        activeObject = context.scene.objects.active
+        unitSystemProperty = context.scene.unit_settings
+        
+        properties = {'useMultiThreading' : str(self.multiThreadProperty),
+                      'unitSystem'        : str(unitSystemProperty.system), 
+                      'unitScale'         : str(unitSystemProperty.scale_length)}
+        
+        bc.sendMultipleBlenderObjects(bpy.context.selected_objects, self.bl_idname, properties) 
+        bc.receiveObjects(removeDoublesThreshold=0.00001)
+        return {'FINISHED'}
+    except toxicblend.ToxicblendException as e:
+      self.report({'ERROR'}, e.message)
+      return {'CANCELLED'}
+    
 def register():
   # Check Blender version
   req = [2, 69, 0]
