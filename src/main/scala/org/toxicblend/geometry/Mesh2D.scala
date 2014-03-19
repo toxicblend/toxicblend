@@ -152,7 +152,7 @@ class Mesh2D protected ( val vertices:ArrayBuffer[ReadonlyVec2D], val faces:Arra
     builder.combineWithArea((0 until faces.size).par.aggregate(new Area)(seqOp,combOp))
     buildFromPolygons(builder.computeShapes())
   }
-  
+    
   def projectionOutline(multiThread:Boolean=false):Mesh2D = {
     //println("in faces :" + faces.size) 
     removeDoubles
@@ -164,7 +164,8 @@ class Mesh2D protected ( val vertices:ArrayBuffer[ReadonlyVec2D], val faces:Arra
       //println("using mergeAllFaces") 
       mergeAllFaces(true)
     }
-    println("outFaces  :" +  faces.size)
+    
+    //println("outFaces  :" +  faces.size)
     this
   }
 }

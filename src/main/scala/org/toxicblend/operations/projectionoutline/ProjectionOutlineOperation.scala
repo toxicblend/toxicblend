@@ -32,13 +32,10 @@ class ProjectionOutlineOperation extends CommandProcessorTrait {
       case s:String => System.err.println("ProjectionOutlineProcessor: Unknown multiThreadProperty property value: " +  s); false
     }
     
-    println(options.options)
-    
     val returnMessageBuilder = Message.newBuilder()
     val result = Mesh2DConverter(inModel, projectionPlane, true)
-    
     Time.time("projectionOutline ", result.mesh2d.projectionOutline(multiThreadProperty))
-    
+     
     val inverseMatrix = if (inModel.hasWorldOrientation()) {
       Option(Matrix4x4Converter(inModel.getWorldOrientation()))
     } else {

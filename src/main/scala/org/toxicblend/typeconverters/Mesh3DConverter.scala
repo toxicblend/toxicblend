@@ -184,7 +184,7 @@ class Mesh3DConverter protected (protected val vertices:Buffer[ReadonlyVec3D],
     })
     this
   }
-  
+    
   /**
    * Create a packet buffer model from this Mesh3D.
    * The result will be a list of triangles due to the design of Mesh3D
