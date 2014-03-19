@@ -42,7 +42,7 @@ class NaiveConvexHull(bpy.types.Operator):
         properties = {'projectionPlane': str(self.projectionPlaneProperty), 
                       'multiThread'    : str(self.multiThreadProperty)}
         bc.sendSingleBlenderObject(activeObject, self.bl_idname, properties) 
-        bc.receiveObjects()
+        bc.receiveObjects(removeDoublesThreshold=0.0001)
         return {'FINISHED'}
     except toxicblend.ToxicblendException as e:
       self.report({'ERROR'}, e.message)
