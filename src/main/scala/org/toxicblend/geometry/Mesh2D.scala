@@ -154,31 +154,17 @@ class Mesh2D protected ( val vertices:ArrayBuffer[ReadonlyVec2D], val faces:Arra
   }
   
   def projectionOutline(multiThread:Boolean=false):Mesh2D = {
-    if (faces.size < 10) {
-      println("in faces  :" + faces.map(x => x.mkString("(",", ",")")).mkString(", ") + " faces:" + faces.size) 
-      removeDoubles
-      println("dedoubled :" + faces.map(x => x.mkString("(",", ",")")).mkString(", ") + " faces:" + faces.size) 
-      if (multiThread) {
-        println("using mergeAllFacesWithBooleanShapeBuilder") 
-        mergeAllFacesWithBooleanShapeBuilder
-      } else {
-        println("using mergeAllFaces") 
-        mergeAllFaces(true)
-      }
-      println("outFaces:" + faces.map(x => x.mkString("(",", ",")")).mkString(", ") + " faces:" + faces.size) 
+    //println("in faces :" + faces.size) 
+    removeDoubles
+    //println("dedoubled :" + faces.size) 
+    if (multiThread) {
+      //println("using mergeAllFacesWithBooleanShapeBuilder") 
+      mergeAllFacesWithBooleanShapeBuilder
     } else {
-      println("in faces :" + faces.size) 
-      removeDoubles
-      println("dedoubled :" + faces.size) 
-      if (multiThread) {
-        println("using mergeAllFacesWithBooleanShapeBuilder") 
-        mergeAllFacesWithBooleanShapeBuilder
-      } else {
-        println("using mergeAllFaces") 
-        mergeAllFaces(true)
-      }
-      println("outFaces  :" +  faces.size)
+      //println("using mergeAllFaces") 
+      mergeAllFaces(true)
     }
+    println("outFaces  :" +  faces.size)
     this
   }
 }
