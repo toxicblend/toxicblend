@@ -96,7 +96,8 @@ class Mesh2DConverter private (val mesh2d:Mesh2D, val projectionPlane:Projection
         f.sliding(2).foreach(e => 
           helper.addFace(e.to)
         )
-        helper.addFace(f(0),f.last)
+        // close the implicitly closed loop, but only if it's a real loop, not just an edge
+        if (f.size>2) helper.addFace(f(0),f.last)
       })
      else
         mesh2d.faces.foreach(f => helper.addFace(f))
@@ -105,7 +106,8 @@ class Mesh2DConverter private (val mesh2d:Mesh2D, val projectionPlane:Projection
       modelBuilder.setWorldOrientation(finalTransformation.get.toPBModel)
     }
     modelBuilder
-  } 
+  }
+  
 }
 
 object Mesh2DConverter {
