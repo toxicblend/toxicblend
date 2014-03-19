@@ -3,14 +3,14 @@ from mathutils import Matrix, Vector
 
 bl_info = {
   "name": "Toxicblend - Move to zero Z (standalone)",
-  'description': 'Moves an object so that top of bounding box touches the Z=0 plane (standalone)',
+  'description': 'Moves all selected objects so that top of thier highest bounding box touches the Z=0 plane (standalone). Note that this operates on the bounding box of the objects, so you should probably apply the model transformation first.',
   'author': 'EAD Fritz',
   'blender': (2, 69, 0),
   "category": "Object",
 }
 
 class ToxicBlend_MoveToZeroZOperator(bpy.types.Operator):
-  '''Moves an object so that top of bounding box touches the Z=0 plane'''
+  '''Moves all selected objects so that top of thier highest bounding box touches the Z=0 plane (standalone)'''
   bl_idname = "object.toxicblend_movetozeroz"
   bl_label = "Toxicblend:Move to zero Z"
   bl_options = {'REGISTER', 'UNDO'}  # enable undo for the operator.
@@ -28,25 +28,29 @@ class ToxicBlend_MoveToZeroZOperator(bpy.types.Operator):
 
   def execute(self, context):
     activeObject = bpy.context.scene.objects.active
+    selectedObjects = bpy.context.selected_objects
+
     matrix = Matrix(activeObject.matrix_world)
     highestPoint = matrix * Vector(activeObject.bound_box[0])
     lowestPoint = matrix * Vector(activeObject.bound_box[0])
-    for i in range(1,8):
-      v = matrix * Vector(activeObject.bound_box[i])
-      if v.z > highestPoint.z:
-        highestPoint = v
-      if v.x < lowestPoint.x:
-        lowestPoint.x = v.x
-      if v.y < lowestPoint.y:
-        lowestPoint.y = v.y
-      if v.z < lowestPoint.z:
-        lowestPoint.z = v.z
-        
-    if self.moveXYProperty=="TRUE":
-      activeObject.location[0] = activeObject.location[0]-lowestPoint.x
-      activeObject.location[1] = activeObject.location[1]-lowestPoint.y
+    for o in selectedObjects:
+      for i in range(1,8):
+        v = matrix * Vector(o.bound_box[i])
+        if v.z > highestPoint.z:
+          highestPoint = v
+        if v.x < lowestPoint.x:
+          lowestPoint.x = v.x
+        if v.y < lowestPoint.y:
+          lowestPoint.y = v.y
+        if v.z < lowestPoint.z:
+          lowestPoint.z = v.z
+
+    for o in selectedObjects:    
+      if self.moveXYProperty=="TRUE":
+        o.location[0] = o.location[0]-lowestPoint.x
+        o.location[1] = o.location[1]-lowestPoint.y
       
-    activeObject.location[2] = activeObject.location[2]-highestPoint.z
+      o.location[2] = o.location[2]-highestPoint.z
     return {'FINISHED'}
 
 def register():
