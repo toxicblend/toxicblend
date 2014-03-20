@@ -24,7 +24,8 @@ import org.toxicblend.ToxicblendException
  */
 class GCodeGenerator(val gCodeProperties:GCodeSettings) {
   
-  def gHeader():String = {
+  def gHeader(info:String=""):String = {
+  	info + 
   	"G0 Z%s (goto safe z)\n".format(gCodeProperties.safeZAsString) +
   	"M3 S%s (start splindle)\n".format(gCodeProperties.spindleSpeedAsString) +
   	"G4 P3  (dwell 3 seconds)\n" +   // TODO make dwell value a property

@@ -1,5 +1,7 @@
 package org.toxicblend.operations.simplegcodegenerator
 
+import scala.collection.mutable.ArrayBuffer
+
 /**
  * Everything in here is in millimeter, mm/s and rpm as applicable
  */
@@ -19,10 +21,19 @@ class GCodeSettings(val outFilename:String,
   val spindleSpeedAsString = GCode.floatToString(spindleSpeed)
   val stepDownAsString = GCode.floatToString(stepDown)
   
-  // TODO: give sizeX,sizeY,sizeZ proper values/settings
   val sizeX:Option[Float] = None
   val sizeY:Option[Float] = None
   val sizeZ:Option[Float] = None
-
+  
+  def toString(uncommentedHeader:String) = {
+    "(" + uncommentedHeader + ")\n" +
+    "(             safeZ=" + safeZAsString + ")\n" +
+    "(        g0Feedrate=" + g0FeedrateAsString + ")\n" +
+    "(        g1Feedrate=" + g1FeedrateAsString + ")\n" +
+    "(  g1PlungeFeedrate=" + g1PlungeFeedrateAsString + ")\n" +
+    "(      spindleSpeed=" + spindleSpeedAsString + ")\n" +
+    "(          stepDown=" + stepDownAsString + ")\n"+
+    "\n"
+  }  
 }
                     
