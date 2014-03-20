@@ -94,11 +94,10 @@ class LineStripConverter private (val lineStrips:Seq[LineStrip3D], val bounds:AA
     if (uniqueVertices) {
       val vmap = new collection.mutable.HashMap[Vec3D,Int]()
       lineStrips.foreach(linestrip=>{
-      
-        linestrip.getSegments().foreach(s=>{
+        linestrip.getVertices.sliding(2).foreach(s=>{
           val face = Face.newBuilder()
-          addVertex(modelBuilder,face,vmap, s.a)
-          addVertex(modelBuilder,face,vmap, s.b)
+          addVertex(modelBuilder,face,vmap, s(0))
+          addVertex(modelBuilder,face,vmap, s(1))
           modelBuilder.addFaces(face)
         })
         
@@ -106,8 +105,8 @@ class LineStripConverter private (val lineStrips:Seq[LineStrip3D], val bounds:AA
     } else {
       val lsmb = new LineStripModelBuilder(modelBuilder)
       lineStrips.foreach(linestrip=>{
-        lsmb.addVertex(linestrip.getSegments().get(0).a)
-        linestrip.getSegments().foreach(s => lsmb.addVertexAndEdgeToPrevious(s.b))
+        lsmb.addVertex(linestrip.getVertices.head)
+        linestrip.getVertices.tail.foreach(s => lsmb.addVertexAndEdgeToPrevious(s))
       })
     }
     modelBuilder.setName(name)
@@ -123,7 +122,6 @@ object LineStripConverter {
   def apply(pbModel:Model, useWorldCoordinares:Boolean):LineStripConverter = {
    
     val worldTransformation = if (useWorldCoordinares && pbModel.hasWorldOrientation) Option(Matrix4x4Converter(pbModel.getWorldOrientation)) else None
-    
     val vertices = new Array[Vec3D](pbModel.getVerticesList.size)
     if (worldTransformation.isDefined) {
       val wtransform = worldTransformation.get.matrix
@@ -143,13 +141,13 @@ object LineStripConverter {
       
       val lineStrips = new ArrayBuffer[LineStrip3D]
       for (f<-pbModel.getFacesList()) {
-        val lineStrip = new LineStrip3D()
-        f.getVerticesList().foreach(v => lineStrip.add(vertices(v)))
+        val lineStrip = new LineStrip3D
+        f.getVerticesList.foreach(v => lineStrip.add(vertices(v)))
         lineStrips.append(lineStrip)
       }
-      //println("LineStripConverter: Done importing model with matrix. aabb=" + aabb)
       new LineStripConverter(lineStrips, aabb, pbModel.getName)
     } else {
+      // no worldTransformation
       
       val firstVertexOpt = Mesh3DConverter.getFirstVertex(pbModel)
       val aabb = if (firstVertexOpt.isDefined) {
@@ -160,7 +158,7 @@ object LineStripConverter {
       
       for (v<-pbModel.getVerticesList()) {
         val vector = new Vec3D(v.getX,v.getY,v.getZ)
-        vertices(v.getId()) = vector
+        vertices(v.getId) = vector
         aabb.growToContainPoint(vector)
       }
       
@@ -170,7 +168,6 @@ object LineStripConverter {
         f.getVerticesList().foreach(v => lineStrip.add(vertices(v)))
         lineStrips.append(lineStrip)
       }
-      //println("LineStripConverter: Done importing model w/o matrix. aabb=" + aabb)
       new LineStripConverter(lineStrips, aabb, pbModel.getName)
     }
   }
@@ -183,29 +180,27 @@ object LineStripConverter {
   /** 
    * Constructs from some LineStrip3D:s
    */
-  def apply(lineStrips:Seq[LineStrip3D]) = {
-    val bounds = new AABB() 
-    lineStrips.foreach(ls=>ls.getSegments().foreach(s=>{
-      bounds.growToContainPoint(s.a) 
-      bounds.growToContainPoint(s.b)
-    }))
-    new LineStripConverter(lineStrips, bounds)
+  def apply(lineStrips:Seq[LineStrip3D], name:String) = {
+    if (lineStrips.size > 0) {
+	    val bounds = new AABB(lineStrips.head.head,0f) 
+	    lineStrips.foreach(ls => ls.getVertices.foreach(v => bounds.growToContainPoint(v)))
+	    new LineStripConverter(lineStrips, bounds, name)
+    } else {
+      // this should be an error state, really
+      new LineStripConverter(new ArrayBuffer[LineStrip3D], new AABB, name)      
+    }
   } 
   
   /** 
-   * Constructs from some LineStrip3D
+   * Constructs from a LineStrip3D
    */
   def apply(lineStrip:LineStrip3D, name:String="") = {
-    
     val bounds = if (lineStrip.getVertices.size <= 0) {
       new AABB() 
     } else {
       new AABB(lineStrip.getVertices.head,0f)
     }
-    lineStrip.getSegments().foreach(s=>{
-      bounds.growToContainPoint(s.a) 
-      bounds.growToContainPoint(s.b)
-    })
+    lineStrip.getVertices.foreach(v => bounds.growToContainPoint(v))
     new LineStripConverter(Array(lineStrip), bounds, name)
   } 
 }
