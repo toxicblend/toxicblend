@@ -10,3 +10,6 @@ libraryDependencies ++= Seq(
 )
 
 resolvers += "Geotoolkit.org" at "http://maven.geotoolkit.org"
+
+lazy val root = project.in( file(".")).aggregate(Projects.jbulletd).dependsOn(Projects.jbulletd)
+
