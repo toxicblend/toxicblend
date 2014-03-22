@@ -1,6 +1,6 @@
 package org.toxicblend.operations.boostmedianaxis
 
-import com.badlogic.gdx.utils.SharedLibraryLoader
+import org.toxicblend.util.SharedLibraryLoader
 import toxi.geom.Vec2D
 import toxi.geom.Vec3D
 import toxi.geom.ReadonlyVec2D
@@ -80,8 +80,7 @@ class MedianAxisJni private {
 object MedianAxisJni {
   
   try {
-    new SharedLibraryLoader().load("toxicblendboost");
-    println("loaded toxicblendboost")
+    SharedLibraryLoader.load("toxicblendboost");
   } catch {
     case e:java.lang.UnsatisfiedLinkError =>
       System.out.println("java.library.path=" + System.getProperty("java.library.path"));
