@@ -9,6 +9,7 @@ import org.toxicblend.UnitSystem
 import toxi.geom.ReadonlyVec3D
 import toxi.geom.Vec3D
 import toxi.geom.Matrix4x4
+import org.toxicblend.util.Time
 
 /**
  * A 'draw custom geometry' example 
@@ -56,7 +57,7 @@ class ParametricCircleOperation extends CommandProcessorTrait {
     (0 until 10).foreach(l => {
       
       val circum = 2.*Math.PI*radius
-      println("circum=" + circum + " radius = " + radius + " steps:" + steps + " circum/steps=" + circum/steps)
+      //println("circum=" + circum + " radius = " + radius + " steps:" + steps + " circum/steps=" + circum/steps)
 
       // draw connecting edges
       steps = stepsI.next //(.5+ 1.5f/circum).toInt 
@@ -104,11 +105,13 @@ class ParametricCircleOperation extends CommandProcessorTrait {
     //println("ParametricCircleOperation drawType: " + drawType)
     
     val returnMessageBuilder = Message.newBuilder()
-    val returnMeshConverter = if (drawType == "CIRCLE"){
-      drawCircle(options, options.getCursorPos)
-    } else {
-      new Mesh3DConverter
-    }
+    val returnMeshConverter = Time.time("Building parametric circle:",
+      if (drawType == "CIRCLE"){
+        drawCircle(options, options.getCursorPos)
+      } else {
+        new Mesh3DConverter
+      }
+    )
     returnMessageBuilder.addModels(returnMeshConverter.toPBModel(None, None))
     returnMessageBuilder
   }
