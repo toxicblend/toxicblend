@@ -16,44 +16,26 @@ import scala.collection.mutable.ArrayBuffer
 import scala.collection.JavaConversions._
 
 class BoostSimplifyOperation extends CommandProcessorTrait {
+  protected val traceMsg = "BoostSimplifyOperation"
   
   def processInput(inMessage:Message) = {
     val options = OptionConverter(inMessage)
     
-    val useMultiThreading = options.getOrElse("useMultiThreading", "FALSE").toUpperCase() match {
-      case "TRUE" => System.err.println("BoostSimplifyOperation: useMultiThreading=True but it's not implemented yet"); true
-      case "FALSE" => false
-      case s:String => System.err.println("BoostSimplifyOperation: Unrecognizable 'useMultiThreading' property value: " +  s ); false
-    }
-    val unitScale:Float = options.getOrElse("unitScale", "1.0") match {
-      case Regex.FLOAT_REGEX(limit) => limit.toFloat
-      case s:String => System.err.println("BoostSimplifyOperation: unrecognizable 'unitScale' property value: " +  s); 1f
-    }
-    val unitIsMetric = options.getOrElse("unitSystem", "METRIC").toUpperCase() match {
-      case "METRIC" => UnitSystem.Metric
-      case "NONE" => throw new ToxicblendException("BoostSimplifyOperation: unitSystem=None but it's not supported"); None
-      case "IMPERIAL" => throw new ToxicblendException("BoostSimplifyOperation:u nitSystem=IMPERIAL but it's not supported"); UnitSystem.Imperial
-      case s:String => System.err.println("BoostSimplifyOperation: Unrecognizable 'unitSystem' property value: " +  s ); None
-    }
-    val simplifyLimit:Float = (options.getOrElse("simplifyLimit", "0.1") match {
-      case Regex.FLOAT_REGEX(limit) => limit.toFloat
-      case s:String => System.err.println("BoostSimplifyOperation: unrecognizable 'simplifyLimit' property value: " +  s); .1f
-    } ) / 1000f  // convert from meter to mm
+    val useMultiThreading = getMultiThreadingProperty(options,traceMsg)
+    val unitScale = getUnitScaleProperty(options,"BoostSimplifyOperation")
+    val unitSystem = getUnitSystem(options,traceMsg)
+    val simplifyLimit:Float = getFloatProperty(options,"simplifyLimit", 0.1f, traceMsg) / 1000f  // convert from meter to mm
         
     val inverseMatrixes = new ArrayBuffer[Option[Matrix4x4Converter]]
     
     // Convert model vertices to world coordinates so that the simplify scaling makes sense
     val models = inMessage.getModelsList.map(inModel => {
       (Mesh3DConverter(inModel,true), // Unit is now [meter]
-      if (inModel.hasWorldOrientation()) {
-        Option(Matrix4x4Converter(inModel.getWorldOrientation()))
-      } else {
-        None
-      })
+      getWorldModel(inModel))
     })
     
     // Perform the simplify operation
-    val result = Time.time("Simplify calculation time: ", models.map(model =>{      
+    val result = Time.time("Boost Simplify calculation time: ", models.map(model =>{      
       val segments = model._1.findContinuousLineSegments
       val newMesh = new Mesh3DConverter(model._1.name + " boost simplify"); 
       segments._1.foreach(ngon => newMesh.addFace(ngon))
