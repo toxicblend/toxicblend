@@ -13,17 +13,12 @@ import scala.collection.JavaConversions._
 
 class GenerateMazeOperation extends CommandProcessorTrait {
   
-  def processInput(inMessage:Message) = {
+  def processInput(inMessage:Message, options:OptionConverter) = {
     
-    val options = OptionConverter(inMessage)
     val returnMessageBuilder = Message.newBuilder()
-    val models = inMessage.getModelsList().map(inModel => {
-      (Mesh3DConverter(inModel,false), // don't convert to world coordinates, instead keep the transform in the result
-      if (inModel.hasWorldOrientation()) {
-        Option(Matrix4x4Converter(inModel.getWorldOrientation()))
-      } else {
-        None
-      })
+    val models = inMessage.getModelsList().map(aModel => {
+      (Mesh3DConverter(aModel,false), // don't convert to world coordinates, instead keep the transform in the result
+      getWorldOrientation(aModel))
     })
     val startPoint = options.getOrElse("startPoint", "RANDOM") match {
       case "CORNER" => StartPoint.CORNER

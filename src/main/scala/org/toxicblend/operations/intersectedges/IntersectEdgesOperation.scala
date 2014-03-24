@@ -40,8 +40,8 @@ class IntersectEdgesOperation extends CommandProcessorTrait {
     val modelAVertices = modelA.getVertices
     val modelBVertices = modelB.getVertices
     val lineAintersections = new ArrayBuffer[ReadonlyVec3D]
-    println("ModelA bounds: " + modelA.getBounds)
-    println("ModelB bounds: " + modelB.getBounds)
+    //println("ModelA bounds: " + modelA.getBounds)
+    //println("ModelB bounds: " + modelB.getBounds)
     modelA.getFaces.foreach(face =>{
       face.sliding(2).foreach(vAseq => {
         val fromA = modelAVertices(vAseq(0))
@@ -117,9 +117,9 @@ class IntersectEdgesOperation extends CommandProcessorTrait {
         })
       })
     }
-    println("Found " + intersectingEdges + " intersecting edges")
+    //println("Found " + intersectingEdges + " intersecting edges")
     val strD = if (smallestIntersectionDistance==Float.MaxValue) "Float.MaxValue" else smallestIntersectionDistance.toString
-    println("Smallest intersection distance = " + strD) 
+    //println("Smallest intersection distance = " + strD) 
     addAllNonIntersectingEdges(modelA, alreadyDrawnA, modelAVertices)
     addAllNonIntersectingEdges(modelB, alreadyDrawnB, modelBVertices)
     rv
@@ -128,7 +128,7 @@ class IntersectEdgesOperation extends CommandProcessorTrait {
   /**
    * Sometimes the blender models will get much too small for numerical stability in the 
    * Line3D.closestLineTo method. 
-   * This methods tries to find a matrix that will center and scale the mesh to a more sane scale
+   * This methods tries to find a matrix that will center and scale the mesh to a more sane proportions
    */
   def getResonableScaling(modelA:Mesh3DConverter, modelB:Mesh3DConverter):Matrix4x4 = {
     val boundsA = modelA.getBounds
@@ -138,48 +138,29 @@ class IntersectEdgesOperation extends CommandProcessorTrait {
     val maxOffset:ReadonlyVec3D = if (boundsA.magSquared > boundsB.magSquared) boundsA else boundsB
     val targetExtent = 1000f  // the new extent, is it too large?
     val scale = targetExtent/Math.max(Math.max(maxExtent.x,maxExtent.y),maxExtent.y)
-    //println("maxOffset=" + maxOffset)
-    //println("maxExtent=" + maxExtent)
-    //println("scale=" + scale)
-    val matrix = new Matrix4x4Extension(maxOffset.scale(-1f), new Vec3D(scale, scale, scale)) 
-    //println("sanity matrix=" + matrix)
-    matrix
+    new Matrix4x4Extension(maxOffset.scale(-1f), new Vec3D(scale, scale, scale)) 
   }
   
-  def processInput(inMessage:Message) = {
-    val options = OptionConverter(inMessage)
-    if (inMessage.getModelsCount != 2) {
-      throw new ToxicblendException("This operation requires two selected objects")
-    }
+  def processInput(inMessage:Message, options:OptionConverter) = {
+    
+    val traceMsg = "IntersectEdgesOperation"      
+    if (inMessage.getModelsCount!=2) throw new ToxicblendException("This operation requires two selected objects")
     
     val models = inMessage.getModelsList().toIndexedSeq.map(i=>Mesh3DConverter(i,true))
     
-    val useMultiThreading = options.getOrElse("useMultiThreading", "FALSE").toUpperCase() match {
-      case "TRUE" => System.err.println("IntersectEdgesOperation:useMultiThreading=True but it's not implemented yet"); true
-      case "FALSE" => false
-      case s:String => System.err.println("IntersectEdgesOperation: Unrecognizable 'useMultiThreading' property value: " + s); false
-    }
-    val unitScale:Float = options.getOrElse("unitScale", "1.0") match {
-      case Regex.FLOAT_REGEX(limit) => limit.toFloat
-      case s:String => System.err.println("IntersectEdgesOperation: unrecognizable 'unitScale' property value: " +  s ); 1f
-    }
-    val unitIsMetric = options.getOrElse("unitSystem", "METRIC").toUpperCase() match {
-      case "METRIC" => UnitSystem.Metric
-      case "NONE" => throw new ToxicblendException("IntersectEdgesOperation:unitSystem=None but it's not supported"); None
-      case "IMPERIAL" => throw new ToxicblendException("IntersectEdgesOperation:unitSystem=IMPERIAL but it's not supported"); UnitSystem.Imperial
-      case s:String => System.err.println("IntersectEdgesOperation: Unrecognizable 'unitSystem' property value: " +  s ); None
-    }
-    println(options)
+    val useMultiThreading = options.getMultiThreadingProperty(traceMsg)
+    if (useMultiThreading) System.err.println(traceMsg + ":useMultiThreading=True but it's not implemented yet")
     
-    val returnMessageBuilder = Message.newBuilder()
+    val unitScale = options.getUnitScaleProperty(traceMsg)
+    val unitSystem = options.getUnitSystemProperty(traceMsg)
+    
+    val returnMessageBuilder = Message.newBuilder
     val matrix = getResonableScaling(models(0), models(1))
     models.foreach( m => m.transform(matrix))
     val returnMeshConverter = intersectEdges(models(0), models(1))
     val intertedM = matrix.invert
-    //println("Inverted=" + intertedM)
     returnMeshConverter.transform(intertedM)
     returnMessageBuilder.addModels(returnMeshConverter.toPBModel(None, None))
-    returnMessageBuilder
   }
 }
 

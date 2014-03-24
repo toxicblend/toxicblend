@@ -11,27 +11,25 @@ import toxi.geom.AABB
 import toxi.geom.Matrix4x4
 import toxi.volume.{MeshLatticeBuilder,VolumetricSpace, VolumetricBrush, RoundBrush, BoxBrush, HashIsoSurface}
 import toxi.util.datatypes.FloatRange
-import scala.collection.JavaConversions._
 import org.toxicblend.typeconverters.Matrix4x4Converter
 import org.toxicblend.typeconverters.LineStripConverter
 import org.toxicblend.typeconverters.Mesh3DConverter
 import org.toxicblend.typeconverters.OptionConverter
 import org.toxicblend.geometry.Matrix4x4Implicit._
 
+import scala.collection.JavaConversions._
+
 /**
  * This code has evolved out of toxiclibs demonstration code written by Karsten Schmidt
  * http://toxiclibs.org/2011/12/metworks-workshop-facade 
  * Released under the same license as toxiclibs itself, LGPLv2.1.
- * 
- * TODO: There are an issue with scaling and centering of the resulting mesh
  */
 class VolumetricRenderOperation extends CommandProcessorTrait {
   
-   def processInput(inMessage:Message) = {
+   def processInput(inMessage:Message, options:OptionConverter) = {
     
     // we are only using the first model as input
     val inModel = inMessage.getModelsList().get(0) 
-    val options = OptionConverter(inMessage)
     //println(optionM.options)
     val voxelBrushSize:Float = options.getOrElse("voxelBrushSize", "2") match {
       case Regex.FLOAT_REGEX(limit) => limit.toFloat

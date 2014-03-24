@@ -22,20 +22,14 @@ import scala.collection.JavaConversions._
 
 class Offset2dShapeOperation extends CommandProcessorTrait {
   
-  def processInput(inMessage:Message) = {
-    
-    val options = OptionConverter(inMessage)
+  def processInput(inMessage:Message, options:OptionConverter) = {
+    val traceMsg = "Offset2dShapeOperation"
         
-    val useMultiThreading = options.getOrElse("useMultiThreading", "FALSE").toUpperCase() match {
-      case "TRUE" => true
-      case "FALSE" => false
-      case s:String => System.err.println("Offset2dShapeOperation: Unrecognizable 'useMultiThreading' property value: " +  s ); false
-    }
-    val useToOutline = options.getOrElse("useToOutline", "FALSE").toUpperCase() match {
-      case "TRUE" => true
-      case "FALSE" => false
-      case s:String => System.err.println("Unrecognizable 'useToOutline' property value: " +  s ); false
-    }
+    val useMultiThreading = options.getMultiThreadingProperty(traceMsg)
+    if (useMultiThreading) System.err.println(traceMsg + ":useMultiThreading=True but it's not implemented yet")
+    
+    val useToOutline = options.getBooleanProperty("useToOutline", false, traceMsg)
+
     val unitScale:Float = options.getOrElse("unitScale", "1.0") match {
       case Regex.FLOAT_REGEX(limit) => limit.toFloat
       case s:String => System.err.println("Offset2dShapeOperation: unrecognizable 'unitScale' property value: " +  s); 1f

@@ -7,6 +7,8 @@ import collection.mutable.HashMap
 import org.toxicblend.util.Regex
 import toxi.geom.Vec3D
 import toxi.geom.ReadonlyVec3D
+import org.toxicblend.ToxicblendException
+import org.toxicblend.UnitSystem
 
 class OptionConverter(val options:collection.mutable.Map[String,String]){
   
@@ -21,7 +23,6 @@ class OptionConverter(val options:collection.mutable.Map[String,String]){
   
   /**
    * Will add the options to the message
-   * TODO: very imperative
    */  
   def toPBModel(message:Message.Builder) = {
     options.foreach( o => {
@@ -48,23 +49,48 @@ class OptionConverter(val options:collection.mutable.Map[String,String]){
   /**
    * returns the cursor position stored in the cursorPosX, cursorPosY and cursorPosZ property values
    */
-  def getCursorPos:ReadonlyVec3D = {
-    val cursorPosX:Float = options.getOrElse("cursorPosX", "0.0") match {
-      case Regex.FLOAT_REGEX(limit) => limit.toFloat
-      case s:String => System.err.println("OptionConverter: unrecognizable 'cursorPosX' property value: " +  s ); 0f
-    }
-    val cursorPosY:Float = options.getOrElse("cursorPosY", "0.0") match {
-      case Regex.FLOAT_REGEX(limit) => limit.toFloat
-      case s:String => System.err.println("OptionConverter: unrecognizable 'cursorPosY' property value: " +  s ); 0f
-    }
-    val cursorPosZ:Float = options.getOrElse("cursorPosZ", "0.0") match {
-      case Regex.FLOAT_REGEX(limit) => limit.toFloat
-      case s:String => System.err.println("OptionConverter: unrecognizable 'cursorPosZ' property value: " +  s ); 0f
-    }
+  def getCursorPosProperty(traceMsg:String):ReadonlyVec3D = {
+    val cursorPosX = getFloatProperty("cursorPosX", 0f, traceMsg) 
+    val cursorPosY = getFloatProperty("cursorPosY", 0f, traceMsg)
+    val cursorPosZ = getFloatProperty("cursorPosZ", 0f, traceMsg)
     new Vec3D(cursorPosX,cursorPosY,cursorPosZ)
   }
   
   override def toString() = options.toString
+  
+  def getUnitSystemProperty(traceMsg:String) = 
+    getOrElse("unitSystem", "METRIC").toUpperCase() match {
+      case "METRIC" => UnitSystem.Metric
+      case "NONE" => throw new ToxicblendException(traceMsg +": unitSystem=None but it's not supported"); None
+      case "IMPERIAL" => throw new ToxicblendException(traceMsg + ":unitSystem=IMPERIAL but it's not supported"); UnitSystem.Imperial
+      case s:String => System.err.println(traceMsg + ": Unrecognizable 'unitSystem' property value: " +  s ); None
+    }
+
+  def getBooleanProperty(propertyName:String, default:Boolean, traceMsg:String) = 
+    getOrElse(propertyName, default.toString).toUpperCase() match {
+      case "TRUE" => true
+      case "FALSE" => false
+      case s:String => System.err.println(traceMsg + ": Unrecognizable '"+propertyName+"' property value: " +  s ); default
+    }
+  
+  def getFloatProperty(propertyName:String, default:Float, traceMsg:String) = 
+    getOrElse(propertyName, default.toString) match {
+      case Regex.FLOAT_REGEX(limit) => limit.toFloat
+      case s:String => System.err.println(traceMsg + ": unrecognizable '"+ propertyName + "' property value: " +  s); default
+    }
+  
+  def getIntProperty(propertyName:String, default:Int, traceMsg:String) = 
+    getOrElse(propertyName, default.toString) match {
+      case Regex.INT_REGEX(limit) => limit.toInt
+      case s:String => System.err.println(traceMsg + ": unrecognizable '"+ propertyName + "' property value: " +  s); default
+    }
+  
+  def getStringProperty(propertyName:String, default:String) = getOrElse(propertyName, default)
+ 
+  def getMultiThreadingProperty(traceMsg:String) = getBooleanProperty("useMultiThreading", false, traceMsg)
+  
+  def getUnitScaleProperty(traceMsg:String) = getFloatProperty("unitScale", 1f, traceMsg)
+  
 }
 
 object OptionConverter {

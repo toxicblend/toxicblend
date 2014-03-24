@@ -77,37 +77,23 @@ class ParametricCircleOperation extends CommandProcessorTrait {
     rv
   }
   
-  def processInput(inMessage:Message) = {
-    val options = OptionConverter(inMessage) 
+  def processInput(inMessage:Message, options:OptionConverter) = {
     
-    val useMultiThreading = options.getOrElse("useMultiThreading", "FALSE").toUpperCase() match {
-      case "TRUE" => true
-      case "FALSE" => false
-      case s:String => System.err.println("ParametricCircleOperation: Unrecognizable 'useMultiThreading' property value: " +  s ); false
-    }
+    val traceMsg = "ParametricCircleOperation"
+    val useMultiThreading = options.getMultiThreadingProperty(traceMsg)
+    if (useMultiThreading) if (useMultiThreading) System.err.println(traceMsg + ":useMultiThreading=True but it's not implemented yet")
     val drawType = options.getOrElse("drawTypeProperty", "CIRCLE").toUpperCase() match {
       case "CIRCLE" => "CIRCLE"
       case "BOX" => "BOX"
       case s:String => System.err.println("ParametricCircleOperation: Unrecognizable 'drawTypeProperty' property value: " +  s ); "CIRCLE"
     }
-    val unitScale:Float = options.getOrElse("unitScale", "1.0") match {
-      case Regex.FLOAT_REGEX(limit) => limit.toFloat
-      case s:String => System.err.println("ParametricCircleOperation: unrecognizable 'unitScale' property value: " +  s ); 1f
-    }
-    
-    val unitIsMetric = options.getOrElse("unitSystem", "METRIC").toUpperCase() match {
-      case "METRIC" => UnitSystem.Metric
-      case "NONE" => None
-      case "IMPERIAL" => UnitSystem.Imperial
-      case s:String => System.err.println("ParametricCircleOperation: Unrecognizable 'unitSystem' property value: " +  s ); None
-    } 
-    //println("ParametricCircleOperation options: " + options)
-    //println("ParametricCircleOperation drawType: " + drawType)
+    val unitScale = options.getUnitScaleProperty(traceMsg)
+    val unitSystem = options.getUnitSystemProperty(traceMsg)
     
     val returnMessageBuilder = Message.newBuilder()
     val returnMeshConverter = Time.time("Building parametric circle:",
       if (drawType == "CIRCLE"){
-        drawCircle(options, options.getCursorPos)
+        drawCircle(options, options.getCursorPosProperty(traceMsg))
       } else {
         new Mesh3DConverter
       }

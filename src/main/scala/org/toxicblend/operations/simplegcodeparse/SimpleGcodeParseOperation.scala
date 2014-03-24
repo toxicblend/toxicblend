@@ -24,8 +24,7 @@ import java.io.File
 
 class SimpleGcodeParseOperation extends CommandProcessorTrait {
     
-  def processInput(inMessage:Message) = {
-    val options = OptionConverter(inMessage)
+  def processInput(inMessage:Message, options:OptionConverter) = {
     println("ParseGcodeOperation::options=" + options)
     val returnMessageBuilder = Message.newBuilder()
     

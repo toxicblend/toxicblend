@@ -17,8 +17,7 @@ import scala.collection.JavaConversions._
 
 class SimpleGcodeGeneratorOperation extends CommandProcessorTrait {
   
-  def processInput(inMessage:Message) = {
-    val options = OptionConverter(inMessage)
+  def processInput(inMessage:Message, options:OptionConverter) = {
     //println("SimpleGcodeGeneratorOperation: options=" + options)
     val unitScaleProperty:Float = options.getOrElse("unitScale", "1.0") match {
       case Regex.FLOAT_REGEX(limit) => limit.toFloat

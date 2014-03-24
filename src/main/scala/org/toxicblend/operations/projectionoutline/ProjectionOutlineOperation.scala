@@ -14,27 +14,23 @@ import org.toxicblend.util.Time
 
 class ProjectionOutlineOperation extends CommandProcessorTrait {
   
-  def processInput(inMessage:Message) = {
-    
+  def processInput(inMessage:Message, options:OptionConverter) = {
+    val traceMsg = "ProjectionOutlineOperation"
+       
     // we are only using the first model as input
     val inModel = inMessage.getModelsList().get(0)
     //println(inModel)
-    val options = OptionConverter(inMessage)
     val projectionPlane = options.getOrElse("projectionPlane", "XY_PLANE") match {
       case "YZ_PLANE" => YZ_PLANE
       case "XZ_PLANE" => XZ_PLANE
       case "XY_PLANE" => XY_PLANE
       case s:String => System.err.println("Unknown projection: " +  s ); XY_PLANE
     }
-    val multiThreadProperty = options.getOrElse("multiThreadProperty", "FALSE") match {
-      case "FALSE" => false
-      case "TRUE" => true
-      case s:String => System.err.println("ProjectionOutlineProcessor: Unknown multiThreadProperty property value: " +  s); false
-    }
+    val useMultiThreading = options.getMultiThreadingProperty(traceMsg)
     
     val returnMessageBuilder = Message.newBuilder()
     val result = Mesh2DConverter(inModel, projectionPlane, true)
-    Time.time("projectionOutline ", result.mesh2d.projectionOutline(multiThreadProperty))
+    Time.time("projectionOutline ", result.mesh2d.projectionOutline(useMultiThreading))
      
     val inverseMatrix = if (inModel.hasWorldOrientation()) {
       Option(Matrix4x4Converter(inModel.getWorldOrientation()))

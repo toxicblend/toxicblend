@@ -18,20 +18,20 @@ import scala.collection.JavaConversions._
 class BoostSimplifyOperation extends CommandProcessorTrait {
   protected val traceMsg = "BoostSimplifyOperation"
   
-  def processInput(inMessage:Message) = {
-    val options = OptionConverter(inMessage)
+  def processInput(inMessage:Message, options:OptionConverter) = {
     
-    val useMultiThreading = getMultiThreadingProperty(options,traceMsg)
-    val unitScale = getUnitScaleProperty(options,"BoostSimplifyOperation")
-    val unitSystem = getUnitSystem(options,traceMsg)
-    val simplifyLimit:Float = getFloatProperty(options,"simplifyLimit", 0.1f, traceMsg) / 1000f  // convert from meter to mm
+    val useMultiThreading = options.getMultiThreadingProperty(traceMsg)
+    if (useMultiThreading) System.err.println(traceMsg + ":useMultiThreading=True but it's not implemented yet")
+    val unitScale = options.getUnitScaleProperty(traceMsg)
+    val unitSystem = options.getUnitSystemProperty(traceMsg)
+    val simplifyLimit:Float = options.getFloatProperty("simplifyLimit", 0.1f, traceMsg) / 1000f  // convert from meter to mm
         
     val inverseMatrixes = new ArrayBuffer[Option[Matrix4x4Converter]]
     
     // Convert model vertices to world coordinates so that the simplify scaling makes sense
     val models = inMessage.getModelsList.map(inModel => {
       (Mesh3DConverter(inModel,true), // Unit is now [meter]
-      getWorldModel(inModel))
+      getWorldOrientation(inModel))
     })
     
     // Perform the simplify operation

@@ -83,7 +83,8 @@ case class ServerThread(socket: Socket) extends Thread("ServerThread") {
                   throw new ToxicblendException(errMsg)
                 }
               }
-              processor.processInput(inMessage)
+              val options = OptionConverter(inMessage) 
+              processor.processInput(inMessage, options)
             } catch {
               case e:Throwable => {
                 val message = Message.newBuilder()

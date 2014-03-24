@@ -26,12 +26,10 @@ import org.toxicblend.geometry.Matrix4x4Implicit._
  */
 class SubdivideEdges extends CommandProcessorTrait {
   
-   def processInput(inMessage:Message) = {
+   def processInput(inMessage:Message, options:OptionConverter) = {
     
     // we are only using the first model as input
     val inModel = inMessage.getModelsList().get(0) 
-    val options = OptionConverter(inMessage)
-    //println(options)
     
     val unitScale:Float = options.getOrElse("unitScale", "1.0") match {
       case Regex.FLOAT_REGEX(limit) => limit.toFloat

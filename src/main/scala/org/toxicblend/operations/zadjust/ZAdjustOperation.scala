@@ -45,8 +45,7 @@ class ZAdjustOperation extends CommandProcessorTrait {
     (scale,matrix)
   }
   
-  def processInput(inMessage:Message) = {
-    val options = OptionConverter(inMessage)
+  def processInput(inMessage:Message, options:OptionConverter) = {
     if (inMessage.getModelsCount() < 2) {
       throw new ToxicblendException("At least two objects must be selected")
     }    

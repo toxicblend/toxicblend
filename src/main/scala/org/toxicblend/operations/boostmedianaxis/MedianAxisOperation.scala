@@ -18,53 +18,31 @@ import toxi.geom.ReadonlyVec3D
 
 class MedianAxisOperation extends CommandProcessorTrait {
   
-  protected def manageInput(inMessage:Message) = {
+  protected def manageInput(inMessage:Message, options:OptionConverter) = {
     // we are only using the first model as input
     val inModel = inMessage.getModelsList().get(0)
     val objectName = inModel.getName
-    val options = OptionConverter(inMessage)
-    println(options)
+    val traceMsg = "MedianAxisProcessor"  
     
     val projectionPlane = options.getOrElse("projectionPlane", "None") match {
       case "YZ_PLANE" => YZ_PLANE
       case "XZ_PLANE" => XZ_PLANE
       case "XY_PLANE" => XY_PLANE
       case _ => throw new IllegalArgumentException("No projection plane specified")
-      //case s:String => System.err.println("Unknown projection: " +  s ); None
     }
-    val useMultiThreading = options.getOrElse("useMultiThreading", "None").toUpperCase() match {
-      case "TRUE" => true
-      case "FALSE" => false
-      case s:String => System.err.println("Unrecognizable useMultiThreading property value: " +  s ); false
-    }
-    val simplifyLimit:Float = options.getOrElse("simplifyLimit", "0.0") match {
-      case Regex.FLOAT_REGEX(limit) => limit.toFloat
-      case s:String => System.err.println("MedianAxisProcessor: unrecognizable simplifyLimit property value: " +  s ); 0f
-    }
-    val zEpsilon:Float = options.getOrElse("zEpsilon", "1.1") match {
-      case Regex.FLOAT_REGEX(limit) => limit.toFloat
-      case s:String => System.err.println("MedianAxisProcessor: unrecognizable zEpsilon property value: " +  s ); 1.1f
-    }
-    val dotProductLimit:Float = options.getOrElse("dotProductLimit", "0.3") match {
-      case Regex.FLOAT_REGEX(limit) => limit.toFloat
-      case s:String => System.err.println("MedianAxisProcessor: unrecognizable dotProductLimit property value: " +  s ); .3f
-    }
-    val calculationResolution:Float = options.getOrElse("calculationResolution", MedianAxisOperation.DEFAULT_CALCULATION_RESOLUTION ) match {
-      case Regex.FLOAT_REGEX(limit) => limit.toFloat
-      case s:String => System.err.println("MedianAxisProcessor: unrecognizable calculationResolution property value: " +  s ); MedianAxisOperation.DEFAULT_CALCULATION_RESOLUTION.toFloat
-    }
+    val useMultiThreading = options.getMultiThreadingProperty(traceMsg)
     
-    if ( calculationResolution < 100) {
-      throw new IllegalArgumentException("CalculationResolution must be positive and at least larger than 100")
-    }
-    
-    val rings2D = Rings2DConverter(inModel, projectionPlane, applyWorldTransform=true)
-   
-    val worldTransformation = if (inModel.hasWorldOrientation()) {
-      Option(Matrix4x4Converter(inModel.getWorldOrientation()))
-    } else {
-      None
-    }
+    val simplifyLimit = options.getFloatProperty("simplifyLimit", 0f, traceMsg)
+    val zEpsilon = options.getFloatProperty("zEpsilon", 1.1f, traceMsg) 
+    val dotProductLimit = options.getFloatProperty("dotProductLimit", 0.3f, traceMsg) 
+    val calculationResolution = options.getFloatProperty("calculationResolution", 
+      MedianAxisOperation.DEFAULT_CALCULATION_RESOLUTION, traceMsg) 
+
+    if ( calculationResolution < 100) 
+      throw new IllegalArgumentException("CalculationResolution must be larger than 100")
+ 
+    val rings2D = Rings2DConverter(inModel, projectionPlane, applyWorldTransform=true) 
+    val worldTransformation = getWorldOrientation(inModel)
     (inModel, rings2D, worldTransformation, zEpsilon, dotProductLimit, calculationResolution, simplifyLimit, objectName, projectionPlane, useMultiThreading)
   }
   
@@ -92,11 +70,11 @@ class MedianAxisOperation extends CommandProcessorTrait {
     rv
   }
     
-  def processInput(inMessage:Message) = {
+  def processInput(inMessage:Message, options:OptionConverter) = {
     val majni = MedianAxisJni()
     val returnMessageBuilder = try {
       val (inModel, rings2D, worldTransformation, zEpsilon, dotProductLimit, calculationResolution, simplifyLimit, objectName, projectionPlane, useMultiThreading) = 
-        manageInput(inMessage)   
+        manageInput(inMessage, options)   
       val result = computeMedianAxis(majni, rings2D, zEpsilon, dotProductLimit, calculationResolution, simplifyLimit, objectName, useMultiThreading)
       //println("MedianAxisProcessor found " + result.getFaces.size + " sets of edges")
       val returnPbOutputModel = result.toPBModel(worldTransformation, Option(projectionPlane))
@@ -116,5 +94,5 @@ class MedianAxisOperation extends CommandProcessorTrait {
 
 object MedianAxisOperation {
   // this is how large the integer voronoi calculation range will be (in c++)
-  val DEFAULT_CALCULATION_RESOLUTION = (math.sqrt(Int.MaxValue).toInt * -2).toString
+  val DEFAULT_CALCULATION_RESOLUTION = (math.sqrt(Int.MaxValue).toInt * -2).toFloat
 }

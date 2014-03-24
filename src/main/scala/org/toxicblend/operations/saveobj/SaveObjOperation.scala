@@ -7,8 +7,7 @@ import org.toxicblend.util.FileOperations
 
 class SaveObjOperation extends CommandProcessorTrait {
   
-  def processInput(inMessage:Message) = {
-    val options = OptionConverter(inMessage)
+  def processInput(inMessage:Message, options:OptionConverter) = {
     val filename:String =  FileOperations.absolutePath(options.getOrElse("filename", "file.toxicblend"))
      
     println("SaveObjOperation Saving to " + filename)
