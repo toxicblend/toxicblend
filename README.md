@@ -12,36 +12,20 @@ I have tested the code on Ubuntu 13.10 (64 bit), Gentoo (64 bit) and OSX 10.9 wi
 
 Dependencies
 ------------
-Blender 2.69                                  Only pure python code is used in blender, so blender addon installation is easy)
+Blender 2.69 or 2.70+                         Only pure python code is used in blender, so blender addon installation is easy)
 http://github.com/malthe/google-protobuf.git  Google protobufs with Python 3 support (only needed if you want to build and or modify the .proto file) 
-http://bitbucket.org/ead_fritz/toxiclibs      Toxiclibs fork with some minor tweaks (fork of http://toxiclibs.org) 
-http://github.com/toxicblend/jbulletd         Java port of bullet physics with double precision (fork of http://jbullet.advel.cz) )  
+http://bitbucket.org/ead_fritz/toxiclibs      Toxiclibs fork with some minor tweaks (fork of http://toxiclibs.org) (managed by sbt)
+http://github.com/toxicblend/jbulletd         Java port of bullet physics with double precision (fork of http://jbullet.advel.cz) (managed by sbt)
 http://www.scalatest.org                      Scala test suite (managed by sbt)
 http://www.scala-sbt.org					  Scala build tool
 www.boost.org version 1.55                    (It seems like only 'System' needs to be installed as a library, rest is header files)
-two files from libgdx.badlogicgames.com are blatantly copied into the repository
  
 Installation & running
 ----------------------
 
-0. Download and build http://github.com/toxicblend/jbulletd
-   
-   cd jbulletd
-   
-   sbt -> package
-   
-   make soft links from toxicblend/lib/jbulletd.jar -> your_build_path/jbulletd/target/scala-2.10/jbulletd_2.10-0.1.jar 
-   
-1. Download and compile the bitbucket.org/ead_fritz/toxiclibs code
 
-	hg clone https://bitbucket.org/ead_fritz/toxiclibs
-
-	cd toxiclibs
-
-	ant -f ant/build_all.xml 
-
-	make soft links from toxicblend/lib/toxiclibscore.jar -> your_build_path/toxiclibs/dist/toxiclibscore.jar 
-	and toxicblend/lib/volumeutils.jar ->  your_build_path/toxiclibs/dist/volumeutils.jar
+   
+1. Install sbt if not already installed. http://www.scala-sbt.org/
 	
 2. Install boost 1.55 (boost.org)
 	
@@ -56,7 +40,7 @@ You will find the location with this command in the blender python console:
 	
 	import site; site.getsitepackages()
 
-4. then import the blender addons found in src/main/blender_addon to blender.
+4. Import the blender addons found in src/main/blender_addon to blender.
     Just running them as blender text blocks works.
 
 5. Compile the jni code. 
@@ -79,7 +63,7 @@ You will find the location with this command in the blender python console:
 
     sbt
     
-    compile  (there are a few warnings generated from libgdx and google-protobuf)
+    compile  (there are a few warnings generated from google-protobuf and jbulletd)
     
 7. Run the Java server (still in sbt console)
     
