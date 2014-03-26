@@ -39,6 +39,8 @@ Installation & running
 You will find the location with this command in the blender python console:
 	
 	import site; site.getsitepackages()
+	
+	If you like you can make soft links instead, that way the blender sitepackages will be up to date with your git repo.
 
 4. Import the blender addons found in src/main/blender_addon to blender.
     Just running them as blender text blocks works.
