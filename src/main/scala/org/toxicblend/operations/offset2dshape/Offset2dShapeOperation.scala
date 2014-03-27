@@ -29,26 +29,14 @@ class Offset2dShapeOperation extends CommandProcessorTrait {
     if (useMultiThreading) System.err.println(traceMsg + ":useMultiThreading=True but it's not implemented yet")
     
     val useToOutline = options.getBooleanProperty("useToOutline", false, traceMsg)
-
-    val unitScale:Float = options.getOrElse("unitScale", "1.0") match {
-      case Regex.FLOAT_REGEX(limit) => limit.toFloat
-      case s:String => System.err.println("Offset2dShapeOperation: unrecognizable 'unitScale' property value: " +  s); 1f
-    }
-    val unitIsMetric = options.getOrElse("unitSystem", "METRIC").toUpperCase() match {
-      case "METRIC" => UnitSystem.Metric
-      case "NONE" => throw new ToxicblendException("Offset2dShapeOperation=None but it's not supported"); None
-      case "IMPERIAL" => throw new ToxicblendException("Offset2dShapeOperation=IMPERIAL but it's not supported"); UnitSystem.Imperial
-      case s:String => System.err.println("Offset2dShapeOperation: Unrecognizable 'unitSystem' property value: " +  s ); None
-    }
-    val offset:Float = (options.getOrElse("offset", "0.1") match {
-      case Regex.FLOAT_REGEX(limit) => limit.toFloat
-      case s:String => System.err.println("Offset2dShapeOperation: unrecognizable 'simplifyLimit' property value: " +  s); .1f
-    } ) / 1000f  // convert from meter to mm
-               
+    val unitScale = options.getUnitScaleProperty(traceMsg)
+    val unitIsMetric = options.getUnitSystemProperty(traceMsg)
+    val offset = options.getFloatProperty("offset", 0.1f, traceMsg) /1000f  // convert from meter to mm
+     
     // Convert model vertices to world coordinates so that the offset unit makes sense
     val models = inMessage.getModelsList.map(inModel => {
       (Mesh3DConverter(inModel,true), // Unit is now [meter]
-      if (inModel.hasWorldOrientation()) {
+      if (inModel.hasWorldOrientation) {
         Option(Matrix4x4Converter(inModel.getWorldOrientation))
       } else {
         None
@@ -58,9 +46,7 @@ class Offset2dShapeOperation extends CommandProcessorTrait {
     val returnPolygons = Time.time("FindPlanes calculation time: ", {
       def findSequenceOfPolygons( model:(Mesh3DConverter,Option[Matrix4x4Converter]) ) = {
         val segments = model._1.findContinuousLineSegments._2.filter(seq => seq.size>2)
-        if (segments.size ==0) {
-          println("No edge sequence found in input model.")  
-        }
+        if (segments.size ==0) System.err.println(traceMsg + ": No edge sequence found in input model.")  
 	      val pt = Polygon2DConverter.toPolygon2D(segments)
 	      new Polygon2DConverter(pt.map(p => p._1), pt.map(t => t._2), "Offset shapes")
       }
@@ -81,7 +67,7 @@ class Offset2dShapeOperation extends CommandProcessorTrait {
       val returnMessageBuilder = Message.newBuilder
       if (useMultiThreading){
         // convert the .par sequence back to a normal sequence
-        returnPolygons.toIndexedSeq.foreach(pc => returnMessageBuilder.addModels(pc.toPBModel(None)))
+        returnPolygons.toSeq.foreach(pc => returnMessageBuilder.addModels(pc.toPBModel(None)))
       } else {
         returnPolygons.foreach(pc => returnMessageBuilder.addModels(pc.toPBModel(None)))
       }
