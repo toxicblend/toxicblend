@@ -19,26 +19,20 @@ class SimpleGcodeGeneratorOperation extends CommandProcessorTrait {
   
   def processInput(inMessage:Message, options:OptionConverter) = {
     //println("SimpleGcodeGeneratorOperation: options=" + options)
-    val unitScaleProperty:Float = options.getOrElse("unitScale", "1.0") match {
-      case Regex.FLOAT_REGEX(limit) => limit.toFloat
-      case s:String => System.err.println("SimpleGcodeOperation: unrecognizable 'unitScale' property value: " +  s ); 1f
-    }
+    val traceMsg = "SimpleGcodeOperation"
+    val unitScaleProperty = options.getUnitScaleProperty(traceMsg)
+
     val gcodeProperties = {
-      val unitIsMetricProperty = options.getOrElse("unitSystem", "METRIC").toUpperCase() match {
-        case "METRIC" => UnitSystem.Metric
-        case "NONE" => throw new ToxicblendException("SimpleGcodeGeneratorOperation:unitSystem=None but it's not supported"); None
-        case "IMPERIAL" => throw new ToxicblendException("SimpleGcodeGeneratorOperation:unitSystem=IMPERIAL but it's not supported"); UnitSystem.Imperial
-        case s:String => System.err.println("SimpleGcodeGeneratorOperation: Unrecognizable 'unitSystem' property value: " +  s ); None
-      }
+      val unitSystemProperty =  options.getUnitSystemProperty(traceMsg)
       val outFilename:String = options.getOrElse("outFilename", "gcode.ngc")
-      val safeZProperty:Float = options.getOrElse("safeZ", "10").toFloat
-      val g0FeedrateProperty:Float = options.getOrElse("g0Feedrate", "10").toFloat
-      val g1FeedrateProperty:Float = options.getOrElse("g1Feedrate", "10f").toFloat
-      val g1PlungeFeedrateProperty:Float = options.getOrElse("g1PlungeFeedrate", "10").toFloat
-      val spindleSpeedProperty:Float = options.getOrElse("spindleSpeed", "10").toFloat
+      val safeZProperty:Float = options.getFloatProperty("safeZ", 10f, traceMsg)
+      val g0FeedrateProperty:Float = options.getFloatProperty("g0Feedrate", 10f, traceMsg)
+      val g1FeedrateProperty:Float = options.getFloatProperty("g1Feedrate", 10f, traceMsg)
+      val g1PlungeFeedrateProperty:Float = options.getFloatProperty("g1PlungeFeedrate", 10f, traceMsg)
+      val spindleSpeedProperty:Float = options.getFloatProperty("spindleSpeed", 10f, traceMsg)
       val g64CommandProperty:String = options.getOrElse("g64Command", "G64 P0.02 Q0.02")
       val customEndCommandProperty:String = options.getOrElse("customEndCommand", "M101")      
-      val stepDownProperty:Float = options.getOrElse("stepDown", "1").toFloat
+      val stepDownProperty:Float = options.getFloatProperty("stepDown", 1f, traceMsg)
       
       new GCodeSettings(outFilename=outFilename, safeZ=safeZProperty,g0Feedrate=g0FeedrateProperty, 
           g1Feedrate=g1FeedrateProperty,g1PlungeFeedrate=g1PlungeFeedrateProperty,
