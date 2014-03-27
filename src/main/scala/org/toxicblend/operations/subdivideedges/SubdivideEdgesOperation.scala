@@ -24,7 +24,7 @@ import org.toxicblend.geometry.Matrix4x4Implicit._
 /**
  * This operation simply subdivides the input edges into segments of @segmentDistance length
  */
-class SubdivideEdges extends CommandProcessorTrait {
+class SubdivideEdgesOperation extends CommandProcessorTrait {
   
    def processInput(inMessage:Message, options:OptionConverter) = {
     
