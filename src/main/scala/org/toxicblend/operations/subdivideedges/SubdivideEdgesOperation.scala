@@ -11,6 +11,7 @@ import toxi.geom.mesh.LaplacianSmooth
 import toxi.geom.AABB
 import toxi.geom.Matrix4x4
 import toxi.geom.LineStrip3D
+import org.toxicblend.util.Time
 import toxi.volume.{MeshLatticeBuilder,VolumetricSpace, VolumetricBrush, RoundBrush, BoxBrush, HashIsoSurface}
 import toxi.util.datatypes.FloatRange
 import scala.collection.JavaConversions._
@@ -22,34 +23,23 @@ import org.toxicblend.UnitSystem
 import org.toxicblend.geometry.Matrix4x4Implicit._
 
 /**
- * This operation simply subdivides the input edges into segments of @segmentDistance length
+ * This operation subdivides the input edges into segments of @segmentDistance length
  */
 class SubdivideEdgesOperation extends CommandProcessorTrait {
   
    def processInput(inMessage:Message, options:OptionConverter) = {
     
+     val traceMsg = "SubdivideEdges"    
     // we are only using the first model as input
-    val inModel = inMessage.getModelsList().get(0) 
-    
-    val unitScale:Float = options.getOrElse("unitScale", "1.0") match {
-      case Regex.FLOAT_REGEX(limit) => limit.toFloat
-      case s:String => System.err.println("BoostSimplifyOperation: unrecognizable 'unitScale' property value: " +  s); 1f
-    }
-    val unitIsMetric = options.getOrElse("unitSystem", "METRIC").toUpperCase() match {
-      case "METRIC" => UnitSystem.Metric
-      case "NONE" => throw new ToxicblendException("BoostSimplifyOperation: unitSystem=None but it's not supported"); None
-      case "IMPERIAL" => throw new ToxicblendException("BoostSimplifyOperation:u nitSystem=IMPERIAL but it's not supported"); UnitSystem.Imperial
-      case s:String => System.err.println("BoostSimplifyOperation: Unrecognizable 'unitSystem' property value: " +  s ); None
-    }
-    val segmentLength:Float = options.getOrElse("segmentLength", "1.0") match {
-      case Regex.FLOAT_REGEX(limit) => unitScale*limit.toFloat / 1000f
-      case s:String => System.err.println("SubdivideEdges: unrecognizable 'segmentLength' property value: " +  s ); unitScale/1000f
-    }
+    val inModel = inMessage.getModelsList.get(0)
+    val unitScale = options.getUnitScaleProperty(traceMsg)
+    val unitSystem = options.getUnitSystemProperty(traceMsg)
+    val segmentLength:Float = options.getFloatProperty("segmentLength", 1f, traceMsg)*unitScale/1000f  // convert from meter to mm
     
     val input = LineStripConverter(inModel,true)
-    println("input vertices:" + input.lineStrips.foldLeft(0)((b,a) => b+a.getVertices.size))
+    //println("input vertices:" + input.lineStrips.foldLeft(0)((b,a) => b+a.getVertices.size))
     //input.lineStrips.foreach(ls => println(ls.mkString(",")))
-    val output = {
+    val output = Time.time(traceMsg + ":getDecimatedVertices calculation time: ", {
       val newStrips = input.lineStrips.map(ls => {
         //println("undecimated" + ls.getVertices.mkString(","))
         val decimated = ls.getDecimatedVertices(segmentLength)
@@ -57,11 +47,11 @@ class SubdivideEdgesOperation extends CommandProcessorTrait {
         new LineStrip3D(decimated)  
       })
       LineStripConverter(newStrips,"Subdivided Edges")
-    }
-    println("output vertices:" + output.lineStrips.foldLeft(0)((b,a) => b+a.getVertices.size))
+    })
+    //println("output vertices:" + output.lineStrips.foldLeft(0)((b,a) => b+a.getVertices.size))
     //output.lineStrips.foreach(ls => println(ls.mkString(",")))
         
-    {
+    Time.time("Building resulting pBModel: ",{
       val messageBuilder = Message.newBuilder
       val pbModel = output.toPBModel(uniqueVertices=false)
 	    //if (inModel.hasWorldOrientation()) {
@@ -70,7 +60,6 @@ class SubdivideEdgesOperation extends CommandProcessorTrait {
 	    //  pbModel.setWorldOrientation(mConverter.toPBModel)
 	    //}
 	    messageBuilder.addModels(pbModel)
-	    //messageBuilder
-    }
+    })
   }  
 }
