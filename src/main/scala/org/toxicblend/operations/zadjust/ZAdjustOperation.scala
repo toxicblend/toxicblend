@@ -46,44 +46,28 @@ class ZAdjustOperation extends CommandProcessorTrait {
   }
   
   def processInput(inMessage:Message, options:OptionConverter) = {
+    
+    val traceMsg = "ZAdjustOperation"
+
     if (inMessage.getModelsCount() < 2) {
       throw new ToxicblendException("At least two objects must be selected")
     }    
-    val useMultiThreading = options.getOrElse("useMultiThreading", "FALSE").toUpperCase() match {
-      case "TRUE" => System.err.println("ZAdjustOperation:useMultiThreading=True but it's not implemented yet"); true
-      case "FALSE" => false
-      case s:String => System.err.println("ZAdjustOperation: Unrecognizable 'useMultiThreading' property value: " +  s ); false
-    }
-    val unitScale:Float = options.getOrElse("unitScale", "1.0") match {
-      case Regex.FLOAT_REGEX(limit) => limit.toFloat
-      case s:String => System.err.println("ZAdjustOperation: unrecognizable 'unitScale' property value: " +  s ); 1f
-    }
-    val unitIsMetric = options.getOrElse("unitSystem", "METRIC").toUpperCase() match {
-      case "METRIC" => UnitSystem.Metric
-      case "NONE" => throw new ToxicblendException("ZAdjustOperation:unitSystem=None but it's not supported"); None
-      case "IMPERIAL" => throw new ToxicblendException("ZAdjustOperation:unitSystem=IMPERIAL but it's not supported"); UnitSystem.Imperial
-      case s:String => System.err.println("ZAdjustOperation: Unrecognizable 'unitSystem' property value: " +  s ); None
-    }
-    val sampleStep:Float = (options.getOrElse("sampleStep", "0.1") match {
-      case Regex.FLOAT_REGEX(limit) => limit.toFloat
-      case s:String => System.err.println("ZAdjustOperation: unrecognizable 'sampleStep' property value: " +  s ); .1f
-    } ) / 1000f // /1000 for conversion to mm
-    val addDiff:Boolean = options.getOrElse("addDiff", "FALSE").toUpperCase() match {
-      case "TRUE" => true
-      case "FALSE" => false
-      case s:String => System.err.println("ZAdjustOperation: Unrecognizable 'addDiff' property value: " +  s ); false
-    }
+    val useMultiThreading = options.getMultiThreadingProperty(traceMsg)
+    val unitScale = options.getUnitScaleProperty(traceMsg)
+    val unitSystem = options.getUnitSystemProperty(traceMsg)
+    val sampleStep = options.getFloatProperty("sampleStep", 0.1f, traceMsg) / 1000f  // convert from meter to mm
+    val addDiff = options.getBooleanProperty("addDiff", false, traceMsg) 
     
     //println(options)
-    println("sampleStep="+ sampleStep)
+    //println("sampleStep="+ sampleStep)
     //println("Input segment :" )
     //segments.foreach( s => println(s.mkString("\n")) )
     // models = all models found in inMessage except the first one
     
-    val segments = Time.time("findContinuousLineSegments: ",{
+    val segments = Time.time(traceMsg + "findContinuousLineSegments: ",{
       val s = Mesh3DConverter(inMessage.getModels(0),true).findContinuousLineSegments
       if (s._1.size > 0) throw new ToxicblendException("First object should only contain edges")
-      s._2.filter( g => g.size <= 1).foreach(g => System.err.println("ZAdjustOperation:invalid input segment " + g))
+      s._2.filter( g => g.size <= 1).foreach(g => System.err.println(traceMsg + ":invalid input segment " + g))
       s._2.map( seg => seg.map(v => new Point3dE(v.x, v.y, v.z)))
     })
    
@@ -134,7 +118,7 @@ class ZAdjustOperation extends CommandProcessorTrait {
     Time.time("Building resulting pBModel: ", {
       val returnMessageBuilder = Message.newBuilder()
       val returnMeshConverter = new Mesh3DConverter("ray results") 
-      result.foreach(s1 => s1.sliding(2).foreach(s2 => returnMeshConverter.addEdge(s2(0), s2(1))))
+      result.toSeq.foreach(s1 => s1.sliding(2).foreach(s2 => returnMeshConverter.addEdge(s2(0), s2(1))))
           
       returnMessageBuilder.addModels(returnMeshConverter.toPBModel(None, None))
       returnMessageBuilder 
