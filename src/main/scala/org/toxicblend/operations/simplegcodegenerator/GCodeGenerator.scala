@@ -65,11 +65,11 @@ class GCodeGenerator(val gCodeProperties:GCodeSettings) {
 	    val offset = new Vec3D(0f, 0f, 0)  // TODO: fix this transform offset, it's just 0 offset now 
 	    new Matrix4f(offset, scale)
     }
-  
+    
+    val mmToBlenderUnit = 1f/gcodeProperties.blenderUnitToMM
     val rv = edges.map( segment => {
-      val pGoints = segment.map(point => {  
-        val tmp = transform.transformOne(new Vec3D(point.x*1000f, point.y*1000f, point.z*1000f))
-        tmp
+      val pGoints = segment.map(point => {
+        transform.transformOne(new Vec3D(point.x*mmToBlenderUnit, point.y*mmToBlenderUnit, point.z*mmToBlenderUnit))
       })
       new GCode(pGoints)
     }) 
@@ -146,15 +146,15 @@ class GCodeGenerator(val gCodeProperties:GCodeSettings) {
     assert(gCodeProperties.stepDown > 0)
     
     val (allUnadjustedGCodes, aabb) = {
-      val scaleMToMM = 1000f
+      val scaleMToMM = gCodeProperties.blenderUnitToMM
       //val simplifyLimit = gCodeProperties.get("simplifyLimit").get  
       //val aabb = mesh.getBounds.scaleSelf(scaleMToMM).asInstanceOf[AABB]
       val segments = mesh.findContinuousLineSegments
       if (segments._2.size > 0 && segments._2(0).size > 0) {
           // recalculate the aabb, with the mm conversion and all
-          val aabb = new AABB(segments._2(0)(0).scale(1000f), 0f) // meter to mm
-          segments._2.foreach(segment => segment.foreach(point => aabb.growToContainPoint(point.scale(1000f)))) // meter to mm
-          println("Bounding Box: %s min:%s max:%S".format(aabb.toString, aabb.getMin().toString(), aabb.getMax().toString() ))
+          val aabb = new AABB(segments._2(0)(0).scale(scaleMToMM), 0f) // meter to mm
+          segments._2.foreach(segment => segment.foreach(point => aabb.growToContainPoint(point.scale(scaleMToMM)))) // meter to mm
+          //println("Bounding Box: %s min:%s max:%S".format(aabb.toString, aabb.getMin().toString(), aabb.getMax().toString() ))
           (generateGcode(segments._2, aabb, gCodeProperties).filter(g => g.gcodePoints.size > 0),aabb)
         } else {
         (new ArrayBuffer[GCode], new AABB)

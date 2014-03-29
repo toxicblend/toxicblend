@@ -31,7 +31,7 @@ class Offset2dShapeOperation extends CommandProcessorTrait {
     val useToOutline = options.getBooleanProperty("useToOutline", false, traceMsg)
     val unitScale = options.getUnitScaleProperty(traceMsg)
     val unitIsMetric = options.getUnitSystemProperty(traceMsg)
-    val offset = options.getFloatProperty("offset", 0.1f, traceMsg) /1000f  // convert from meter to mm
+    val offset = options.getFloatProperty("offset", 0.1f, traceMsg)*unitScale/1000f // convert from meter to mm
      
     // Convert model vertices to world coordinates so that the offset unit makes sense
     val models = inMessage.getModelsList.map(inModel => {

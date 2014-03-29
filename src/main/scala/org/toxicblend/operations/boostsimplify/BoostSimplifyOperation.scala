@@ -24,7 +24,7 @@ class BoostSimplifyOperation extends CommandProcessorTrait {
     if (useMultiThreading) System.err.println(traceMsg + ":useMultiThreading=True but it's not implemented yet")
     val unitScale = options.getUnitScaleProperty(traceMsg)
     val unitSystem = options.getUnitSystemProperty(traceMsg)
-    val simplifyLimit:Float = options.getFloatProperty("simplifyLimit", 0.1f, traceMsg) / 1000f  // convert from meter to mm
+    val simplifyLimit:Float = options.getFloatProperty("simplifyLimit", 0.1f, traceMsg) *unitScale/1000f // convert from meter to mm
         
     val inverseMatrixes = new ArrayBuffer[Option[Matrix4x4Converter]]
     

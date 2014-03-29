@@ -34,9 +34,9 @@ class SimpleGcodeGeneratorOperation extends CommandProcessorTrait {
       val customEndCommandProperty:String = options.getOrElse("customEndCommand", "M101")      
       val stepDownProperty:Float = options.getFloatProperty("stepDown", 1f, traceMsg)
       
-      new GCodeSettings(outFilename=outFilename, safeZ=safeZProperty,g0Feedrate=g0FeedrateProperty, 
-          g1Feedrate=g1FeedrateProperty,g1PlungeFeedrate=g1PlungeFeedrateProperty,
-          spindleSpeed=spindleSpeedProperty,g64Command=g64CommandProperty,customEndCommand=customEndCommandProperty,stepDown=stepDownProperty)
+      new GCodeSettings(blenderUnitToMM=1000f*unitScaleProperty, outFilename=outFilename, safeZ=safeZProperty,g0Feedrate=g0FeedrateProperty, 
+        g1Feedrate=g1FeedrateProperty,g1PlungeFeedrate=g1PlungeFeedrateProperty,
+        spindleSpeed=spindleSpeedProperty,g64Command=g64CommandProperty,customEndCommand=customEndCommandProperty,stepDown=stepDownProperty)
     }
     Time.time("Building " + gcodeProperties.outFilename + " :",{ 
       // translate every vertex into world coordinates

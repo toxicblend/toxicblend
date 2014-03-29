@@ -8,9 +8,9 @@ import org.toxicblend.operations.simplegcodegenerator.GCodeSettings
 
 class GCodeTests1 extends FlatSpec with Matchers {
   def setup():GCodeSettings = {
-    val rv = new GCodeSettings(outFilename="test.ngc",safeZ=2.f, g0Feedrate=1, g1Feedrate=2,
-                               g1PlungeFeedrate=3,spindleSpeed=4,g64Command="G64",
-                               customEndCommand="M101",stepDown=5f)
+    val rv = new GCodeSettings(blenderUnitToMM=100f, outFilename="test.ngc", safeZ=2.f, g0Feedrate=1, g1Feedrate=2,
+                               g1PlungeFeedrate=3, spindleSpeed=4, g64Command="G64",
+                               customEndCommand="M101", stepDown=5f)
     rv
   }
   
@@ -54,7 +54,7 @@ class GCodeTests1 extends FlatSpec with Matchers {
       state0
     }
     state = {
-      val prop2 = new GCodeSettings(outFilename=prop.outFilename, safeZ=prop.safeZ, g0Feedrate=prop.g0Feedrate, g1Feedrate=10,
+      val prop2 = new GCodeSettings(blenderUnitToMM=1000f, outFilename=prop.outFilename, safeZ=prop.safeZ, g0Feedrate=prop.g0Feedrate, g1Feedrate=10,
                                 g1PlungeFeedrate=prop.g1PlungeFeedrate, spindleSpeed=prop.spindleSpeed,
                                 g64Command=prop.g64Command, customEndCommand=prop.customEndCommand,
                                 stepDown=prop.stepDown) 
@@ -91,7 +91,7 @@ class GCodeTests1 extends FlatSpec with Matchers {
       state0
     }
     state = {
-      val prop2 = new GCodeSettings(outFilename=prop.outFilename, safeZ=5, g0Feedrate=123, 
+      val prop2 = new GCodeSettings(blenderUnitToMM=1000f, outFilename=prop.outFilename, safeZ=5, g0Feedrate=123, 
                                     g1Feedrate=prop.g1Feedrate,
                                     g1PlungeFeedrate=prop.g1PlungeFeedrate, spindleSpeed=prop.spindleSpeed,
                                     g64Command=prop.g64Command, customEndCommand=prop.customEndCommand,
@@ -140,7 +140,7 @@ class GCodeTests1 extends FlatSpec with Matchers {
       state0
     }
     state = {
-      val prop2 = new GCodeSettings(outFilename=prop.outFilename, safeZ=prop.safeZ, g0Feedrate=123, 
+      val prop2 = new GCodeSettings(blenderUnitToMM=1000f, outFilename=prop.outFilename, safeZ=prop.safeZ, g0Feedrate=123, 
                                     g1Feedrate=prop.g1Feedrate,
                                     g1PlungeFeedrate=prop.g1PlungeFeedrate, spindleSpeed=prop.spindleSpeed,
                                     g64Command=prop.g64Command, customEndCommand=prop.customEndCommand,
@@ -187,7 +187,7 @@ class GCodeTests1 extends FlatSpec with Matchers {
     }
     
     state = {
-      val prop2 = new GCodeSettings(outFilename=prop.outFilename, safeZ=prop.safeZ, g0Feedrate=prop.g0Feedrate, g1Feedrate=10,
+      val prop2 = new GCodeSettings(blenderUnitToMM=1000f, outFilename=prop.outFilename, safeZ=prop.safeZ, g0Feedrate=prop.g0Feedrate, g1Feedrate=10,
                                 g1PlungeFeedrate=prop.g1PlungeFeedrate, spindleSpeed=prop.spindleSpeed,
                                 g64Command=prop.g64Command, customEndCommand=prop.customEndCommand,
                                 stepDown=prop.stepDown) 

@@ -55,7 +55,7 @@ class ZAdjustOperation extends CommandProcessorTrait {
     val useMultiThreading = options.getMultiThreadingProperty(traceMsg)
     val unitScale = options.getUnitScaleProperty(traceMsg)
     val unitSystem = options.getUnitSystemProperty(traceMsg)
-    val sampleStep = options.getFloatProperty("sampleStep", 0.1f, traceMsg) / 1000f  // convert from meter to mm
+    val sampleStep = options.getFloatProperty("sampleStep", 0.1f, traceMsg)*unitScale/1000f  // convert from meter to mm
     val addDiff = options.getBooleanProperty("addDiff", false, traceMsg) 
     
     //println(options)

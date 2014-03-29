@@ -3,9 +3,10 @@ package org.toxicblend.operations.simplegcodegenerator
 import scala.collection.mutable.ArrayBuffer
 
 /**
- * Everything in here is in millimeter, mm/s and rpm as applicable
+ * Everything (but blenderUnitToMM) in here is in millimeter, mm/s and rpm as applicable
  */
-class GCodeSettings(val outFilename:String,
+class GCodeSettings(val blenderUnitToMM:Float,
+                    val outFilename:String,
                     val safeZ:Float,
                     val g0Feedrate:Float,
                     val g1Feedrate:Float,
@@ -14,6 +15,7 @@ class GCodeSettings(val outFilename:String,
                     val g64Command:String,
                     val customEndCommand:String,
                     val stepDown:Float ) {
+  
   val safeZAsString = GCode.floatToString(safeZ)
   val g0FeedrateAsString = GCode.floatToString(g0Feedrate)
   val g1FeedrateAsString = GCode.floatToString(g1Feedrate)
