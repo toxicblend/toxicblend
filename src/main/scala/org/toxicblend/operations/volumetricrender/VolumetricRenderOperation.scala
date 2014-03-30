@@ -1,6 +1,7 @@
 package org.toxicblend.operations.volumetricrender
 
 import org.toxicblend.util.Regex
+import org.toxicblend.util.Time.time
 import org.toxicblend.CommandProcessorTrait
 import org.toxicblend.protobuf.ToxicBlendProtos.Message
 import org.toxicblend.protobuf.ToxicBlendProtos.Model
@@ -117,7 +118,7 @@ class VolumetricRenderOperation extends CommandProcessorTrait {
     volume.closeSides
     // create an iso surface for the volume and threshold value
     // and turn it into a triangle mesh
-    new HashIsoSurface(volume).computeSurfaceMesh(mesh, voxelIsoValue)
+    time("Running computeSurfaceMesh: ", new HashIsoSurface(volume).computeSurfaceMesh(mesh, voxelIsoValue));
     
     {
       // laplacian smooth sometimes deforms scale and origin, so i transform the mesh 
@@ -144,25 +145,28 @@ class VolumetricRenderOperation extends CommandProcessorTrait {
     // neighboring mesh vertices and so reduce voxel aliasing
     
     if (laplacianSmoothIterations > 0) {
-      try new LaplacianSmooth().filter(mesh, laplacianSmoothIterations)
-      catch {
-        // sometimes it just throws an exception
-        case e: NullPointerException => e.printStackTrace
-      }
-      println("Done doing "+laplacianSmoothIterations + " laplacian smooth iterations")
+      time("Running laplacianSmoothIterations: ", {
+        try new LaplacianSmooth().filter(mesh, laplacianSmoothIterations)
+	      catch {
+	        // sometimes it just throws an exception
+	        case e: NullPointerException => e.printStackTrace
+	      }
+      })
     }
     
-
+    time("Fixing face normals ", mesh.faceOutwards)
     
-    val messageBuilder = Message.newBuilder
-    val pbModel = Mesh3DConverter(mesh).toPBModel(None, None)
-    //if (inModel.hasWorldOrientation()) {
-      // simply copy the world orientation
-    //  val mConverter = Matrix4x4Converter(inModel.getWorldOrientation)
-    //  pbModel.setWorldOrientation(mConverter.toPBModel)
-    //}
-    pbModel.setName("Iso surface")
-    messageBuilder.addModels(pbModel)
-    messageBuilder
+    time("Building packet buffer reply: ", {
+      val messageBuilder = Message.newBuilder
+    
+	    val pbModel = Mesh3DConverter(mesh).toPBModel(None, None)
+	    //if (inModel.hasWorldOrientation()) {
+	      // simply copy the world orientation
+	    //  val mConverter = Matrix4x4Converter(inModel.getWorldOrientation)
+	    //  pbModel.setWorldOrientation(mConverter.toPBModel)
+	    //}
+	    pbModel.setName("Iso surface")
+	    messageBuilder.addModels(pbModel)
+    })
   }  
 }
