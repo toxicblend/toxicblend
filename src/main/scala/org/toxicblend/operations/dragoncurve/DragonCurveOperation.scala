@@ -5,6 +5,7 @@ import scala.collection.mutable.ArrayBuffer
 import toxi.geom.Vec3D
 import toxi.geom.ReadonlyVec3D
 import toxi.geom.LineStrip3D
+import org.toxicblend.util.Time.time
 import org.toxicblend.protobuf.ToxicBlendProtos.Message
 import org.toxicblend.typeconverters.LineStripConverter
 import org.toxicblend.typeconverters.OptionConverter
@@ -23,11 +24,11 @@ class DragonCurveOperation extends CommandProcessorTrait {
     val iterations = options.getIntProperty("iterations", 9, traceMsg)   
     val edgeLength = options.getFloatProperty("edgeLength", 1f, traceMsg)
     val cursorPos = options.getCursorPosProperty(traceMsg)
-    Message.newBuilder.addModels({
+    time("Dragon curve operation:", Message.newBuilder.addModels({
       val dragon = DragonCurveOperation.draw(DragonCurveOperation.generateData(iterations), edgeLength)
       val model = LineStripConverter(dragon,"dragon curve") 
       model.center(cursorPos).toPBModel(uniqueVertices=false) // don't run remove doubles
-    })
+    }))
   }
 }
 

@@ -1,7 +1,7 @@
 package org.toxicblend.operations.zadjust
 
 import org.toxicblend.CommandProcessorTrait
-import org.toxicblend.util.Time
+import org.toxicblend.util.Time.time
 import org.toxicblend.protobuf.ToxicBlendProtos.Message
 import org.toxicblend.typeconverters.OptionConverter
 import org.toxicblend.typeconverters.Mesh3DConverter
@@ -64,14 +64,14 @@ class ZAdjustOperation extends CommandProcessorTrait {
     //segments.foreach( s => println(s.mkString("\n")) )
     // models = all models found in inMessage except the first one
     
-    val segments = Time.time(traceMsg + "findContinuousLineSegments: ",{
+    val segments = time(traceMsg + "findContinuousLineSegments: ",{
       val s = Mesh3DConverter(inMessage.getModels(0),true).findContinuousLineSegments
       if (s._1.size > 0) throw new ToxicblendException("First object should only contain edges")
       s._2.filter( g => g.size <= 1).foreach(g => System.err.println(traceMsg + ":invalid input segment " + g))
       s._2.map( seg => seg.map(v => new Point3dE(v.x, v.y, v.z)))
     })
    
-    val models = Time.time("Parse collision objects: ", 
+    val models = time("Parse collision objects: ", 
         inMessage.getModelsList.tail.toIndexedSeq.map(i=>ByteBufferMeshConverter(i,true, unitScale)))
     val aabbAllModels = new AABB(models.map(m=>m.aabb))
     val (bulletScaling,bulletScalingM) = getResonableScaling(aabbAllModels)
@@ -81,7 +81,7 @@ class ZAdjustOperation extends CommandProcessorTrait {
     segments.foreach(segment => segment.foreach( p=>bulletScalingM.transform(p)))
     models.foreach(model => model.transformVertices(bulletScalingM) )
     
-    val result = Time.time("Collision calculation time: ", {
+    val result = time("Collision calculation time: ", {
       val facade = new BulletFacade(models)
       val collider = new Collider(facade, sampleStep*bulletScaling) 
       /*
@@ -115,7 +115,7 @@ class ZAdjustOperation extends CommandProcessorTrait {
     //result.foreach( s => println(s.mkString("\n")) )
 
     //collider.cleanup
-    Time.time("Building resulting pBModel: ", {
+    time("Building resulting pBModel: ", {
       val returnMessageBuilder = Message.newBuilder()
       val returnMeshConverter = new Mesh3DConverter("ray results") 
       result.toSeq.foreach(s1 => s1.sliding(2).foreach(s2 => returnMeshConverter.addEdge(s2(0), s2(1))))

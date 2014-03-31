@@ -6,7 +6,7 @@ import org.toxicblend.UnitSystem
 import org.toxicblend.util.Regex
 import scala.collection.mutable.ArrayBuffer
 import toxi.geom.Vec3D
-import org.toxicblend.util.Time
+import org.toxicblend.util.Time.time
 import org.toxicblend.protobuf.ToxicBlendProtos.Message
 import org.toxicblend.typeconverters.Mesh3DConverter
 import org.toxicblend.typeconverters.OptionConverter
@@ -38,7 +38,7 @@ class SimpleGcodeGeneratorOperation extends CommandProcessorTrait {
         g1Feedrate=g1FeedrateProperty,g1PlungeFeedrate=g1PlungeFeedrateProperty,
         spindleSpeed=spindleSpeedProperty,g64Command=g64CommandProperty,customEndCommand=customEndCommandProperty,stepDown=stepDownProperty)
     }
-    Time.time("Building " + gcodeProperties.outFilename + " :",{ 
+    time("Building " + gcodeProperties.outFilename + " :",{ 
       // translate every vertex into world coordinates
       val models = inMessage.getModelsList().map(inModel => Mesh3DConverter(inModel,true,unitScaleProperty))
       val gCodeGenerator = new GCodeGenerator(gcodeProperties)
@@ -57,7 +57,7 @@ class SimpleGcodeGeneratorOperation extends CommandProcessorTrait {
       gCodeGenerator.saveGCode(gcodeProperties.outFilename, header, gcodeAsText, gCodeGenerator.gFooter)
     })
     
-    Time.time("Parsing " + gcodeProperties.outFilename + " :",{
+    time("Parsing " + gcodeProperties.outFilename + " :",{
       val returnMessageBuilder = Message.newBuilder()
       try {
         SimpleGcodeParseOperation.readGcodeIntoBuilder(gcodeProperties.outFilename, options, returnMessageBuilder)

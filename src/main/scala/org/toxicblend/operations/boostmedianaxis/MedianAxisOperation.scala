@@ -13,7 +13,7 @@ import org.toxicblend.util.Regex
 import org.toxicblend.CommandProcessorTrait
 import scala.collection.parallel.mutable.ParArray
 import scala.collection.mutable.ArrayBuffer
-import org.toxicblend.util.Time
+import org.toxicblend.util.Time.time
 import toxi.geom.ReadonlyVec3D
 
 class MedianAxisOperation extends CommandProcessorTrait {
@@ -48,15 +48,15 @@ class MedianAxisOperation extends CommandProcessorTrait {
   
   def computeMedianAxis(majni:MedianAxisJni,rings2D:Rings2DConverter, zEpsilon:Float, dotProductLimit:Float, calculationResolution:Float, simplifyLimit:Float, objectName:String, useMultiThreading:Boolean):Mesh3DConverter = {
     
-    var ringSeq = Time.time("loadRings ", majni.loadRings2D(rings2D.mesh2d, simplifyLimit, objectName) )
+    var ringSeq = time("loadRings ", majni.loadRings2D(rings2D.mesh2d, simplifyLimit, objectName) )
     ringSeq = Ring2D.sortOutInternals(ringSeq)
     
     println("Starting interiorVoronoiEdges: objectName=" + objectName+ " zEpsilon=" +zEpsilon+ " dotProductLimit=" +dotProductLimit + " calculationResolution="+ calculationResolution + " simplifyLimit="+ simplifyLimit + " useMultiThreading=" + useMultiThreading);
     val internalEdges =
     if (useMultiThreading) 
-      Time.time("removeZDoubles ", ringSeq.par.map(ring => Mesh3DConverter.removeZDoubles(majni.voronoiInternalEdges(ring, zEpsilon, dotProductLimit, calculationResolution, simplifyLimit))).toArray )
+      time("removeZDoubles ", ringSeq.par.map(ring => Mesh3DConverter.removeZDoubles(majni.voronoiInternalEdges(ring, zEpsilon, dotProductLimit, calculationResolution, simplifyLimit))).toArray )
     else
-      Time.time("removeZDoubles ", ringSeq.map(ring => Mesh3DConverter.removeZDoubles(majni.voronoiInternalEdges(ring, zEpsilon, dotProductLimit, calculationResolution, simplifyLimit))).toArray )
+      time("removeZDoubles ", ringSeq.map(ring => Mesh3DConverter.removeZDoubles(majni.voronoiInternalEdges(ring, zEpsilon, dotProductLimit, calculationResolution, simplifyLimit))).toArray )
    
     val rv = new Mesh3DConverter
     // Do .toArray before assembling result into one Mesh3DConverter

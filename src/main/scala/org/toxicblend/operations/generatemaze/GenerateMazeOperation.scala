@@ -8,7 +8,7 @@ import org.toxicblend.typeconverters.Mesh3DConverter
 import org.toxicblend.typeconverters.Matrix4x4Converter
 import toxi.geom.ReadonlyVec3D
 import scala.collection.mutable.ArrayBuffer
-
+import org.toxicblend.util.Time.time
 import scala.collection.JavaConversions._
 
 class GenerateMazeOperation extends CommandProcessorTrait {
@@ -28,7 +28,7 @@ class GenerateMazeOperation extends CommandProcessorTrait {
     }
     
     // Perform the generate maze on each model
-    val result = models.map(model =>{    
+    val result = time("Generate maze:", models.map(model =>{    
       val mazegenerator = new MazeGenerator(model._1.getBounds)
       val segments = model._1.findContinuousLineSegments
       if (segments._2.size < 2) {
@@ -40,7 +40,7 @@ class GenerateMazeOperation extends CommandProcessorTrait {
         }
       })
       returnMessageBuilder.addModels(mazegenerator.generateMaze(model._1.name + " maze", model._2, startPoint))
-    })
+    }))
     
     returnMessageBuilder
   }

@@ -2,7 +2,7 @@ package org.toxicblend.operations.boostsimplify
 
 import org.toxicblend.ToxicblendException
 import org.toxicblend.UnitSystem
-import org.toxicblend.util.Time
+import org.toxicblend.util.Time.time
 import org.toxicblend.CommandProcessorTrait
 import org.toxicblend.util.Regex
 import org.toxicblend.protobuf.ToxicBlendProtos.Message
@@ -35,7 +35,7 @@ class BoostSimplifyOperation extends CommandProcessorTrait {
     })
     
     // Perform the simplify operation
-    val result = Time.time("Boost Simplify calculation time: ", models.map(model =>{      
+    val result = time("Boost Simplify calculation time: ", models.map(model =>{      
       val segments = model._1.findContinuousLineSegments
       val newMesh = new Mesh3DConverter(model._1.name + " boost simplify"); 
       segments._1.foreach(ngon => newMesh.addFace(ngon))
@@ -50,7 +50,7 @@ class BoostSimplifyOperation extends CommandProcessorTrait {
       (newMesh,model._2)
     }))
     
-    Time.time("Building resulting pBModel: ",{
+    time("Building resulting pBModel: ",{
       val returnMessageBuilder = Message.newBuilder
       // Convert the coordinate system back again (world orientation matrix.inverse)
       result.foreach(mesh3d => {

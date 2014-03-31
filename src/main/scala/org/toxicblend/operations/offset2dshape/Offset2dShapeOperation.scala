@@ -2,7 +2,7 @@ package org.toxicblend.operations.offset2dshape
 
 import org.toxicblend.ToxicblendException
 import org.toxicblend.UnitSystem
-import org.toxicblend.util.Time
+import org.toxicblend.util.Time.time
 import org.toxicblend.CommandProcessorTrait
 import org.toxicblend.geometry.ProjectionPlane.YZ_PLANE
 import org.toxicblend.geometry.ProjectionPlane.XZ_PLANE
@@ -43,7 +43,7 @@ class Offset2dShapeOperation extends CommandProcessorTrait {
       })
     })
     
-    val returnPolygons = Time.time("FindPlanes calculation time: ", {
+    val returnPolygons = time("FindPlanes calculation time: ", {
       def findSequenceOfPolygons( model:(Mesh3DConverter,Option[Matrix4x4Converter]) ) = {
         val segments = model._1.findContinuousLineSegments._2.filter(seq => seq.size>2)
         if (segments.size ==0) System.err.println(traceMsg + ": No edge sequence found in input model.")  
@@ -57,13 +57,13 @@ class Offset2dShapeOperation extends CommandProcessorTrait {
       }
     })
            
-    Time.time("Executing offsetShape : ", returnPolygons.foreach(pc => pc.polygons.foreach(p=>p.offsetShape(offset) )))
+    time("Executing offsetShape : ", returnPolygons.foreach(pc => pc.polygons.foreach(p=>p.offsetShape(offset) )))
     
     if (useToOutline) {
-	    Time.time("Executing toOutline : ", returnPolygons.foreach(pc => pc.polygons.foreach(p=>p.toOutline)))
+	    time("Executing toOutline : ", returnPolygons.foreach(pc => pc.polygons.foreach(p=>p.toOutline)))
     }
         
-    Time.time("Building resulting pBModel: ",{
+    time("Building resulting pBModel: ",{
       val returnMessageBuilder = Message.newBuilder
       if (useMultiThreading){
         // convert the .par sequence back to a normal sequence

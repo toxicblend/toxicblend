@@ -11,7 +11,7 @@ import toxi.geom.mesh.LaplacianSmooth
 import toxi.geom.AABB
 import toxi.geom.Matrix4x4
 import toxi.geom.LineStrip3D
-import org.toxicblend.util.Time
+import org.toxicblend.util.Time.time
 import toxi.volume.{MeshLatticeBuilder,VolumetricSpace, VolumetricBrush, RoundBrush, BoxBrush, HashIsoSurface}
 import toxi.util.datatypes.FloatRange
 import scala.collection.JavaConversions._
@@ -39,7 +39,7 @@ class SubdivideEdgesOperation extends CommandProcessorTrait {
     val input = LineStripConverter(inModel,true)
     //println("input vertices:" + input.lineStrips.foldLeft(0)((b,a) => b+a.getVertices.size))
     //input.lineStrips.foreach(ls => println(ls.mkString(",")))
-    val output = Time.time(traceMsg + ":getDecimatedVertices calculation time: ", {
+    val output = time(traceMsg + ":getDecimatedVertices calculation time: ", {
       val newStrips = input.lineStrips.map(ls => {
         //println("undecimated" + ls.getVertices.mkString(","))
         val decimated = ls.getDecimatedVertices(segmentLength)
@@ -51,7 +51,7 @@ class SubdivideEdgesOperation extends CommandProcessorTrait {
     //println("output vertices:" + output.lineStrips.foldLeft(0)((b,a) => b+a.getVertices.size))
     //output.lineStrips.foreach(ls => println(ls.mkString(",")))
         
-    Time.time("Building resulting pBModel: ",{
+    time("Building resulting pBModel: ",{
       val messageBuilder = Message.newBuilder
       val pbModel = output.toPBModel(uniqueVertices=false)
 	    //if (inModel.hasWorldOrientation()) {

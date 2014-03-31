@@ -10,7 +10,7 @@ import org.toxicblend.typeconverters.Matrix4x4Converter
 import org.toxicblend.typeconverters.Mesh2DConverter
 import org.toxicblend.typeconverters.OptionConverter
 import org.toxicblend.CommandProcessorTrait
-import org.toxicblend.util.Time
+import org.toxicblend.util.Time.time
 
 class ProjectionOutlineOperation extends CommandProcessorTrait {
   
@@ -30,17 +30,17 @@ class ProjectionOutlineOperation extends CommandProcessorTrait {
     
     val returnMessageBuilder = Message.newBuilder()
     val result = Mesh2DConverter(inModel, projectionPlane, true)
-    Time.time("projectionOutline ", result.mesh2d.projectionOutline(useMultiThreading))
+    time("projectionOutline: ", result.mesh2d.projectionOutline(useMultiThreading))
      
     val inverseMatrix = if (inModel.hasWorldOrientation()) {
       Option(Matrix4x4Converter(inModel.getWorldOrientation()))
     } else {
       None
     }
-    
-    val returnPbModel = result.toPBModel(true, inverseMatrix)    
-    returnPbModel.setName(inModel.getName + " Projection Outline")
-    returnMessageBuilder.addModels(returnPbModel)
-    returnMessageBuilder
+    time("Building resulting pBModel: ", {
+	    val returnPbModel = result.toPBModel(true, inverseMatrix)    
+	    returnPbModel.setName(inModel.getName + " Projection Outline")
+	    returnMessageBuilder.addModels(returnPbModel)
+    })
   }  
 }
