@@ -30,33 +30,22 @@ class VolumetricRenderOperation extends CommandProcessorTrait {
    def processInput(inMessage:Message, options:OptionConverter) = {
     
     // we are only using the first model as input
-    val inModel = inMessage.getModelsList().get(0) 
+    val inModel = inMessage.getModelsList.get(0) 
     //println(optionM.options)
-    val voxelBrushSize:Float = options.getOrElse("voxelBrushSize", "2") match {
-      case Regex.FLOAT_REGEX(limit) => limit.toFloat
-      case s:String => System.err.println("VolumetricRenderOperation: unrecognizable 'voxelBrushSize' property value: " +  s ); 2f
-    }
-    val voxelResolution:Float = options.getOrElse("voxelResolution", "128") match {
-      case Regex.FLOAT_REGEX(limit) => limit.toFloat
-      case s:String => System.err.println("VolumetricRenderOperation: unrecognizable 'voxelResolution' property value: " +  s ); 128f
-    }
-    val voxelIsoValue:Float = options.getOrElse("voxelIsoValue", "0.66") match {
-      case Regex.FLOAT_REGEX(limit) => limit.toFloat
-      case s:String => System.err.println("VolumetricRenderOperation: unrecognizable 'voxelIsoValue' property value: " +  s ); 0.66f
-    }
-    val voxelBrushDrawStep:Float = options.getOrElse("voxelBrushDrawStep", "1.0") match {
-      case Regex.FLOAT_REGEX(limit) => limit.toFloat
-      case s:String => System.err.println("VolumetricRenderOperation: unrecognizable 'voxelIsoValue' property value: " +  s ); 1f
-    }
-    val laplacianSmoothIterations:Int = options.getOrElse("laplacianIterations", "0") match {
-      case Regex.INT_REGEX(limit) => limit.toInt
-      case s:String => System.err.println("VolumetricRenderOperation: unrecognizable 'laplacianIterations' property value: " +  s ); 0
-    }
+    val traceMsg = "VolumetricRenderOperation"
+      
+    val voxelBrushSize = options.getFloatProperty("voxelBrushSize", 2f, traceMsg)
+    val voxelResolution = options.getFloatProperty("voxelResolution", 128f, traceMsg)    
+    val voxelIsoValue = options.getFloatProperty("voxelIsoValue", 0.66f, traceMsg)
+    val voxelBrushDrawStep = options.getFloatProperty("voxelBrushDrawStep", 1f, traceMsg)
+    val laplacianSmoothIterations = options.getIntProperty("laplacianIterations", 0, traceMsg)
+    val runMeshFaceOutwards = options.getBooleanProperty("runMeshFaceOutwards", false, traceMsg)
+
     // pure magic
     val magicalScalingFactor=1.1f
     
     // create empty container for iso surface mesh
-    val mesh = new WETriangleMesh();
+    val mesh = new WETriangleMesh
     val lineStripConverter = LineStripConverter(inModel,true)
     val bounds3D = lineStripConverter.bounds.copy;
     
@@ -85,7 +74,7 @@ class VolumetricRenderOperation extends CommandProcessorTrait {
     builder.setInputBounds(new AABB(bounds3D, extent.scale(magicalScalingFactor)))
     // ask the builder for the underlying volumetric/voxel space data
     // structure
-    val volume = builder.getVolume();
+    val volume = builder.getVolume
     // create a volumetric brush associated with this volume and using a
     // small brush size
     // VolumetricBrush brush = new BoxBrush(volume, 3.33f);
@@ -154,7 +143,7 @@ class VolumetricRenderOperation extends CommandProcessorTrait {
       })
     }
     
-    time("Fixing face normals ", mesh.faceOutwards)
+    if (runMeshFaceOutwards) time("Fixing face normals ", mesh.faceOutwards)
     
     time("Building packet buffer reply: ", {
       val messageBuilder = Message.newBuilder
