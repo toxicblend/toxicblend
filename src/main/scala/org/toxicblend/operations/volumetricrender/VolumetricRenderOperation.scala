@@ -130,7 +130,7 @@ class VolumetricRenderOperation extends CommandProcessorTrait {
       mesh.transform(m)
     }
     
-    // apply 2 iterations of the laplacian smooth filter to average
+    // apply iterations of the laplacian smooth filter to average
     // neighboring mesh vertices and so reduce voxel aliasing
     
     if (laplacianSmoothIterations > 0) {
@@ -149,12 +149,7 @@ class VolumetricRenderOperation extends CommandProcessorTrait {
       val messageBuilder = Message.newBuilder
     
 	    val pbModel = Mesh3DConverter(mesh).toPBModel(None, None)
-	    //if (inModel.hasWorldOrientation()) {
-	      // simply copy the world orientation
-	    //  val mConverter = Matrix4x4Converter(inModel.getWorldOrientation)
-	    //  pbModel.setWorldOrientation(mConverter.toPBModel)
-	    //}
-	    pbModel.setName("Iso surface")
+	    pbModel.setName(inModel.getName + " Iso surface")
 	    messageBuilder.addModels(pbModel)
     })
   }  
