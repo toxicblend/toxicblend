@@ -154,18 +154,12 @@ class Mesh2D protected ( val vertices:ArrayBuffer[ReadonlyVec2D], val faces:Arra
   }
     
   def projectionOutline(multiThread:Boolean=false):Mesh2D = {
-    //println("in faces :" + faces.size) 
     removeDoubles
-    //println("dedoubled :" + faces.size) 
     if (multiThread) {
-      //println("using mergeAllFacesWithBooleanShapeBuilder") 
-      mergeAllFacesWithBooleanShapeBuilder
-    } else {
-      //println("using mergeAllFaces") 
       mergeAllFaces(true)
+    } else {
+      mergeAllFacesWithBooleanShapeBuilder
     }
-    
-    //println("outFaces  :" +  faces.size)
     this
   }
 }
