@@ -30,8 +30,6 @@ object SharedLibraryLoader {
   val isWindows = System.getProperty("os.name").contains("Windows")
   val isLinux = System.getProperty("os.name").contains("Linux")
   val isMac = System.getProperty("os.name").contains("Mac")
-  //val isIos = false
-  //val isAndroid = false
   val isARM = System.getProperty("os.arch").startsWith("arm")
   val is64Bit = System.getProperty("os.arch").equals("amd64")
   // JDK 8 only.
@@ -78,9 +76,6 @@ object SharedLibraryLoader {
    * Loads a shared library for the platform the application is running on.
    * @param libraryName The platform independent library name. If not contain a prefix (eg lib) or suffix (eg .dll). */
   def load(inLibraryName:String):Unit = this.synchronized {
-    // in case of iOS, things have been linked statically to the executable, bail out.
-    //if (isIos) return
-
     val libraryName = mapLibraryName(inLibraryName)
     if (!loadedLibraries.contains(libraryName)) {
       extractAndLoad(libraryName)
