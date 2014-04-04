@@ -138,24 +138,24 @@ object Polygon2DConverter {
    * note: This function will perform badly if the largest eigenvalue is complex
    */
   protected def findEigenVectorAssociatedWithLargestEigenValue(m:Matrix3d):ReadonlyVec3D = {
-   //pre-condition
-   val mc = new Matrix3d(m)
-   mc.mul(1.0/findLargestMatrixEntry(m))
+    //pre-condition
+    val mc = new Matrix3d(m)
+    mc.mul(1.0/findLargestMatrixEntry(m))
+   
+    mc.mul(mc)
+    mc.mul(mc)
+    mc.mul(mc)
   
-   mc.mul(mc)
-   mc.mul(mc)
-   mc.mul(mc)
-  
-   val v = new Vec3D(1,1,1)
-   val lastV = v.copy
-   var i=0
-   do {
-     lastV.set(v)
-     mc.transform(v); v.normalize          
-     i+=1
-   } while (i<100 && v.distanceToSquared(lastV) > 1.e-26 )
-   //println("Found normal:" + v + " with i=" + i + " distance=" + v.distanceToSquared(lastV))
-   v
+    val v = new Vec3D(1,1,1)
+    val lastV = v.copy
+    var i=0
+    do {
+      lastV.set(v)
+      mc.transform(v); v.normalize          
+      i+=1
+    } while (i<100 && v.distanceToSquared(lastV) > 1.e-26 )
+    //println("Found normal:" + v + " with i=" + i + " distance=" + v.distanceToSquared(lastV))
+    v
   }
  
   /**
