@@ -50,7 +50,7 @@ class ToxicBlend_BoostSimplify(bpy.types.Operator):
                      
         bc.sendSingleBlenderObject(activeObject, self.bl_idname, properties) 
         # remove doubles with mm as unit and half the resolution of the simplify operation
-        bc.receiveObjects(removeDoublesThreshold=self.simplifyLimitProperty/(unitSystemProperty.scale_length*2000.))
+        bc.receiveObjects()#removeDoublesThreshold=self.simplifyLimitProperty/(unitSystemProperty.scale_length*2000.))
         return {'FINISHED'}
     except toxicblend.ToxicblendException as e:
       self.report({'ERROR'}, e.message)
