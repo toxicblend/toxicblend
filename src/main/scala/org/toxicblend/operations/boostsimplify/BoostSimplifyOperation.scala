@@ -13,6 +13,7 @@ import org.toxicblend.operations.boostmedianaxis.MedianAxisJni.simplify3D
 import toxi.geom.Vec3D
 import toxi.geom.LineStrip3D
 import scala.collection.mutable.ArrayBuffer
+import org.toxicblend.geometry.RamerDouglasPeuckerAlgorithm
 import scala.collection.JavaConversions._
 
 class BoostSimplifyOperation extends CommandProcessorTrait {
@@ -24,8 +25,8 @@ class BoostSimplifyOperation extends CommandProcessorTrait {
     if (useMultiThreading) System.err.println(traceMsg + ":useMultiThreading=True but it's not implemented yet")
     val unitScale = options.getUnitScaleProperty(traceMsg)
     val unitSystem = options.getUnitSystemProperty(traceMsg)
-    val simplifyLimit:Float = options.getFloatProperty("simplifyLimit", 0.1f, traceMsg) *unitScale/1000f // convert from meter to mm
-        
+    val simplifyLimit = options.getFloatProperty("simplifyLimit", 0.1f, traceMsg) *unitScale/1000f // convert from meter to mm
+    val useBoost = options.getBooleanProperty("useBoost", true, traceMsg)
     val inverseMatrixes = new ArrayBuffer[Option[Matrix4x4Converter]]
     
     // Convert model vertices to world coordinates so that the simplify scaling makes sense
@@ -41,7 +42,11 @@ class BoostSimplifyOperation extends CommandProcessorTrait {
       segments._1.foreach(ngon => newMesh.addFace(ngon))
       segments._2.foreach(segment =>  {
         if (segment.size>2) {
-          val simplifiedSegment = simplify3D(segment, simplifyLimit)
+          val simplifiedSegment = if (useBoost){
+            simplify3D(segment, simplifyLimit)
+          } else {
+            RamerDouglasPeuckerAlgorithm.simplify(segment, simplifyLimit)
+          }
           newMesh.addEdges(simplifiedSegment)
         } else {
           newMesh.addEdges(segment)

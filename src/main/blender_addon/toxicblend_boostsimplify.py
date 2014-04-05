@@ -17,6 +17,12 @@ class ToxicBlend_BoostSimplify(bpy.types.Operator):
   bl_label = "Toxicblend:Boost simplify"
   bl_options = {'REGISTER', 'UNDO'}  # enable undo for the operator.
   
+  useBoostProperty = bpy.props.EnumProperty(
+    name="Use C++ boost implementation (faster)",
+    items=(("TRUE", "True",""),
+           ("FALSE", "False","")),
+           default="TRUE"    
+          )
   useMultiThreadingProperty = bpy.props.EnumProperty(
     name="Use experimental mulithreading algorithm",
     items=(("TRUE", "True",""),
@@ -39,7 +45,8 @@ class ToxicBlend_BoostSimplify(bpy.types.Operator):
         properties = {'useMultiThreading'     : str(self.useMultiThreadingProperty),
                       'simplifyLimit'         : str(self.simplifyLimitProperty),
                       'unitSystem'            : str(unitSystemProperty.system), 
-                      'unitScale'             : str(unitSystemProperty.scale_length) }
+                      'unitScale'             : str(unitSystemProperty.scale_length),
+                      'useBoost'              : str(self.useBoostProperty) }
                      
         bc.sendSingleBlenderObject(activeObject, self.bl_idname, properties) 
         # remove doubles with mm as unit and half the resolution of the simplify operation
