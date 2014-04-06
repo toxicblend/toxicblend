@@ -1,32 +1,15 @@
 package org.toxicblend.geometry
 
 import toxi.geom.ReadonlyVec3D
+import toxi.geom.Vec3D
 import toxi.geom.Line3D
 import scala.collection.mutable.ArrayBuffer
 import scala.annotation.tailrec
 
 /**
- * Ported from JTS (http://www.vividsolutions.com/jts/JTSHome.htm)
+ * Ramer-Douglas-Peucker algorithm implementation ported from JTS (http://www.vividsolutions.com/jts/JTSHome.htm)
  * LGPL License
- */
-class LineSegment (var p0:ReadonlyVec3D, var p1:ReadonlyVec3D) {
-  
-  @inline protected def crossSquared(v0:ReadonlyVec3D, v1:ReadonlyVec3D) = {
-    v0.cross(v1).magSquared
-  }
-  
-  def distanceSquared(p:ReadonlyVec3D):Float = {
-    val d = p1.sub(p0).magSquared
-    if (d==0) {
-      p0.distanceToSquared(p)
-    } else {
-      val n = crossSquared( p1.sub(p0), p0.sub(p))
-      n/d
-    }
-  }
-}
-
-/**
+ *
  * Simplifies a sequence of points using
  * the standard Ramer-Douglas-Peucker algorithm.
  */
@@ -34,7 +17,7 @@ class RamerDouglasPeuckerAlgorithm(private val pts:IndexedSeq[ReadonlyVec3D], pr
 {
 
   private val usePt = ArrayBuffer.fill(pts.size)(true)
-  private val seg = new LineSegment(pts(0), pts(1))
+  private val seg = new QuickLineSegment(pts(0), pts(1))
   
   /**
    * Sets the distance tolerance for the simplification.
@@ -44,13 +27,17 @@ class RamerDouglasPeuckerAlgorithm(private val pts:IndexedSeq[ReadonlyVec3D], pr
    * @param distanceTolerance the approximation tolerance to use
    */
   def setDistanceTolerance(distanceToleranceSquared:Float) = {
-    this.distanceToleranceSquared = distanceToleranceSquared;
+    this.distanceToleranceSquared = distanceToleranceSquared
+    (0 until usePt.size).foreach(i=>usePt(i)=true)
   }
 
   def simplify: IndexedSeq[ReadonlyVec3D] = {
     simplifySection(0, pts.length - 1);
     //CoordinateList coordList = new CoordinateList();
-    val coordList = pts.zip(usePt).withFilter(_._2).map(_._1)
+    assert(usePt(0) == true)
+    assert(usePt(usePt.size-1) == true)
+    assert(usePt.size == pts.size)
+    val coordList = pts.zip(usePt).withFilter(_._2).map(_._1.copy)
     coordList
   }
 
@@ -60,7 +47,7 @@ class RamerDouglasPeuckerAlgorithm(private val pts:IndexedSeq[ReadonlyVec3D], pr
     }
     seg.p0 = pts(i)
     seg.p1 = pts(j)
-    var maxDistance = -1.0
+    var maxDistance = -1.0f
     var maxIndex = i;
     (i+1 until j).foreach(k=>{
       val distance = seg.distanceSquared(pts(k))
@@ -80,8 +67,12 @@ class RamerDouglasPeuckerAlgorithm(private val pts:IndexedSeq[ReadonlyVec3D], pr
 }
 
 object RamerDouglasPeuckerAlgorithm {
-  def simplify(pts:IndexedSeq[ReadonlyVec3D], distanceTolerance:Float):  IndexedSeq[ReadonlyVec3D] = {
+  def simplify(pts:IndexedSeq[ReadonlyVec3D], distanceTolerance:Float): IndexedSeq[ReadonlyVec3D] = {
+    //println("distanceTolerance: " + distanceTolerance)
+    //println("Input:  " + pts.mkString(","))
     val algo = new RamerDouglasPeuckerAlgorithm(pts, distanceTolerance*distanceTolerance)
-    return algo.simplify
+    val rv = algo.simplify
+    //println("Output: " + rv.mkString(","))
+    rv
   }
 }
