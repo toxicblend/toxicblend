@@ -9,11 +9,11 @@ import org.toxicblend.protobuf.ToxicBlendProtos.Message
 import org.toxicblend.typeconverters.Mesh3DConverter
 import org.toxicblend.typeconverters.OptionConverter
 import org.toxicblend.typeconverters.Matrix4x4Converter
-import org.toxicblend.operations.boostmedianaxis.MedianAxisJni.simplify3D
+import org.toxicblend.operations.boostmedianaxis.MedianAxisJni.{simplify3D => boostSimplify}
 import toxi.geom.Vec3D
 import toxi.geom.LineStrip3D
 import scala.collection.mutable.ArrayBuffer
-import org.toxicblend.geometry.RamerDouglasPeuckerAlgorithm
+import org.toxicblend.geometry.RamerDouglasPeuckerAlgorithm.{simplify=>javaSimplify}
 import scala.collection.JavaConversions._
 
 class BoostSimplifyOperation extends CommandProcessorTrait {
@@ -36,24 +36,28 @@ class BoostSimplifyOperation extends CommandProcessorTrait {
     })
     
     // Perform the simplify operation
-    val result = time("Boost Simplify calculation time: ", models.map(model =>{      
-      val segments = model._1.findContinuousLineSegments
-      val newMesh = new Mesh3DConverter(model._1.name + " boost simplify"); 
+    val result = models.map(model =>{      
+      val segments = time("find continuous line segments:", model._1.findContinuousLineSegments)
+      val (newMesh, traceMessage) = if (useBoost) {
+        (new Mesh3DConverter(model._1.name + " boost simplify"),"Boost Simplify calculation time: ")
+      } else {
+        (new Mesh3DConverter(model._1.name + " simplify"), "Simplify calculation time:")
+      }
       segments._1.foreach(ngon => newMesh.addFace(ngon))
-      segments._2.foreach(segment =>  {
+      time(traceMessage, segments._2.foreach(segment =>  {
         if (segment.size>2) {
           val simplifiedSegment = if (useBoost){
-            simplify3D(segment, simplifyLimit)
+            boostSimplify(segment, simplifyLimit)
           } else {
-            RamerDouglasPeuckerAlgorithm.simplify(segment, simplifyLimit)
+            javaSimplify(segment, simplifyLimit)
           }
           newMesh.addEdges(simplifiedSegment)
         } else {
           newMesh.addEdges(segment)
         }
-      })
+      }))
       (newMesh,model._2)
-    }))
+    })
     
     time("Building resulting pBModel: ",{
       val returnMessageBuilder = Message.newBuilder
