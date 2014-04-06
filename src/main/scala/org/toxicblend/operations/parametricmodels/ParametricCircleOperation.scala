@@ -40,7 +40,6 @@ class ParametricCircleOperation extends CommandProcessorTrait {
     
     // each "cell" occupies this number of radians 
     val deltaDegree = (2d*Math.PI) / circleData.size
-    val decoRotation = deltaDegree*.08
     var degree = 0d
     (0 until circleData.size).foreach(i => {
       circleData(i) = new Vec3D(Math.cos(degree).toFloat, Math.sin(degree).toFloat, 0)
@@ -50,7 +49,6 @@ class ParametricCircleOperation extends CommandProcessorTrait {
     addEdgeWithOrigin(circleData.last,circle(0),origin,rv)
     
     var radius = 1f
-    var steps = 1
     val deltaRadius = -0.1f
     var indexOffset = 0
     val stepsI = Array(2,2,4,4,4,8,8,16,16,32).iterator
@@ -60,18 +58,15 @@ class ParametricCircleOperation extends CommandProcessorTrait {
       //println("circum=" + circum + " radius = " + radius + " steps:" + steps + " circum/steps=" + circum/steps)
 
       // draw connecting edges
-      steps = stepsI.next //(.5+ 1.5f/circum).toInt 
-      (0 until (circleData.size, steps) ).foreach( s => {
+      (0 until circleData.size by stepsI.next ).foreach( s =>
          addEdgeWithOrigin(circle(s+indexOffset-1).scale(radius+deltaRadius),circle(s+indexOffset).scale(radius),origin,rv)
-      })
+      )
       // draw circles
       if (l > 0){
         circleData.sliding(2).foreach(l => addEdgeWithOrigin(l(0).scale(radius),l(1).scale(radius),origin,rv))
         addEdgeWithOrigin(circleData.last.scale(radius),circle(0).scale(radius),origin,rv)
       }
       radius += deltaRadius
-      //rotation.rotateZ(decoRotation)
-      //circleData.foreach(v => rotation.applyToSelf(v))
       indexOffset-=1
     })
     rv
@@ -90,15 +85,13 @@ class ParametricCircleOperation extends CommandProcessorTrait {
     val unitScale = options.getUnitScaleProperty(traceMsg)
     val unitSystem = options.getUnitSystemProperty(traceMsg)
     
-    val returnMessageBuilder = Message.newBuilder()
-    val returnMeshConverter = time("Building parametric circle:",
-      if (drawType == "CIRCLE"){
-        drawCircle(options, options.getCursorPosProperty(traceMsg))
+    val returnMessageBuilder = Message.newBuilder
+    val returnMeshConverter = if (drawType == "CIRCLE"){
+        time("Draw parametric circle ", drawCircle(options, options.getCursorPosProperty(traceMsg)))
       } else {
         new Mesh3DConverter
       }
-    )
-    returnMessageBuilder.addModels(returnMeshConverter.toPBModel(None, None))
-    returnMessageBuilder
+  
+    time("Building resulting pBModel: ", returnMessageBuilder.addModels(returnMeshConverter.toPBModel(None, None)))
   }
 }

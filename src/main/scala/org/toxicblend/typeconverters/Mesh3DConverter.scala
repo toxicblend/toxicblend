@@ -98,17 +98,18 @@ class Mesh3DConverter protected (protected val vertices:Buffer[ReadonlyVec3D],
   }
   
   /**
-   * Adds a unique vertex to the vertices list. If a the vertex is already found the vertex id is returned 
+   * Adds a unique vertex to the vertices list. If a the vertex is already found the vertex id is returned.
    * Not thread safe
    */
   @inline
-  protected def addVertex(v:ReadonlyVec3D):Int = {
-    if (vert2id.contains(v)) {
-      vert2id(v)
+  protected def addVertex(vertex:ReadonlyVec3D):Int = {
+    if (vert2id.contains(vertex)) {
+      vert2id(vertex)
     } else {
       val rv = vertices.size
-      vertices += v
-      vert2id.put(v,rv)
+      vertices += vertex
+      vert2id.put(vertex,rv)
+      bounds.growToContainPoint(vertex)
       rv
     }
   }
@@ -249,11 +250,11 @@ class Mesh3DConverter protected (protected val vertices:Buffer[ReadonlyVec3D],
       System.err.println("addEdges: One single vertex does not build an edge: Debug me")
     }
     inVertices.sliding(2,1).foreach(edge => {
-      val v1index = addVertex(edge(0))
-      val v2index = addVertex(edge(1))
-      if (v1index != v2index) {
+      val v0index = addVertex(edge(0))
+      val v1index = addVertex(edge(1))
+      if (v0index != v1index) {
         // don't add edges from and to the same vertex
-        val newFace = new ArrayBuffer[Int](2) += v1index += v2index
+        val newFace = new ArrayBuffer[Int](2) += v0index += v1index
         faces += newFace
       }
     })
