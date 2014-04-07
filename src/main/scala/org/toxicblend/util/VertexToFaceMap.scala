@@ -14,11 +14,11 @@ class VertexToFaceMap {
    * When the code is stable they can be exchanged for a simple Int
    */
   class IntId(val value:Int) {
-    override def toString() = value.toString()
-    def toInt() = value
+    override def toString = value.toString
+    def toInt = value
   }
-  case class VertexId(välue:Int) extends IntId(välue)
-  case class FaceId(välue:Int) extends IntId(välue)
+  case class VertexId(__value:Int) extends IntId(__value)
+  case class FaceId(__value:Int) extends IntId(__value)
 
   /**
    * vertexId => Set[faceId...]
@@ -154,15 +154,6 @@ class VertexToFaceMap {
       add(vertexIds.map(v => new VertexId(v)), new FaceId(faceId))
     }
   }
-
-  /* 
-   def removeNotWorking(faceId:FaceId) = {
-    face2vertexMap(faceId).foreach( edge => {
-      // vertex2facesMap(edge).remove(faceId) 
-    })
-    face2vertexMap.remove(faceId)
-  }
-  */
   
   /**
    * remove double faces. i.e. faces that contain the same vertices, just in another order
