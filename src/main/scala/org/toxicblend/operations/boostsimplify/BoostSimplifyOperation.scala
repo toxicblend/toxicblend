@@ -10,7 +10,7 @@ import org.toxicblend.typeconverters.Mesh3DConverter
 import org.toxicblend.typeconverters.OptionConverter
 import org.toxicblend.typeconverters.Matrix4x4Converter
 import org.toxicblend.operations.boostmedianaxis.MedianAxisJni.{simplify3D => boostSimplify}
-import toxi.geom.Vec3D
+import toxi.geom.ReadonlyVec3D
 import toxi.geom.LineStrip3D
 import scala.collection.mutable.ArrayBuffer
 import org.toxicblend.geometry.RamerDouglasPeuckerAlgorithm.{simplify=>javaSimplify}
@@ -19,10 +19,27 @@ import scala.collection.JavaConversions._
 class BoostSimplifyOperation extends CommandProcessorTrait {
   protected val traceMsg = "BoostSimplifyOperation"
   
+  protected def runSimplify(simplifyLimit:Float, useBoost:Boolean, segment:IndexedSeq[ReadonlyVec3D], newMesh:Mesh3DConverter):Unit = {
+    if (segment.size>2) {
+      val simplifiedSegment = if (useBoost){
+        boostSimplify(segment, simplifyLimit)
+      } else {
+        javaSimplify(segment, simplifyLimit)
+      }
+      newMesh.synchronized {
+        newMesh.addEdges(simplifiedSegment)
+      }
+    } else {
+      newMesh.synchronized {
+        newMesh.addEdges(segment)
+      }
+    }
+  }
+  
   def processInput(inMessage:Message, options:OptionConverter) = {
     
     val useMultiThreading = options.getMultiThreadingProperty(traceMsg)
-    if (useMultiThreading) System.err.println(traceMsg + ":useMultiThreading=True but it's not implemented yet")
+    //if (useMultiThreading) System.err.println(traceMsg + ":useMultiThreading=True but it's not implemented yet")
     val unitScale = options.getUnitScaleProperty(traceMsg)
     val unitSystem = options.getUnitSystemProperty(traceMsg)
     val simplifyLimit = options.getFloatProperty("simplifyLimit", 0.1f, traceMsg) *unitScale/1000f // convert from meter to mm
@@ -34,28 +51,23 @@ class BoostSimplifyOperation extends CommandProcessorTrait {
       (Mesh3DConverter(inModel,true), // Unit is now [meter]
       getWorldOrientation(inModel))
     })
-    
+        
     // Perform the simplify operation
     val result = models.map(model =>{      
       val segments = time("find continuous line segments:", model._1.findContinuousLineSegments)
-      val (newMesh, traceMessage) = if (useBoost) {
+      val (newMesh, timeMessage) = if (useBoost) {
         (new Mesh3DConverter(model._1.name + " boost simplify"),"Boost Simplify calculation time: ")
       } else {
-        (new Mesh3DConverter(model._1.name + " simplify"), "Simplify calculation time:")
+        (new Mesh3DConverter(model._1.name + " simplify"), "Simplify calculation time: ")
       }
       segments._1.foreach(ngon => newMesh.addFace(ngon))
-      time(traceMessage, segments._2.foreach(segment =>  {
-        if (segment.size>2) {
-          val simplifiedSegment = if (useBoost){
-            boostSimplify(segment, simplifyLimit)
-          } else {
-            javaSimplify(segment, simplifyLimit)
-          }
-          newMesh.addEdges(simplifiedSegment)
-        } else {
-          newMesh.addEdges(segment)
-        }
-      }))
+      
+      time(timeMessage, 
+        if (useMultiThreading) 
+          segments._2.par.foreach(segment => runSimplify(simplifyLimit, useBoost, segment, newMesh))
+        else
+          segments._2.foreach(segment => runSimplify(simplifyLimit, useBoost, segment, newMesh))
+      )
       (newMesh,model._2)
     })
     
