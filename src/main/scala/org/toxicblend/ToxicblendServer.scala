@@ -6,6 +6,9 @@ import java.net.Socket
 import java.io.DataInputStream
 import java.net.SocketTimeoutException 
 
+/**
+ * The main class for the toxic blend server
+ */
 object ToxicblendServer {
   
   class SocketListener(val port:Int) extends Thread("SocketListener") {
