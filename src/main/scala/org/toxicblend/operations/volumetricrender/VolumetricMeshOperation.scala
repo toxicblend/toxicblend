@@ -25,14 +25,14 @@ import scala.collection.JavaConversions._
  * http://toxiclibs.org/2011/12/metworks-workshop-facade 
  * Released under the same license as toxiclibs itself, LGPLv2.1.
  */
-class VolumetricRenderOperation extends CommandProcessorTrait {
+class VolumetricMeshOperation extends CommandProcessorTrait {
   
    def processInput(inMessage:Message, options:OptionConverter) = {
     
     // we are only using the first model as input
     val inModel = inMessage.getModelsList.get(0) 
     //println(optionM.options)
-    val traceMsg = "VolumetricRenderOperation"
+    val traceMsg = "VolumetricMeshOperation"
       
     val voxelBrushSize = options.getFloatProperty("voxelBrushSize", 2f, traceMsg)
     val voxelResolution = options.getFloatProperty("voxelResolution", 128f, traceMsg)    
