@@ -1,4 +1,4 @@
-package org.toxicblend.operations.boostsimplify
+package org.toxicblend.operations.simplify
 
 import org.toxicblend.ToxicblendException
 import org.toxicblend.UnitSystem
@@ -16,7 +16,7 @@ import scala.collection.mutable.ArrayBuffer
 import org.toxicblend.geometry.RamerDouglasPeuckerAlgorithm.{simplify=>javaSimplify}
 import scala.collection.JavaConversions._
 
-class BoostSimplifyOperation extends CommandProcessorTrait {
+class SimplifyOperation extends CommandProcessorTrait {
   protected val traceMsg = "BoostSimplifyOperation"
   
   protected def runSimplify(simplifyLimit:Float, useBoost:Boolean, segment:IndexedSeq[ReadonlyVec3D], newMesh:Mesh3DConverter):Unit = {

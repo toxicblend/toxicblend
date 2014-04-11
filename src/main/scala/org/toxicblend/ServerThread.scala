@@ -13,7 +13,7 @@ import org.toxicblend.operations.volumetricrender.VolumetricMeshOperation
 import org.toxicblend.operations.projectionoutline.ProjectionOutlineOperation
 import org.toxicblend.operations.boostmedianaxis.MedianAxisOperation
 import org.toxicblend.operations.dragoncurve.DragonCurveOperation
-import org.toxicblend.operations.boostsimplify.BoostSimplifyOperation
+import org.toxicblend.operations.simplify.SimplifyOperation
 import org.toxicblend.operations.simplegcodegenerator.SimpleGcodeGeneratorOperation
 import org.toxicblend.operations.simplegcodeparse.SimpleGcodeParseOperation
 import org.toxicblend.operations.saveobj.SaveObjOperation
@@ -67,7 +67,7 @@ case class ServerThread(socket: Socket) extends Thread("ServerThread") {
                 case "OBJECT_OT_toxicblend_add_dragon_curve" => new DragonCurveOperation
                 case "OBJECT_OT_toxicblend_projection_outline" => new ProjectionOutlineOperation
                 case "OBJECT_OT_toxicblend_medianaxis" => new MedianAxisOperation
-                case "OBJECT_OT_toxicblend_boostsimplify" => new BoostSimplifyOperation
+                case "OBJECT_OT_toxicblend_simplify" => new SimplifyOperation
                 case "OBJECT_OT_toxicblend_simplegcodegenerator" => new SimpleGcodeGeneratorOperation     
                 case "OBJECT_OT_toxicblend_simplegcodeviewer" => new SimpleGcodeParseOperation
                 case "OBJECT_OT_toxicblend_saveobj" => new SaveObjOperation
