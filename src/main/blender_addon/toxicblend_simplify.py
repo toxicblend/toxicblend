@@ -4,21 +4,21 @@ import toxicblend
 import imp # needed when reloading toxicblend site-packages, won't be used in a release version
 
 bl_info = {
-  "name": "Toxicblend - Boost simplify",
-  'description': 'Boost implementation of Douglas-Peucker simplification',
+  "name": "Toxicblend - simplify",
+  'description': '3D Ramer-Douglas-Peucker simplification',
   'author': 'EAD Fritz',
   'blender': (2, 69, 0),
   "category": "Object",
 }
        
 class ToxicBlend_BoostSimplify(bpy.types.Operator):
-  '''Simplify edges using boost'''
-  bl_idname = "object.toxicblend_boostsimplify"
-  bl_label = "Toxicblend:Boost simplify"
+  '''Simplify edges'''
+  bl_idname = "object.toxicblend_simplify"
+  bl_label = "Toxicblend simplify"
   bl_options = {'REGISTER', 'UNDO'}  # enable undo for the operator.
   
   useBoostProperty = bpy.props.EnumProperty(
-    name="Use C++ boost implementation (faster)",
+    name="Use C++ boost implementation",
     items=(("TRUE", "True",""),
            ("FALSE", "False","")),
            default="TRUE"    

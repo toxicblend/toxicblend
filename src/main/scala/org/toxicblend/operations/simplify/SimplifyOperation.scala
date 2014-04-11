@@ -17,7 +17,7 @@ import org.toxicblend.geometry.RamerDouglasPeuckerAlgorithm.{simplify=>javaSimpl
 import scala.collection.JavaConversions._
 
 class SimplifyOperation extends CommandProcessorTrait {
-  protected val traceMsg = "BoostSimplifyOperation"
+  protected val traceMsg = "SimplifyOperation"
   
   protected def runSimplify(simplifyLimit:Float, useBoost:Boolean, segment:IndexedSeq[ReadonlyVec3D], newMesh:Mesh3DConverter):Unit = {
     if (segment.size>2) {
