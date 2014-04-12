@@ -16,6 +16,11 @@ import scala.collection.mutable.ArrayBuffer
 import org.toxicblend.geometry.RamerDouglasPeuckerAlgorithm.{simplify=>javaSimplify}
 import scala.collection.JavaConversions._
 
+/**
+ * Ramer-Douglas-Peucker 3d simplify implementation
+ * The addon can select either the boost (jni) or a scala implementation.
+ * It turns out that the java implementation is faster, so the boost implementation will probably be removed.
+ */
 class SimplifyOperation extends CommandProcessorTrait {
   protected val traceMsg = "SimplifyOperation"
   
