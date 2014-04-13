@@ -120,8 +120,8 @@ case class ServerThread(socket: Socket) extends Thread("ServerThread") {
         if (commandsReceived==0){
            e.printStackTrace
         }
-        println("Response received by Blender: "+(System.nanoTime-lastActiveTime)/1e6+"ms")
-        println("Closing connection to " + socket.getPort() + "->" + socket.getLocalPort());
+        println("Response received by Blender: " + Time.formatAsSeconds((System.nanoTime-lastActiveTime)/1e6f))
+        println("Closing connection to " + socket.getPort + "->" + socket.getLocalPort);
       case e: IOException =>
         e.printStackTrace
     }
