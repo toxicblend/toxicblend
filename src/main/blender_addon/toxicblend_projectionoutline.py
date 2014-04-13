@@ -24,12 +24,6 @@ class NaiveConvexHull(bpy.types.Operator):
            ("XY_PLANE", "XY","")),
            default="XY_PLANE"    
           )
-  multiThreadProperty = bpy.props.EnumProperty(
-    name="Use experimental multi threading",
-    items=(("TRUE", "True",""),
-           ("FALSE", "False","")),
-           default="TRUE"    
-          )
   @classmethod
   def poll(cls, context):
     return context.active_object is not None
@@ -39,8 +33,7 @@ class NaiveConvexHull(bpy.types.Operator):
     try:
       with toxicblend.ByteCommunicator("localhost", 9999) as bc: 
         activeObject = context.scene.objects.active
-        properties = {'projectionPlane': str(self.projectionPlaneProperty), 
-                      'multiThread'    : str(self.multiThreadProperty)}
+        properties = {'projectionPlane': str(self.projectionPlaneProperty)}
         bc.sendSingleBlenderObject(activeObject, self.bl_idname, properties) 
         bc.receiveObjects(removeDoublesThreshold=0.0001)
         return {'FINISHED'}
