@@ -22,7 +22,7 @@ import java.io.FileOutputStream;
 import org.toxicblend.ToxicblendException
 
 /*
- * Cherry picked and minimal Scala port of com.badlogic.gdx.utils.SharedLibraryLoader 
+ * Cherry picked and minimalistic Scala port of com.badlogic.gdx.utils.SharedLibraryLoader 
  * http://libgdx.badlogicgames.com
  */
 object SharedLibraryLoader {
@@ -74,7 +74,8 @@ object SharedLibraryLoader {
   
   /** 
    * Loads a shared library for the platform the application is running on.
-   * @param libraryName The platform independent library name. If not contain a prefix (eg lib) or suffix (eg .dll). */
+   * @param libraryName The platform independent library name. May not contain a prefix (eg lib) or suffix (eg .dll). 
+   */
   def load(inLibraryName:String):Unit = this.synchronized {
     val libraryName = mapLibraryName(inLibraryName)
     if (!loadedLibraries.contains(libraryName)) {
