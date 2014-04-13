@@ -1,10 +1,22 @@
 package org.toxicblend.util
 
+/**
+ * A simple time measuring device
+ */
 object Time {
   def time[A](text:String="time: ", f: => A) = {
-    val s = System.nanoTime
-    val ret = f
-    println(text+(System.nanoTime-s)/1e6+"ms")
-    ret
+    
+    val (spentTime, returnValue) = {
+      val timeSample = System.nanoTime
+      val rv = f
+      ((System.nanoTime-timeSample)/1e6f, rv)
+    }
+    val timeStr = if (spentTime > 1000f) {
+      "%fs".format(spentTime/1000f)
+    } else {
+      "%fms".format(spentTime)
+    }
+    println(text + timeStr)
+    returnValue
   }
 }
