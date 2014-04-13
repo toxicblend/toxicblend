@@ -25,6 +25,12 @@ class ToxicLibsVolume(bpy.types.Operator):
             "Use a box voxel brush")),
            default="SPHERE"    
           )
+  flipNormalsProperty = bpy.props.EnumProperty(
+    name="Flip normals",
+    items=(("TRUE", "True",""),
+           ("FALSE", "False","")),
+           default="FALSE"    
+          )
   voxelBrushMode = bpy.props.EnumProperty(
     name="Volumetric brush mode",
     description="Best kept at Peak",
@@ -64,6 +70,10 @@ class ToxicLibsVolume(bpy.types.Operator):
                       'unitScale'          : str(unitSystemProperty.scale_length)}
         bc.sendSingleBlenderObject(activeObject, self.bl_idname, properties) 
         bc.receiveObjects()
+        if self.flipNormalsProperty:
+          bpy.ops.object.editmode_toggle()
+          bpy.ops.mesh.flip_normals()
+          bpy.ops.object.editmode_toggle()
         return {'FINISHED'}
     except toxicblend.ToxicblendException as e:
       self.report({'ERROR'}, e.message)
