@@ -75,7 +75,7 @@ class ParametricCircleOperation extends CommandProcessorTrait {
   def processInput(inMessage:Message, options:OptionConverter) = {
     
     val traceMsg = "ParametricCircleOperation"
-    val useMultiThreading = options.getMultiThreadingProperty(traceMsg)
+    val useMultiThreading = options.getMultiThreadingProperty(traceMsg,true)
     if (useMultiThreading) if (useMultiThreading) System.err.println(traceMsg + ":useMultiThreading=True but it's not implemented yet")
     val drawType = options.getOrElse("drawTypeProperty", "CIRCLE").toUpperCase() match {
       case "CIRCLE" => "CIRCLE"

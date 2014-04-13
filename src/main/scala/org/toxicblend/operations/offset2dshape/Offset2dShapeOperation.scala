@@ -25,7 +25,7 @@ class Offset2dShapeOperation extends CommandProcessorTrait {
   def processInput(inMessage:Message, options:OptionConverter) = {
     val traceMsg = "Offset2dShapeOperation"
         
-    val useMultiThreading = options.getMultiThreadingProperty(traceMsg)
+    val useMultiThreading = options.getMultiThreadingProperty(traceMsg,true)
     
     val useToOutline = options.getBooleanProperty("useToOutline", false, traceMsg)
     val unitScale = options.getUnitScaleProperty(traceMsg)

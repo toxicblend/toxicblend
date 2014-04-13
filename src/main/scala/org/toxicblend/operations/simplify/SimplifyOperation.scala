@@ -43,7 +43,7 @@ class SimplifyOperation extends CommandProcessorTrait {
   
   def processInput(inMessage:Message, options:OptionConverter) = {
     
-    val useMultiThreading = options.getMultiThreadingProperty(traceMsg)
+    val useMultiThreading = options.getMultiThreadingProperty(traceMsg,true)
     //if (useMultiThreading) System.err.println(traceMsg + ":useMultiThreading=True but it's not implemented yet")
     val unitScale = options.getUnitScaleProperty(traceMsg)
     val unitSystem = options.getUnitSystemProperty(traceMsg)

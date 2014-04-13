@@ -87,9 +87,9 @@ class OptionConverter(val options:collection.mutable.Map[String,String]){
   
   def getStringProperty(propertyName:String, default:String) = getOrElse(propertyName, default)
  
-  def getMultiThreadingProperty(traceMsg:String) = getBooleanProperty("useMultiThreading", false, traceMsg)
+  def getMultiThreadingProperty(traceMsg:String, default:Boolean=false) = getBooleanProperty("useMultiThreading", default, traceMsg)
   
-  def getUnitScaleProperty(traceMsg:String) = getFloatProperty("unitScale", 1f, traceMsg)
+  def getUnitScaleProperty(traceMsg:String, default:Float=1f) = getFloatProperty("unitScale", default, traceMsg)
   
 }
 

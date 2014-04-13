@@ -30,7 +30,7 @@ class MedianAxisOperation extends CommandProcessorTrait {
       case "XY_PLANE" => XY_PLANE
       case _ => throw new IllegalArgumentException("No projection plane specified")
     }
-    val useMultiThreading = options.getMultiThreadingProperty(traceMsg)
+    val useMultiThreading = options.getMultiThreadingProperty(traceMsg, true)
     
     val simplifyLimit = options.getFloatProperty("simplifyLimit", 0f, traceMsg)
     val zEpsilon = options.getFloatProperty("zEpsilon", 1.1f, traceMsg) 

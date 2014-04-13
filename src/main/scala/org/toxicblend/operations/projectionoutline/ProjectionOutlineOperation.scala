@@ -18,15 +18,15 @@ class ProjectionOutlineOperation extends CommandProcessorTrait {
     val traceMsg = "ProjectionOutlineOperation"
        
     // we are only using the first model as input
-    val inModel = inMessage.getModelsList().get(0)
+    val inModel = inMessage.getModelsList.get(0)
     //println(inModel)
     val projectionPlane = options.getOrElse("projectionPlane", "XY_PLANE") match {
       case "YZ_PLANE" => YZ_PLANE
       case "XZ_PLANE" => XZ_PLANE
       case "XY_PLANE" => XY_PLANE
-      case s:String => System.err.println("Unknown projection: " +  s ); XY_PLANE
+      case s:String => System.err.println("ProjectionOutlineOperation::Unknown projection: " +  s ); XY_PLANE
     }
-    val useMultiThreading = options.getMultiThreadingProperty(traceMsg)
+    val useMultiThreading = options.getMultiThreadingProperty(traceMsg,true)
     
     val returnMessageBuilder = Message.newBuilder()
     val result = Mesh2DConverter(inModel, projectionPlane, true)

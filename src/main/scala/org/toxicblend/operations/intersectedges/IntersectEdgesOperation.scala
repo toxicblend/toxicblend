@@ -148,7 +148,7 @@ class IntersectEdgesOperation extends CommandProcessorTrait {
     
     val models = inMessage.getModelsList().toIndexedSeq.map(i=>Mesh3DConverter(i,true))
     
-    val useMultiThreading = options.getMultiThreadingProperty(traceMsg)
+    val useMultiThreading = options.getMultiThreadingProperty(traceMsg,true)
     if (useMultiThreading) System.err.println(traceMsg + ":useMultiThreading=True but it's not implemented yet")
     
     val unitScale = options.getUnitScaleProperty(traceMsg)
