@@ -144,7 +144,6 @@ class Mesh2D protected ( val vertices:ArrayBuffer[ReadonlyVec2D], val faces:Arra
    * Recalculates the faces using a parallel BooleanShapeBuilder
    */
   protected def mergeAllFaces:Mesh2D = {
-    println("mergeAllFaces")
     val seqOp=(a:Area,b:Int) =>  {val rv = poly2Area(b); rv.add(a); rv }
     val combOp=(a:Area,b:Area) => { a.add(b); a }      
     
