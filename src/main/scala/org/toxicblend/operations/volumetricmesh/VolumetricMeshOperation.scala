@@ -1,4 +1,4 @@
-package org.toxicblend.operations.volumetricrender
+package org.toxicblend.operations.volumetricmesh
 
 import org.toxicblend.util.Regex
 import org.toxicblend.util.Time.time

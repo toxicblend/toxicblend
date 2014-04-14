@@ -9,7 +9,7 @@ import org.toxicblend.protobuf.ToxicBlendProtos.Message
 import org.toxicblend.protobuf.ToxicBlendProtos.{Option => MessageOption}
 import org.toxicblend.protobuf.ToxicBlendProtos.Model
 import org.toxicblend.typeconverters.OptionConverter
-import org.toxicblend.operations.volumetricrender.VolumetricMeshOperation
+import org.toxicblend.operations.volumetricmesh.VolumetricMeshOperation
 import org.toxicblend.operations.projectionoutline.ProjectionOutlineOperation
 import org.toxicblend.operations.boostmedianaxis.MedianAxisOperation
 import org.toxicblend.operations.dragoncurve.DragonCurveOperation
