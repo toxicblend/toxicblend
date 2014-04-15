@@ -43,7 +43,12 @@ class OptionConverter(val options:collection.mutable.Map[String,String]){
   }
   
   def getOrElse(key:String,default:String):String = {
-    options.getOrElse(key,default)
+    if (options.contains(key)) {
+      options.getOrElse(key,default)
+    } else {
+      System.err.println("The key:\"" + key + "\" is missing from the options.")
+      default
+    }
   }
   
   /**
