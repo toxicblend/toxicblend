@@ -21,13 +21,13 @@ class ToxicBlend_BoostSimplify(bpy.types.Operator):
     name="Use C++ boost implementation",
     items=(("TRUE", "True",""),
            ("FALSE", "False","")),
-           default="TRUE"    
+           default="FALSE"    
           )
   useMultiThreadingProperty = bpy.props.EnumProperty(
     name="Use experimental mulithreading algorithm",
     items=(("TRUE", "True",""),
            ("FALSE", "False","")),
-           default="FALSE"    
+           default="TRUE"    
           )
           
   simplifyLimitProperty = bpy.props.FloatProperty(name="Simplify Limit [mm]", default=0.1, min=0.001, max=100, description="the maximum allowed 3d deviation (in mm) from a straight line, if the deviation is larger than this the line will be segmented.")  
