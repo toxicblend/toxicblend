@@ -23,7 +23,7 @@ class ParametricCircleOperation extends CommandProcessorTrait {
   /*
    * a totally unreadable circle drawer :) 
    */
-  def drawCircle(options:OptionConverter, origin:ReadonlyVec3D):Mesh3DConverter = {
+  def drawCircle(iterations:Int, origin:ReadonlyVec3D):Mesh3DConverter = {
     val rotation = new Matrix4x4
     val rv = new Mesh3DConverter("parametric circle")
     val circleData = new Array[Vec3D](128)
@@ -52,7 +52,7 @@ class ParametricCircleOperation extends CommandProcessorTrait {
     val deltaRadius = -0.1f
     var indexOffset = 0
     val stepsI = Array(2,2,4,4,4,8,8,16,16,32).iterator
-    (0 until 10).foreach(l => {
+    (0 until iterations).foreach(i => {
       
       val circum = 2.*Math.PI*radius
       //println("circum=" + circum + " radius = " + radius + " steps:" + steps + " circum/steps=" + circum/steps)
@@ -62,7 +62,7 @@ class ParametricCircleOperation extends CommandProcessorTrait {
          addEdgeWithOrigin(circle(s+indexOffset-1).scale(radius+deltaRadius),circle(s+indexOffset).scale(radius),origin,rv)
       )
       // draw circles
-      if (l > 0){
+      if (i > 0){
         circleData.sliding(2).foreach(l => addEdgeWithOrigin(l(0).scale(radius),l(1).scale(radius),origin,rv))
         addEdgeWithOrigin(circleData.last.scale(radius),circle(0).scale(radius),origin,rv)
       }
@@ -84,10 +84,10 @@ class ParametricCircleOperation extends CommandProcessorTrait {
     }
     val unitScale = options.getUnitScaleProperty(traceMsg)
     val unitSystem = options.getUnitSystemProperty(traceMsg)
-    
+    val iterations = options.getIntProperty("iterations", 10, traceMsg)
     val returnMessageBuilder = Message.newBuilder
     val returnMeshConverter = if (drawType == "CIRCLE"){
-        time("Draw parametric circle ", drawCircle(options, options.getCursorPosProperty(traceMsg)))
+        time("Draw parametric circle ", drawCircle(iterations, options.getCursorPosProperty(traceMsg)))
       } else {
         new Mesh3DConverter
       }
