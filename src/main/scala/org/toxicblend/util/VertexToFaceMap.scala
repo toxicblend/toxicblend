@@ -10,25 +10,14 @@ import scala.collection.mutable.ArrayBuffer
 class VertexToFaceMap {
   
   /**
-   * VertexId and FaceId is as a type safety during development.
-   * When the code is stable they can be exchanged for a simple Int
-   */
-  class IntId(val value:Int) {
-    override def toString = value.toString
-    def toInt = value
-  }
-  case class VertexId(__value:Int) extends IntId(__value)
-  case class FaceId(__value:Int) extends IntId(__value)
-
-  /**
    * vertexId => Set[faceId...]
    */
-  protected val vertex2facesMap = new HashMap[VertexId,ArrayBuffer[FaceId]]
+  protected val vertex2facesMap = new HashMap[Int,ArrayBuffer[Int]]
   
   /**
    * faceId => Set[vertexId...]
    */
-  protected val face2vertexMap = new HashMap[FaceId,ArrayBuffer[VertexId]]
+  protected val face2vertexMap = new HashMap[Int,ArrayBuffer[Int]]
   
   /**
    * A set containing all of the two-vertex edges we already have added. 
@@ -37,57 +26,44 @@ class VertexToFaceMap {
   protected val alreadyAddedEdges = new HashSet[(Int,Int)]
   
   @inline
-  protected def sortTwoVertexEdge(a:VertexId,b:VertexId):(Int,Int) = {
-    if (a.value < b.value) {
-      (a.value, b.value)
-    } else {
-      (b.value, a.value)
-    }
+  protected def sortTwoVertexEdge(a:Int,b:Int):(Int,Int) = {
+    if (a < b) (a, b)
+    else (b, a)
   } 
   
-  @inline def vertexId2faceIds(vertexId:VertexId):IndexedSeq[FaceId] = vertex2facesMap(vertexId)
-  @inline def faceId2vertices(faceId:FaceId):IndexedSeq[VertexId] = face2vertexMap(faceId)
-  // not to be used in production, just for testing
-  @inline def vertexId2faces(vertexId:Int):IndexedSeq[FaceId] = vertex2facesMap(new VertexId(vertexId))
-  // not to be used in production, just for testing
-  @inline def faceId2vertices(faceId:Int):IndexedSeq[VertexId] = face2vertexMap(new FaceId(faceId))
-  
+  @inline def vertexId2faceIds(vertexId:Int):IndexedSeq[Int] = vertex2facesMap(vertexId)
+  @inline def faceId2vertices(faceId:Int):IndexedSeq[Int] = face2vertexMap(faceId)
+ 
   /**
    * returns a list of every vertex that is only used in one face
    */
-  def endVertices:Iterable[VertexId]  = {
-    val rv =
-    vertex2facesMap.filter(item => item._2.size==1 && face2vertexMap(item._2(0)).size==2).map(item => item._1)
+  def endVertices:Iterable[Int] = {
+    val rv = vertex2facesMap.filter(item => item._2.size==1 && face2vertexMap(item._2(0)).size==2).map(item => item._1)
     rv
   }
   
   /**
    * returns a list of every face that has more than two vertices (ngons and triangles)
    */
-  def nGons:Iterable[FaceId] = {
-    val rv =
-    face2vertexMap.filter(item => item._2.size>2).map( item => item._1)
+  def nGons:Iterable[Int] = {
+    val rv = face2vertexMap.filter(item => item._2.size>2).map( item => item._1)
     rv
   }
   
-  def intersectionVertices:Iterable[VertexId]  = {
-    val rv =
-    vertex2facesMap.filter(item => item._2.size > 2).map(item => item._1)
+  def intersectionVertices:Iterable[Int]  = {
+    val rv = vertex2facesMap.filter(item => item._2.size > 2).map(item => item._1)
     rv
   }
-  
-  //@inline
-  //def apply(vertexId:VertexId) = vertex2facesMap(vertexId)
-  
+
   @inline
-  def contains(vertexId:VertexId):Boolean = {
+  def contains(vertexId:Int):Boolean = {
     vertex2facesMap contains vertexId
   }
   
-  def containsFace(faceId:FaceId) = face2vertexMap.contains(faceId)
-  def containsVertex(vertexId:VertexId) = vertex2facesMap.contains(vertexId)
+  def containsFace(faceId:Int) = face2vertexMap.contains(faceId)
+  def containsVertex(vertexId:Int) = vertex2facesMap.contains(vertexId)
   
-  def add(vertexIds:IndexedSeq[VertexId], faceId:FaceId):VertexToFaceMap = {
+  def add(vertexIds:IndexedSeq[Int], faceId:Int):VertexToFaceMap = {
     if(vertexIds.distinct.size!=vertexIds.size){
       println("VertexToFaceMap found clone vertices, trying to cope")
     }
@@ -98,7 +74,7 @@ class VertexToFaceMap {
         if (face2vertexMap contains faceId) {
           face2vertexMap(faceId)
         } else {
-          val tmp = new ArrayBuffer[VertexId] 
+          val tmp = new ArrayBuffer[Int] 
           face2vertexMap(faceId) = tmp
           tmp
         }
@@ -107,7 +83,7 @@ class VertexToFaceMap {
         if (vertex2facesMap contains vertexId) {
           vertex2facesMap(vertexId) += faceId
         } else {
-          vertex2facesMap(vertexId) = new ArrayBuffer[FaceId]() += faceId
+          vertex2facesMap(vertexId) = new ArrayBuffer[Int]() += faceId
         }
         vertexList += vertexId
       })
@@ -116,7 +92,7 @@ class VertexToFaceMap {
   }
   
   @inline
-  def add(vertexId1:VertexId,vertexId2:VertexId,faceId:FaceId):VertexToFaceMap = {
+  def add(vertexId1:Int, vertexId2:Int, faceId:Int):VertexToFaceMap = {
     assert(vertexId1!=vertexId2)
     val key=sortTwoVertexEdge(vertexId1,vertexId2)
     if (!alreadyAddedEdges.contains(key)) {
@@ -124,17 +100,17 @@ class VertexToFaceMap {
       if (vertex2facesMap contains vertexId1) {
         vertex2facesMap(vertexId1) += faceId
       } else {
-        vertex2facesMap(vertexId1) = new ArrayBuffer[FaceId]() += faceId
+        vertex2facesMap(vertexId1) = new ArrayBuffer[Int]() += faceId
       }
       if (vertex2facesMap contains vertexId2) {
         vertex2facesMap(vertexId2) += faceId
       } else {
-        vertex2facesMap(vertexId2) = new ArrayBuffer[FaceId]() += faceId
+        vertex2facesMap(vertexId2) = new ArrayBuffer[Int]() += faceId
       }
       if (face2vertexMap contains faceId) {
         face2vertexMap(faceId) += vertexId1 += vertexId2
       } else {
-        face2vertexMap(faceId) = new ArrayBuffer[VertexId](2) += vertexId1 += vertexId2
+        face2vertexMap(faceId) = new ArrayBuffer[Int](2) += vertexId1 += vertexId2
       }
     } else {
       println("Refusing to add edge: " + key + " more than once")
@@ -142,34 +118,22 @@ class VertexToFaceMap {
     this
   }
   
-  @inline
-  def add(vertexId1:Int,vertexId2:Int,faceId:Int):VertexToFaceMap = {
-    add(new VertexId(vertexId1),new VertexId(vertexId2),new FaceId(faceId))
-  }
-  
-  def add(vertexIds:IndexedSeq[Int], faceId:Int):VertexToFaceMap = {
-    if (2==vertexIds.size){
-      add(vertexIds(0), vertexIds(1), faceId)
-    }else {
-      add(vertexIds.map(v => new VertexId(v)), new FaceId(faceId))
-    }
-  }
-  
   /**
    * remove double faces. i.e. faces that contain the same vertices, just in another order
+   * TODO: this seems broken, fix it
    */
-  def removeDoubleFaces() {
-    val facesToBeDeleted = new HashSet[FaceId]
+  def removeDoubleFacesBroken = {
+    val facesToBeDeleted = new HashSet[Int]
     face2vertexMap.filter(x => x._2.size==2).foreach(item => {
       val faceId = item._1
       if (!facesToBeDeleted.contains(faceId)) {
         val memberVertices = item._2
-        val sortedVertices = memberVertices.sortBy(i=>i.value)
+        val sortedVertices = memberVertices.sortBy(i=>i)
         memberVertices.foreach(vertex => {
           val otherFaces = vertex2facesMap(vertex).filter(x=>x!=faceId && face2vertexMap(x).size==2)
           otherFaces.foreach(otherFace => {
             if (!facesToBeDeleted.contains(otherFace)) {
-              val sortedOtherVertices = face2vertexMap(otherFace).sortBy(x=>x.value)
+              val sortedOtherVertices = face2vertexMap(otherFace).sortBy(x=>x)
               if (sortedOtherVertices.sameElements(sortedVertices)){
                 facesToBeDeleted += otherFace
               }
@@ -191,13 +155,13 @@ class VertexToFaceMap {
    *   is forming a line strip (vertices connected to only two edges)       == ._2
    *       Note that the start and end points of the line strip can be connected to any number of vertices
    */
-  def findVertexIdLineStrips():(IndexedSeq[IndexedSeq[VertexId]],IndexedSeq[IndexedSeq[VertexId]]) = {
+  def findVertexIdLineStrips():(IndexedSeq[IndexedSeq[Int]],IndexedSeq[IndexedSeq[Int]]) = {
 
-    val visitedFaces = new HashSet[FaceId]
+    val visitedFaces = new HashSet[Int]
     // ngon return value, contains vertices that is not part of any line strip
-    val ngrv = new ArrayBuffer[ArrayBuffer[VertexId]]
+    val ngrv = new ArrayBuffer[ArrayBuffer[Int]]
     // line strip return value
-    val lsrv = new ArrayBuffer[ArrayBuffer[VertexId]]   
+    val lsrv = new ArrayBuffer[ArrayBuffer[Int]]   
    
     val t = intersectionVertices.size
     
@@ -217,7 +181,7 @@ class VertexToFaceMap {
      * append 'dstVertexId' to 'segment'
      */
     //@tailrec
-    def followSegment(fromVertexId:VertexId, dstVertexId:VertexId, moveAlongfaceId:FaceId, segment:ArrayBuffer[VertexId] ){
+    def followSegment(fromVertexId:Int, dstVertexId:Int, moveAlongfaceId:Int, segment:ArrayBuffer[Int] ){
       
       val nextFaceIds = this.vertexId2faceIds(dstVertexId).filter(f => f!=moveAlongfaceId && !visitedFaces.contains(f))
       if (nextFaceIds.size != 1 || this.vertexId2faceIds(dstVertexId).size > 2 ) {
@@ -232,7 +196,7 @@ class VertexToFaceMap {
       }
     }
     
-    def initiateFollowSegment(startVertexId:VertexId, moveAlongfaceId:FaceId, segment:ArrayBuffer[VertexId] ){
+    def initiateFollowSegment(startVertexId:Int, moveAlongfaceId:Int, segment:ArrayBuffer[Int] ){
       val dstVertexIds = faceId2vertices(moveAlongfaceId).filter( vertex => vertex!=startVertexId)
       if (dstVertexIds.size == 1) {
         segment += startVertexId
@@ -256,7 +220,7 @@ class VertexToFaceMap {
       assert(1==faceIds.size)
       
       if (! visitedFaces.contains(faceIds(0)) ){
-        val segment = new ArrayBuffer[VertexId]
+        val segment = new ArrayBuffer[Int]
         initiateFollowSegment(vertexId,faceIds(0), segment)
         lsrv += segment
       }
@@ -266,7 +230,7 @@ class VertexToFaceMap {
     intersectionVertices.foreach(vertexId => {
       vertex2facesMap(vertexId).foreach(faceId => {
         if ( !visitedFaces.contains(faceId) ){
-          val segment = new ArrayBuffer[VertexId]
+          val segment = new ArrayBuffer[Int]
           initiateFollowSegment(vertexId,faceId, segment)
           lsrv += segment
         }
@@ -277,7 +241,7 @@ class VertexToFaceMap {
     face2vertexMap.foreach(x => {
       if ( !visitedFaces.contains(x._1)) {
         assert(x._2.size == 2)
-        val segment = new ArrayBuffer[VertexId]
+        val segment = new ArrayBuffer[Int]
         initiateFollowSegment(x._2(0),x._1, segment)
         lsrv += segment
       }

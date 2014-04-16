@@ -34,12 +34,12 @@ object VertexToFaceMapTest {
      println("endVertices:" + t.endVertices.mkString(","))
      //println("intersectionVertices:" + t.intersectionVertices.mkString(","))
      
-     println("facesOfVertex(0):" + t.vertexId2faces(0).mkString(","))
-     println("facesOfVertex(4):" + t.vertexId2faces(4).mkString(","))
-     println("facesOfVertex(11):" + t.vertexId2faces(11).mkString(","))
-     println("facesOfVertex(18):" + t.vertexId2faces(18).mkString(","))
-     println("facesOfVertex(16):" + t.vertexId2faces(16).mkString(","))
-     println("facesOfVertex(21):" + t.vertexId2faces(21).mkString(","))
+     println("facesOfVertex(0):" + t.vertexId2faceIds(0).mkString(","))
+     println("facesOfVertex(4):" + t.vertexId2faceIds(4).mkString(","))
+     println("facesOfVertex(11):" + t.vertexId2faceIds(11).mkString(","))
+     println("facesOfVertex(18):" + t.vertexId2faceIds(18).mkString(","))
+     println("facesOfVertex(16):" + t.vertexId2faceIds(16).mkString(","))
+     println("facesOfVertex(21):" + t.vertexId2faceIds(21).mkString(","))
 
      println("vertexOfFace(10):" + t.faceId2vertices(10).mkString(","))
      println("vertexOfFace(1):"  + t.faceId2vertices(1).mkString(","))
