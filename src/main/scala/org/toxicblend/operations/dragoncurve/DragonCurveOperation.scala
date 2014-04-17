@@ -13,7 +13,9 @@ import org.toxicblend.util.Regex
 import scala.collection.JavaConversions._
 
 /**
- * This class is a Scala port of http://rosettacode.org/wiki/Dragon_curve#Java
+ * This class is a Scala port of http://rosettacode.org/wiki/Dragon_curve#Java.
+ * It generates a parametric dragon curve.
+ * 
  * Author unknown
  * License: same as rosettacode.org code
  */

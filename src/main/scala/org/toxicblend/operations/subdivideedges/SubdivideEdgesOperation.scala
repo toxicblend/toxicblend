@@ -23,7 +23,9 @@ import org.toxicblend.UnitSystem
 import org.toxicblend.geometry.Matrix4x4Implicit._
 
 /**
- * This operation subdivides the input edges into segments of @segmentDistance length
+ * This operation subdivides the input edges into segments of @segmentDistance length. 
+ * The edge will not be subdivided if it's already shorter than @segmentDistance.
+ * The blender subdivide operations always splits the edges into a number of segments, regardless how short they are.
  */
 class SubdivideEdgesOperation extends CommandProcessorTrait {
   

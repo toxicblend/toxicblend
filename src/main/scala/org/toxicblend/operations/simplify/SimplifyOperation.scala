@@ -59,7 +59,7 @@ class SimplifyOperation extends CommandProcessorTrait {
         
     // Perform the simplify operation
     val result = models.map(model =>{      
-      val segments = time("find continuous line segments:", model._1.findContinuousLineSegments)
+      val segments = time("find continuous line segments: ", model._1.findContinuousLineSegments)
       val (newMesh, timeMessage) = if (useBoost) {
         (new Mesh3DConverter(model._1.name + " boost simplify"),"Boost Simplify calculation time: ")
       } else {
