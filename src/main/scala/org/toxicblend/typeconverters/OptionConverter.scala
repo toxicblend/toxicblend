@@ -46,7 +46,7 @@ class OptionConverter(val options:collection.mutable.Map[String,String]){
     if (options.contains(key)) {
       options.getOrElse(key,default)
     } else {
-      System.err.println("The key:\"" + key + "\" is missing from the options.")
+      System.err.println("The key \"" + key + "\" is missing from the options. Using default value:" + default)
       default
     }
   }
@@ -64,7 +64,7 @@ class OptionConverter(val options:collection.mutable.Map[String,String]){
   override def toString() = options.toString
   
   def getUnitSystemProperty(traceMsg:String) = 
-    getOrElse("unitSystem", "METRIC").toUpperCase() match {
+    getOrElse("unitSystem", "METRIC").toUpperCase match {
       case "METRIC" => UnitSystem.Metric
       case "NONE" => throw new ToxicblendException(traceMsg +": unitSystem=None but it's not supported"); None
       case "IMPERIAL" => throw new ToxicblendException(traceMsg + ":unitSystem=IMPERIAL but it's not supported"); UnitSystem.Imperial
@@ -72,7 +72,7 @@ class OptionConverter(val options:collection.mutable.Map[String,String]){
     }
 
   def getBooleanProperty(propertyName:String, default:Boolean, traceMsg:String) = 
-    getOrElse(propertyName, default.toString).toUpperCase() match {
+    getOrElse(propertyName, default.toString).toUpperCase match {
       case "TRUE" => true
       case "FALSE" => false
       case s:String => System.err.println(traceMsg + ": Unrecognizable '"+propertyName+"' property value: " +  s ); default
