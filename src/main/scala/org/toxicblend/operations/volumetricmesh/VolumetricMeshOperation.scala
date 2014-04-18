@@ -7,6 +7,7 @@ import org.toxicblend.protobuf.ToxicBlendProtos.Message
 import org.toxicblend.protobuf.ToxicBlendProtos.Model
 import toxi.geom.mesh.WETriangleMesh
 import toxi.geom.Vec3D
+import toxi.geom.ReadonlyVec3D
 import toxi.geom.mesh.LaplacianSmooth
 import toxi.geom.AABB
 import toxi.geom.Matrix4x4
@@ -27,7 +28,7 @@ import scala.collection.JavaConversions._
  */
 class VolumetricMeshOperation extends CommandProcessorTrait {
   
-   def processInput(inMessage:Message, options:OptionConverter) = {
+  def processInput(inMessage:Message, options:OptionConverter) = {
     
     // we are only using the first model as input
     val inModel = inMessage.getModelsList.get(0) 
@@ -46,8 +47,8 @@ class VolumetricMeshOperation extends CommandProcessorTrait {
     
     // create empty container for iso surface mesh
     val mesh = new WETriangleMesh
-    val lineStripConverter = LineStripConverter(inModel,true)
-    val bounds3D = lineStripConverter.bounds.copy;
+    val lineStripConverter = time("Converting input to linestrips: ", LineStripConverter(inModel,true))
+    val bounds3D = lineStripConverter.bounds.copy
     
     {
       // enlarge the aabb a bit so that the voxels will fit
@@ -112,7 +113,7 @@ class VolumetricMeshOperation extends CommandProcessorTrait {
     {
       // laplacian smooth sometimes deforms scale and origin, so i transform the mesh 
       // before smoothing
-      val scale = {
+      val scale:ReadonlyVec3D = {
         val maxAxisInput = {
           val e = lineStripConverter.bounds.getExtent
           List(e.x,e.y,e.z).max+(voxelBrushSize*0.5f)
