@@ -48,7 +48,7 @@ class SubdivideEdgesOperation extends CommandProcessorTrait {
         //println("decimated" + decimated.mkString(","))
         new LineStrip3D(decimated)  
       })
-      LineStripConverter(newStrips,"Subdivided Edges")
+      LineStripConverter(newStrips,inModel.getName + "Subdivided Edges")
     })
     //println("output vertices:" + output.lineStrips.foldLeft(0)((b,a) => b+a.getVertices.size))
     //output.lineStrips.foreach(ls => println(ls.mkString(",")))
