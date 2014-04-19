@@ -29,12 +29,12 @@ class GCodeSettings(val blenderUnitToMM:Float,
   
   def toString(uncommentedHeader:String) = {
     "(" + uncommentedHeader + ")\n" +
-    "(             safeZ=" + safeZAsString + ")\n" +
-    "(        g0Feedrate=" + g0FeedrateAsString + ")\n" +
-    "(        g1Feedrate=" + g1FeedrateAsString + ")\n" +
-    "(  g1PlungeFeedrate=" + g1PlungeFeedrateAsString + ")\n" +
-    "(      spindleSpeed=" + spindleSpeedAsString + ")\n" +
-    "(          stepDown=" + stepDownAsString + ")\n"+
+    "(             safeZ=" + safeZAsString + " )\n" +
+    "(        g0Feedrate=" + g0FeedrateAsString + " )\n" +
+    "(        g1Feedrate=" + g1FeedrateAsString + " )\n" +
+    "(  g1PlungeFeedrate=" + g1PlungeFeedrateAsString + " )\n" +
+    "(      spindleSpeed=" + spindleSpeedAsString + " )\n" +
+    "(          stepDown=" + stepDownAsString + " )\n"+
     "\n"
   }  
 }
