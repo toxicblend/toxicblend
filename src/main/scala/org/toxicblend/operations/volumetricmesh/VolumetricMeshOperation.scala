@@ -32,7 +32,6 @@ class VolumetricMeshOperation extends CommandProcessorTrait {
     
     // we are only using the first model as input
     val inModel = inMessage.getModelsList.get(0) 
-    //println(optionM.options)
     val traceMsg = "VolumetricMeshOperation"
       
     val voxelBrushSize = options.getFloatProperty("voxelBrushSize", 2f, traceMsg)
@@ -59,15 +58,17 @@ class VolumetricMeshOperation extends CommandProcessorTrait {
     // get the extent of the 3d bounding box enclosing
     // all displaced facade points
     val extent = bounds3D.getExtent
-    // figure out which axis is the longest/largest
-    val maxAxis = List(extent.x, extent.y, extent.z).max
-    // scale voxel resolution per axis in relation to major axis
-    val resX = (extent.x / maxAxis * voxelResolution).toInt
-    val resY = (extent.y / maxAxis * voxelResolution).toInt
-    val resZ = (extent.z / maxAxis * voxelResolution).toInt
-    // create a new mesh lattice builder utility configured
-    // to match the current physical size of the facade and voxel resolution
-    val builder = new MeshLatticeBuilder(extent.scale(2), resX, resY, resZ, new FloatRange(1, 1))
+    val builder = {
+      // figure out which axis is the longest/largest
+      val maxAxis = List(extent.x, extent.y, extent.z).max
+      // scale voxel resolution per axis in relation to major axis
+      val resX = (extent.x / maxAxis * voxelResolution).toInt
+      val resY = (extent.y / maxAxis * voxelResolution).toInt
+      val resZ = (extent.z / maxAxis * voxelResolution).toInt
+      // create a new mesh lattice builder utility configured
+      // to match the current physical size of the facade and voxel resolution
+       new MeshLatticeBuilder(extent.scale(2), resX, resY, resZ, new FloatRange(1, 1))
+    }
     // use a slightly enlarged bounding box as range for input coordinates
     // it needs to be slightly larger to avoid clipping/thinning of the
     // voxel structure
@@ -76,10 +77,8 @@ class VolumetricMeshOperation extends CommandProcessorTrait {
     // ask the builder for the underlying volumetric/voxel space data
     // structure
     val volume = builder.getVolume
-    // create a volumetric brush associated with this volume and using a
-    // small brush size
-    // VolumetricBrush brush = new BoxBrush(volume, 3.33f);
     
+    // create a volumetric brush associated with this volume
     val brush = options.getOrElse("voxelBrushType", "SPHERE") match {
       case "SPHERE" =>  new RoundBrush(volume, voxelBrushSize);
       case "BOX" =>  new BoxBrush(volume, voxelBrushSize);      
@@ -139,7 +138,10 @@ class VolumetricMeshOperation extends CommandProcessorTrait {
         try new LaplacianSmooth().filter(mesh, laplacianSmoothIterations)
 	      catch {
 	        // sometimes it just throws an exception
-	        case e: NullPointerException => e.printStackTrace
+	        case e: NullPointerException => {
+	          System.out.println("LaplacianSmooth Ignoring exception:")
+	          e.printStackTrace
+	        }
 	      }
       })
     }
