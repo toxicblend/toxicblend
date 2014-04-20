@@ -15,7 +15,7 @@ class ClosestRayResultCallback(val minZ:Double,val maxZ:Double) extends RayResul
   val hitPointWorld = new HitPointWorld
      
   /**
-   * callback from jbullet on collision
+   * callback from jbullet on ray collision
    */
   override def addSingleResult(rayResult:LocalRayResult, normalInWorldSpace:Boolean):Double = {
     closestHitFraction = rayResult.hitFraction      
