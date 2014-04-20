@@ -47,7 +47,8 @@ class Offset2dShapeOperation extends CommandProcessorTrait {
         val segments = model._1.findContinuousLineSegments._2.filter(seq => seq.size>2)
         if (segments.size ==0) System.err.println(traceMsg + ": No edge sequence found in input model.")  
 	      val pt = Polygon2DConverter.toPolygon2D(segments)
-	      new Polygon2DConverter(pt.map(p => p._1), pt.map(t => t._2), "Offset shapes")
+	      val name = model._1.name+ " offset " + options.getStringProperty("offset", "0.1") + "mm"
+	      new Polygon2DConverter(pt.map(p => p._1), pt.map(t => t._2), name)
       }
       if (useMultiThreading) {
         models.par.map(model => findSequenceOfPolygons(model))
@@ -56,7 +57,7 @@ class Offset2dShapeOperation extends CommandProcessorTrait {
       }
     })
            
-    time("Executing offsetShape : ", returnPolygons.foreach(pc => pc.polygons.foreach(p=>p.offsetShape(offset) )))
+    time("Executing offsetShape : ", returnPolygons.foreach(pc => pc.polygons.foreach(p=>p.offsetShape(offset))))
     
     if (useToOutline) {
 	    time("Executing toOutline : ", returnPolygons.foreach(pc => pc.polygons.foreach(p=>p.toOutline)))
