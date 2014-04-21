@@ -28,7 +28,7 @@ trait HasContainsMethod[A] {
 class IntersectEdgesOperation extends CommandProcessorTrait {
     
   /**
-   * Naive and simple brute force "algorithm": test each edge in model against all edges in model B.
+   * Naive and simple brute force "algorithm": test each edge in modelA against all edges in modelB.
    */
   def intersectEdges(modelA:Mesh3DConverter, modelB:Mesh3DConverter):Mesh3DConverter = {
     val rv = new Mesh3DConverter("intersected edges")
@@ -146,7 +146,7 @@ class IntersectEdgesOperation extends CommandProcessorTrait {
     val traceMsg = "IntersectEdgesOperation"      
     if (inMessage.getModelsCount!=2) throw new ToxicblendException("This operation requires two selected objects")
     
-    val models = inMessage.getModelsList().toIndexedSeq.map(i=>Mesh3DConverter(i,true))
+    val models = inMessage.getModelsList.toIndexedSeq.map(i=>Mesh3DConverter(i,true))
     
     val useMultiThreading = options.getMultiThreadingProperty(traceMsg,true)
     if (useMultiThreading) System.err.println(traceMsg + ":useMultiThreading=True but it's not implemented yet")
