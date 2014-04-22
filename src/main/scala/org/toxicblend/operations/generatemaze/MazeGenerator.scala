@@ -12,7 +12,6 @@ import org.toxicblend.typeconverters.Mesh3DConverter
 import org.toxicblend.protobuf.ToxicBlendProtos.Model.{Builder=>PbBuilder}
 import org.toxicblend.typeconverters.Matrix4x4Converter
 import scala.util.Random
-//import scala.math.Ordering.Implicits._
 
 case class WallIndex(val index:Int)  // just a typesafe int dedicated for Walls
 case class NodeIndex(val index:Int)  // just a typesafe int dedicated for Nodes

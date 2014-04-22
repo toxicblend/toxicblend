@@ -38,7 +38,7 @@ object DragonCurveOperation {
   
   /**
    * start with original string="1"
-   * add 1 to the right hand side of original string
+   * append 1 to the right hand side of original string
    * add the original string with the middle digit reversed to get the new string
    * original string = new string
    * repeat
