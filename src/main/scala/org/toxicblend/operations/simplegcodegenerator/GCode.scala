@@ -14,7 +14,7 @@ import java.text.ParsePosition
  * A container for the 'last' gcode state written. By keeping this information we can minimize the number of parameters in gcode.
  * The container should be considered an opaque passed on from one gCode* method to the next
  */
-protected class GCodeState(val cmd:String, val pos:ReadonlyVec3D, val g0Feed:Float, val g1Feed:Float){}
+/*protected*/ class GCodeState(val cmd:String, val pos:ReadonlyVec3D, val g0Feed:Float, val g1Feed:Float){}
 
 /**
  * Prints to gcode as text

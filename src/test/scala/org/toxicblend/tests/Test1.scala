@@ -41,25 +41,25 @@ object Test1 {
   
   def randomWorldOrientation(rnd:Random) = {
      val matrixBuilder = Matrix4x4.newBuilder()
-     matrixBuilder.setM00(rand.nextFloat()*20.f-10.f)
-     matrixBuilder.setM01(rand.nextFloat()*20.f-10.f)
-     matrixBuilder.setM02(rand.nextFloat()*20.f-10.f)
-     matrixBuilder.setM03(rand.nextFloat()*20.f-10.f)
+     matrixBuilder.setM00(rand.nextFloat()*20f-10f)
+     matrixBuilder.setM01(rand.nextFloat()*20f-10f)
+     matrixBuilder.setM02(rand.nextFloat()*20f-10f)
+     matrixBuilder.setM03(rand.nextFloat()*20f-10f)
 
-     matrixBuilder.setM10(rand.nextFloat()*20.f-10.f)
-     matrixBuilder.setM11(rand.nextFloat()*20.f-10.f)
-     matrixBuilder.setM12(rand.nextFloat()*20.f-10.f)
-     matrixBuilder.setM13(rand.nextFloat()*20.f-10.f)
+     matrixBuilder.setM10(rand.nextFloat()*20f-10f)
+     matrixBuilder.setM11(rand.nextFloat()*20f-10f)
+     matrixBuilder.setM12(rand.nextFloat()*20f-10f)
+     matrixBuilder.setM13(rand.nextFloat()*20f-10f)
      
-     matrixBuilder.setM20(rand.nextFloat()*20.f-10.f)
-     matrixBuilder.setM21(rand.nextFloat()*20.f-10.f)
-     matrixBuilder.setM22(rand.nextFloat()*20.f-10.f)
-     matrixBuilder.setM23(rand.nextFloat()*20.f-10.f)
+     matrixBuilder.setM20(rand.nextFloat()*20f-10f)
+     matrixBuilder.setM21(rand.nextFloat()*20f-10f)
+     matrixBuilder.setM22(rand.nextFloat()*20f-10f)
+     matrixBuilder.setM23(rand.nextFloat()*20f-10f)
 
-     matrixBuilder.setM30(rand.nextFloat()*20.f-10.f)
-     matrixBuilder.setM31(rand.nextFloat()*20.f-10.f)
-     matrixBuilder.setM32(rand.nextFloat()*20.f-10.f)
-     matrixBuilder.setM33(rand.nextFloat()*20.f-10.f)
+     matrixBuilder.setM30(rand.nextFloat()*20f-10f)
+     matrixBuilder.setM31(rand.nextFloat()*20f-10f)
+     matrixBuilder.setM32(rand.nextFloat()*20f-10f)
+     matrixBuilder.setM33(rand.nextFloat()*20f-10f)
      matrixBuilder
   }
   

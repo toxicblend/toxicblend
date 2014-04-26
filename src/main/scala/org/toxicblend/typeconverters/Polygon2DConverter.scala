@@ -153,7 +153,7 @@ object Polygon2DConverter {
       lastV.set(v)
       mc.transform(v); v.normalize          
       i+=1
-    } while (i<100 && v.distanceToSquared(lastV) > 1.e-26 )
+    } while (i<100 && v.distanceToSquared(lastV) > 1E-26f )
     //println("Found normal:" + v + " with i=" + i + " distance=" + v.distanceToSquared(lastV))
     v
   }

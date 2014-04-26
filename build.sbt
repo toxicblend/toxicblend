@@ -2,10 +2,11 @@ lazy val toxicblend = project.in( file(".")).aggregate(Projects.jbulletd, Projec
 
 version := "0.1"
 
-scalaVersion := "2.10.4"
+scalaVersion := "2.11.0"
 
 libraryDependencies ++= Seq(
-	"org.scalatest" % "scalatest_2.10" % "2.0" % "test",
+  	"org.scala-lang.modules" %% "scala-parser-combinators" % "1.0.1",
+	"org.scalatest" % "scalatest_2.11" % "2.1.4" % "test",
 	"java3d" % "vecmath" % "1.5.2"
 )
 

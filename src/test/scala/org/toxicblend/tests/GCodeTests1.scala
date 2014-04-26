@@ -8,7 +8,7 @@ import org.toxicblend.operations.simplegcodegenerator.GCodeSettings
 
 class GCodeTests1 extends FlatSpec with Matchers {
   def setup():GCodeSettings = {
-    val rv = new GCodeSettings(blenderUnitToMM=100f, outFilename="test.ngc", safeZ=2.f, g0Feedrate=1, g1Feedrate=2,
+    val rv = new GCodeSettings(blenderUnitToMM=100f, outFilename="test.ngc", safeZ=2f, g0Feedrate=1, g1Feedrate=2,
                                g1PlungeFeedrate=3, spindleSpeed=4, g64Command="G64",
                                customEndCommand="M101", stepDown=5f)
     rv

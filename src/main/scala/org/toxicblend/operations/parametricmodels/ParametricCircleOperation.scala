@@ -10,6 +10,7 @@ import toxi.geom.ReadonlyVec3D
 import toxi.geom.Vec3D
 import toxi.geom.Matrix4x4
 import org.toxicblend.util.Time.time
+import scala.math.Pi
 
 /**
  * A 'draw custom geometry' example 
@@ -39,7 +40,7 @@ class ParametricCircleOperation extends CommandProcessorTrait {
     }
     
     // each "cell" occupies this number of radians 
-    val deltaDegree = (2d*Math.PI) / circleData.size
+    val deltaDegree = (2d*Pi) / circleData.size
     var degree = 0d
     (0 until circleData.size).foreach(i => {
       circleData(i) = new Vec3D(Math.cos(degree).toFloat, Math.sin(degree).toFloat, 0)
@@ -54,7 +55,7 @@ class ParametricCircleOperation extends CommandProcessorTrait {
     val stepsI = Array(2,2,4,4,4,8,8,16,16,32).iterator
     (0 until iterations).foreach(i => {
       
-      val circum = 2.*Math.PI*radius
+      val circum = 2d*Pi*radius
       //println("circum=" + circum + " radius = " + radius + " steps:" + steps + " circum/steps=" + circum/steps)
 
       // draw connecting edges
