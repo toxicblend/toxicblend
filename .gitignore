@@ -5,6 +5,7 @@
 *.dylib
 target/
 bin/
+*.ngc
 .classpath
 .project
 .cache
