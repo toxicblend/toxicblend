@@ -6,7 +6,7 @@ scalaVersion := "2.11.1"
 
 libraryDependencies ++= Seq(
   	"org.scala-lang.modules" %% "scala-parser-combinators" % "1.0.1",
-	"org.scalatest" % "scalatest_2.11" % "2.1.4" % "test",
+	"org.scalatest" % "scalatest_2.11" % "2.2.0" % "test",
 	"java3d" % "vecmath" % "1.5.2"
 )
 
