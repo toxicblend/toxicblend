@@ -66,10 +66,10 @@ class GCodeGenerator(val gCodeProperties:GCodeSettings) {
 	    new Matrix4f(offset, scale)
     }
     
-    val mmToBlenderUnit = 1f/gcodeProperties.blenderUnitToMM
+    val blenderUnitToMM = gcodeProperties.blenderUnitToMM
     val rv = edges.map( segment => {
       val pGoints = segment.map(point => {
-        transform.transformOne(new Vec3D(point.x*mmToBlenderUnit, point.y*mmToBlenderUnit, point.z*mmToBlenderUnit))
+        transform.transformOne(new Vec3D(point.x*blenderUnitToMM, point.y*blenderUnitToMM, point.z*blenderUnitToMM))
       })
       new GCode(pGoints)
     }) 
@@ -154,7 +154,7 @@ class GCodeGenerator(val gCodeProperties:GCodeSettings) {
           // recalculate the aabb, with the mm conversion and all
           val aabb = new AABB(segments._2(0)(0).scale(scaleMToMM), 0f) // meter to mm
           segments._2.foreach(segment => segment.foreach(point => aabb.growToContainPoint(point.scale(scaleMToMM)))) // meter to mm
-          //println("Bounding Box: %s min:%s max:%S".format(aabb.toString, aabb.getMin().toString(), aabb.getMax().toString() ))
+          println("Bounding Box in mm: %s min:%s max:%S".format(aabb.toString, aabb.getMin().toString(), aabb.getMax().toString() ))
           (generateGcode(segments._2, aabb, gCodeProperties).filter(g => g.gcodePoints.size > 0),aabb)
         } else {
         (new ArrayBuffer[GCode], new AABB)
