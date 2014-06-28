@@ -59,7 +59,7 @@ class ToxicBlend_SimpleGcodeGenerator(bpy.types.Operator):
                       'spindleSpeed'          : str(self.spindleSpeedProperty),
                       'g64Command'            : self.g64CommandProperty,
                       'customEndCommand'      : self.customEndCommandProperty,
-                      'filename'              : self.filenameProperty}
+                      'outFilename'           : self.filenameProperty}
                     
         bc.sendSingleBlenderObject(activeObject, self.bl_idname, properties) 
         bc.receiveObjects()
