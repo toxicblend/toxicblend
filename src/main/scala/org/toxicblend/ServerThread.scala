@@ -23,6 +23,7 @@ import org.toxicblend.operations.intersectedges.IntersectEdgesOperation
 import org.toxicblend.operations.parametricmodels.ParametricCircleOperation
 import org.toxicblend.operations.offset2dshape.Offset2dShapeOperation
 import org.toxicblend.operations.subdivideedges.SubdivideEdgesOperation
+import org.toxicblend.operations.meshgenerator.MeshGeneratorOperation
 import org.toxicblend.util.Time
 
 import com.google.protobuf.{CodedInputStream,CodedOutputStream}
@@ -77,6 +78,7 @@ case class ServerThread(socket: Socket) extends Thread("ServerThread") {
                 case "OBJECT_OT_toxicblend_addparametriccircleoperation" => new ParametricCircleOperation
                 case "OBJECT_OT_toxicblend_offset2d" => new Offset2dShapeOperation
                 case "OBJECT_OT_toxicblend_subdivideedges" => new SubdivideEdgesOperation
+                case "OBJECT_OT_toxicblend_meshgenerator" => new MeshGeneratorOperation
                 case s:String => {
                   val errMsg = "Unknown command: " + s
                   System.err.println(errMsg) 
