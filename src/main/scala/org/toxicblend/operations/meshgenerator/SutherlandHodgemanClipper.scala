@@ -95,6 +95,45 @@ class SutherlandHodgemanClipper( ) {
   }
   
   /**
+   * Returns the intersection point between an infinite line and one finite line (segment)
+   */
+  def getIntersectionPosOnInfiniteLine(infiniteLine:Line2D, fromV:ReadonlyVec2D, toV:ReadonlyVec2D): Option[ReadonlyVec2D] = {
+    val x1 = infiniteLine.a.x.toDouble
+    val y1 = infiniteLine.a.y.toDouble
+    val x2 = infiniteLine.b.x.toDouble
+    val y2 = infiniteLine.b.y.toDouble
+    val x3 = fromV.x.toDouble
+    val y3 = fromV.y.toDouble
+    val x4 = toV.x.toDouble
+    val y4 = toV.y.toDouble
+    
+    val denom = (y4-y3)*(x2-x1)-(x4-x3)*(y2-y1)
+    val nb = (x2-x1)*(y1-y3)-(y2-y1)*(x1-x3) // edge line position
+    
+    if (denom != 0.0) {
+      //val ua = na / denom
+      val ub = nb / denom
+      if (ub >= 0 && ub <= 1) {
+        val i = fromV.interpolateTo(toV, ub.toFloat);
+        Some(i)  
+      } else {
+        None 
+      }
+    } else {
+      val na = (x4-x3)*(y1-y3)-(y4-y3)*(x1-x3) // infinite line position
+      if (na == 0.0 && nb == 0.0) {
+        if (infiniteLine.distanceToPoint(fromV) == 0.0) {
+          Some(fromV) // COINCIDENT. Any point on edge is intersecting - what to return?
+        } else {
+          None // COINCIDENT_NO_INTERSECT
+        }
+      } else {
+        None // PARALLEL
+      }
+    }
+  }
+  
+  /**
    * Clips a polygon with regards to one single edge.
    * Origo is assumed to be on the 'inside' side of the edge 
    */
@@ -116,13 +155,13 @@ class SutherlandHodgemanClipper( ) {
       
       if (currentInside) {
          if (!previousInside) {
-           output.add(getClippedPosOnEdge(edge, previous, current).get) 
+           output.add(getIntersectionPosOnInfiniteLine(edge, previous, current).get) 
            //println("\tadd clip")
          }
          output.add(current)
          //println("\tadd current")
       } else if (previousInside) {
-        output.add(getClippedPosOnEdge(edge, previous, current).get)
+        output.add(getIntersectionPosOnInfiniteLine(edge, previous, current).get)
         //println("\tadd clip")
       } else {
         //println("\tnop")
@@ -138,43 +177,45 @@ class SutherlandHodgemanClipper( ) {
 
 object Test extends App {
   
-  def toRad(angle:Float) = (math.Pi * angle / 180f).toFloat
-  def cos(angle:Float) = math.cos(angle).toFloat
-  def sin(angle:Float) = math.sin(angle).toFloat
-  def vec2dpolar(mag:Float,rad:Float) = new Vec2D(mag*cos(rad),mag*sin(rad)) 
-    
-  val origin = new Vec2D(0,0)
-  val edge = new Line2D(new Vec2D(-1,-1f).addSelf(origin), new Vec2D(2,2).addSelf(origin))
-  val p0 = new Vec2D(0,0).addSelf(origin)
-  val p1 = new Vec2D(1,0).addSelf(origin)
-  val p2 = new Vec2D(0,1).addSelf(origin)
-  val poly = new Polygon2D
-  poly.add(p0); poly.add(p1); poly.add(p2);
-  val center = new Vec2D(0f,0f)
-  val clipper = new SutherlandHodgemanClipper
-  val alpha = 180f + 45f
-  val alphaDelta = -360f/100f
-  val sign = clipper.clockwiseFactor(edge)
+  val p0 = new Vec2D(1,-1)
+  val p1 = new Vec2D(-1,-1)
+  val p2 = new Vec2D(-1,1)
+  val p3 = new Vec2D(1,1)
   
-  if (true) for (i <- 0 until 50) {
-    val pos = vec2dpolar(0.5f,toRad(alpha+alphaDelta*i)).addSelf(origin)
-    if (clipper.isInside(pos, edge, sign)) {
-      println("outside fail: angle=" + (alpha+alphaDelta*i) + " pos=" + pos)
-    }
-  }
-  for (i <- 50 until 100) {
-    val pos = vec2dpolar(0.5f,toRad(alpha+alphaDelta*i)).addSelf(origin)
-    if (!clipper.isInside(pos, edge, sign)) {
-      println("inside fail: angle=" + (alpha+alphaDelta*i) + " pos=" + pos)
-    }
-  }
-  println("unclipped: " + poly)
-  println("p0: " + p0 + " isInside:" + clipper.isInside(p0, edge, sign))
-  println("p1: " + p1 + " isInside:" + clipper.isInside(p1, edge, sign))
-  println("p2: " + p2 + " isInside:" + clipper.isInside(p2, edge, sign))
-
-    
-  val clipped = clipper.clipPolygon(poly,edge)
-  println("clipped:" + clipped)
+  var polygon = new Polygon2D
+  Array(p0.scale(10), p1.scale(10), p2.scale(10), p3.scale(10)).foreach( v => polygon.add(v))
+  val clipper = new SutherlandHodgemanClipper
+  
+  println(polygon)
+  println
+  
+  var iLine = new Line2D(p0, p1)
+  polygon = clipper.clipPolygon(polygon, iLine)
+  println("line=" + iLine)
+  println(polygon)
+  println
+  
+  iLine = new Line2D(p1, p2)
+  polygon = clipper.clipPolygon(polygon, iLine)
+  println("line=" + iLine)
+  println(polygon)
+  println
+  
+  iLine = new Line2D(p2, p3)
+  val insideSign = clipper.clockwiseFactor(iLine)
+  println("p0: " + clipper.isInside(p0, iLine, insideSign))
+  println("p1: " + clipper.isInside(p1, iLine, insideSign))
+  println("p2: " + clipper.isInside(p2, iLine, insideSign))
+  println("p3: " + clipper.isInside(p3, iLine, insideSign))
+  polygon = clipper.clipPolygon(polygon, iLine)
+  println("line=" + iLine)
+  println(polygon)
+  println
+  
+  iLine = new Line2D(p3, p0)
+  polygon = clipper.clipPolygon(polygon, iLine)
+  println("line=" + iLine)
+  println(polygon)
+  println
   println("end")
 }
