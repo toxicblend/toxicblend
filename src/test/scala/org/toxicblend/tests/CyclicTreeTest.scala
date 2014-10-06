@@ -8,7 +8,7 @@ import org.toxicblend.ToxicblendException
 class CyclicTreeTest extends FlatSpec with Matchers {
   "CyclicTreeTest-1" should "work just fine" in {
     val data = Array(Payload(0d),Payload(1d),Payload(2d),Payload(3d),Payload(4d),Payload(5d),Payload(6d),Payload(7d),Payload(8d))
-    val tree = CyclicTree.apply(data)
+    val tree = CyclicTree(data)
     for ( x <- 1 until 8 ) {
       val rv = tree.searchIntervalWithLimits(0.5+x)
       rv.isDefined should be (true)
@@ -29,7 +29,7 @@ class CyclicTreeTest extends FlatSpec with Matchers {
   
   "CyclicTreeTest-2" should "work just fine" in {
     val data = Array(Payload(0d)).drop(1)
-    val tree = CyclicTree.apply(data)
+    val tree = CyclicTree(data)
     
     val rv = tree.searchIntervalWithLimits(8.5)
     rv.isDefined should be (false)
