@@ -50,7 +50,7 @@ import scala.collection.JavaConversions._
     }
  * 
  */
-class SutherlandHodgemanClipper( ) {
+class SutherlandHodgemanClipper {
   val center:ReadonlyVec2D = new Vec2D
   
   def clockwiseFactor(edge:Line2D) = {
@@ -61,14 +61,16 @@ class SutherlandHodgemanClipper( ) {
       poly.add(center.copy)
       if (poly.isClockwise) -1f else 1f
     } */
-    val sign = if (edge.b.sub(edge.a).cross(center.sub(edge.a)) >= 0 ) -1f else 1f
+    val sign = if (edge.b.sub(edge.a).cross(center.sub(edge.a)) >= 0 ) 1f else -1f
     //if (sign != realSign) println("sign != realSign")
-    -sign
+    sign
   }
   
   def isInside(point:ReadonlyVec2D, edge:Line2D, sign:Float):Boolean = {
-    val cross = edge.b.sub(edge.a).cross(point.sub(edge.a))
-    val rv = sign*cross >= 0
+    val dotProduct =  (edge.a.x - point.x) * (edge.b.y - point.y) > (edge.a.y - point.y) * (edge.b.x - point.x);
+    //val cross = edge.b.sub(edge.a).cross(point.sub(edge.a))
+    //val rv = sign*cross >= 0
+    if (sign > 0) dotProduct else !dotProduct
     /*val anotherRv = {
       val cp = getClippedPosOnEdge(edge, point, center)
       cp.isDefined && cp.get.sub(center).magSquared <= point.sub(center).magSquared
@@ -78,7 +80,7 @@ class SutherlandHodgemanClipper( ) {
     //else 
     //  println("isInside ok: point=" + point + " edge=" + edge + " center=" + center + " rv=" + rv + " anotherRv=" + anotherRv)
     anotherRv*/
-    rv
+    //rv
   }
   
   def getClippedPosOnEdge(edge:Line2D, p1:ReadonlyVec2D, p2:ReadonlyVec2D): Option[ReadonlyVec2D] = {
@@ -93,7 +95,48 @@ class SutherlandHodgemanClipper( ) {
       } else None
     } else None
   }
-  
+    
+  /**
+   * Clips a polygon with regards to one single edge.
+   * Origo is always assumed to be on the 'inside' side of the edge 
+   */
+  def clipPolygon(poly:Polygon2D, edge:Line2D ) : Polygon2D = {
+    val points = new ArrayBuffer[ReadonlyVec2D](poly.size+1); points.insertAll(0,poly.vertices.toTraversable)
+    val output = new ArrayBuffer[ReadonlyVec2D] // outputList
+    val sign = clockwiseFactor(edge)
+      
+    (0 until points.size).foreach( i => {
+      val current = points(i)
+      val previous = if (i==0) points.last else points(i-1)
+      
+      val currentInside= isInside(current, edge, sign)
+      val previousInside = isInside(previous, edge, sign)
+    
+      if (currentInside) {
+         if (!previousInside) {
+           val iPoint = SutherlandHodgemanClipper.getIntersectionPosOnInfiniteLine(edge, previous, current)
+           if (iPoint.isDefined) {
+             output.add(iPoint.get)
+           } else {
+             println(" No intersection found: edge=" + edge + " previous=" + previous + " current=" + current)
+           }
+         }
+         output.add(current)
+      } else if (previousInside) {
+        val iPoint = SutherlandHodgemanClipper.getIntersectionPosOnInfiniteLine(edge, previous, current)
+        if (iPoint.isDefined) {
+          output.add(iPoint.get)
+        } else {
+          println(" No intersection found: edge=" + edge + " previous=" + previous + " current=" + current)
+        }
+      }
+    })
+    
+    new Polygon2D(output.iterator)//.removeDuplicates(0.001f);
+  }
+}
+
+object SutherlandHodgemanClipper {
   /**
    * Returns the intersection point between an infinite line and one finite line (segment)
    */
@@ -123,7 +166,7 @@ class SutherlandHodgemanClipper( ) {
       val na = (x4-x3)*(y1-y3)-(y4-y3)*(x1-x3) // infinite line position
       if (na == 0.0 && nb == 0.0) {
         if (infiniteLine.distanceToPoint(fromV) == 0.0) {
-          Some(fromV) // COINCIDENT. Any point on edge is intersecting - what to return?
+          Some(toV) // COINCIDENT. Any point on edge is intersecting - what to return?
         } else {
           None // COINCIDENT_NO_INTERSECT
         }
@@ -131,48 +174,7 @@ class SutherlandHodgemanClipper( ) {
         None // PARALLEL
       }
     }
-  }
-  
-  /**
-   * Clips a polygon with regards to one single edge.
-   * Origo is assumed to be on the 'inside' side of the edge 
-   */
-  def clipPolygon(poly:Polygon2D, edge:Line2D ) : Polygon2D = {
-    val points = new ArrayBuffer[ReadonlyVec2D](poly.size+1); points.insertAll(0,poly.vertices.toTraversable)
-    val output = new ArrayBuffer[ReadonlyVec2D] // outputList
-    val sign = clockwiseFactor(edge)
-      
-    (0 until points.size).foreach( i => {
-      //val e = p(1)
-      //val s = p(0)
-      val current = points(i)
-      val previous = if (i==0) points.last else points(i-1)
-      
-      val currentInside= isInside(current, edge, sign)
-      val previousInside = isInside(previous, edge, sign)
-      //println("current=\t" + current + "\tinside:" + currentInside)
-      //println("   prev=\t" + previous + "\tinside:" + previousInside)
-      
-      if (currentInside) {
-         if (!previousInside) {
-           output.add(getIntersectionPosOnInfiniteLine(edge, previous, current).get) 
-           //println("\tadd clip")
-         }
-         output.add(current)
-         //println("\tadd current")
-      } else if (previousInside) {
-        output.add(getIntersectionPosOnInfiniteLine(edge, previous, current).get)
-        //println("\tadd clip")
-      } else {
-        //println("\tnop")
-      }
-      //if (output.size > 0 && output.head != output.last) {
-      //  output += output.head
-      //}
-    })
-    
-    new Polygon2D(output.iterator).removeDuplicates(0.001f);
-  }
+  }  
 }
 
 object Test extends App {

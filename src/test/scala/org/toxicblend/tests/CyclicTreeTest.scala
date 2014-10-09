@@ -6,6 +6,7 @@ import org.toxicblend.operations.meshgenerator.Payload
 import org.toxicblend.ToxicblendException
 
 class CyclicTreeTest extends FlatSpec with Matchers {
+  
   "CyclicTreeTest-1" should "work just fine" in {
     val data = Array(Payload(0d),Payload(1d),Payload(2d),Payload(3d),Payload(4d),Payload(5d),Payload(6d),Payload(7d),Payload(8d))
     val tree = CyclicTree(data)
@@ -38,7 +39,7 @@ class CyclicTreeTest extends FlatSpec with Matchers {
   
   "CyclicTreeTest-3" should "work just fine" in {
     val unordered = Array(Payload(4d),Payload(5d),Payload(6d),Payload(7d),Payload(8d),Payload(0d),Payload(1d),Payload(2d),Payload(3d))
-    val order = CyclicTree.inOrder(unordered)
+    val (order,clockwise) = CyclicTree.inOrder(unordered, Option(false))
     
     for (i <- 0 until order.size) {
       order(i).angle.toInt should be (i)
@@ -49,5 +50,16 @@ class CyclicTreeTest extends FlatSpec with Matchers {
     val unordered = Array(Payload(1d),Payload(0d),Payload(3d))
     an [ToxicblendException] should be thrownBy CyclicTree.inOrder(unordered)
     
+  }
+  
+  "CyclicTreeTest-5" should "work just fine" in {
+    //println("CyclicTreeTest-5 start")
+    val unordered = Array(Payload(1d),Payload(0d),Payload(8d),Payload(7d),Payload(6d),Payload(5d),Payload(4d),Payload(3d),Payload(2d))
+    val (order,clockwise) = CyclicTree.inOrder(unordered, Option(true))
+    
+    for (i <- 0 until order.size) {
+      order(i).angle.toInt should be (order.size-i-1)
+    }
+    //println("CyclicTreeTest-5 end")
   }
 }

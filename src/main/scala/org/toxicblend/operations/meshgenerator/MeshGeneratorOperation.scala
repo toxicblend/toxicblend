@@ -32,16 +32,25 @@ class MeshGeneratorOperation extends CommandProcessorTrait {
    * Look at http://paulbourke.net/geometry/circlesphere/
    */
   def calculateZ(point:ReadonlyVec2D, center:ReadonlyVec2D, r:Float) : Vec3D = {
-    val d = center.distanceTo(point)
-    val h = math.sqrt((4d*d*d*r*r-d*d*d*d)/(4d*d*d)).toFloat
-    new Vec3D(point.x, point.y, 0)
+    if (point.x.isNaN || point.y.isNaN) {
+      new Vec3D(0,0,0)
+    } else {
+      val d = center.distanceTo(point)
+      if (d != 0) {
+        val h = math.sqrt((4d*d*d*r*r-d*d*d*d)/(4d*d*d)).toFloat
+        new Vec3D(point.x, point.y, 0)
+      } else {
+        new Vec3D(point.x, point.y, 0)
+      }
+    }
   }
   
   def processData(edges:Polygon2DConverter, center:ReadonlyVec3D, radius:Float) : Mesh3DConverter = {
     val polygon = edges.polygons(0)
     val aabb = polygon.getBounds
-    val deltaX = aabb.width / 50.0f
-    val deltaY = aabb.height / 50.0f
+    val steps = 3
+    val deltaX = aabb.width / steps.toFloat
+    val deltaY = aabb.height / steps.toFloat
       
     val realCenter3d = if (edges.transforms.size > 0) {
       val c = edges.transforms(0).applyTo(center) // center.copy //
@@ -58,14 +67,19 @@ class MeshGeneratorOperation extends CommandProcessorTrait {
       new Payload(v.heading, v.magnitude, p)
     })
     val tree = CyclicTree(points)
-    
+    println("realCenter2d:" + realCenter2d)
+    println("polygons: " + tree.seq.map(p => "" + p.pos + "@" + p.angle*180f/math.Pi).mkString(","))
+    println("clockwise: " + tree.clockwise)
     def containsPoint(p:ReadonlyVec2D):Boolean = {
       val v = p.sub(realCenter2d)
       val candidate = tree.searchIntervalWithLimits(v.heading)
       if (candidate.isDefined) {
         val mag = v.magnitude 
-        if (mag < candidate.get._1.distance && mag < candidate.get._2.distance ) true
-        else false
+        if (mag < candidate.get._1.distance && mag < candidate.get._2.distance ) {
+          val i = SutherlandHodgemanClipper.getIntersectionPosOnInfiniteLine(new Line2D(Vec2D.ZERO, v), candidate.get._1.pos, candidate.get._2.pos )
+          i.isDefined && i.get.magnitude >= mag
+        } else 
+          false
       } else {
         polygon.containsPoint(p)
       }
@@ -78,7 +92,7 @@ class MeshGeneratorOperation extends CommandProcessorTrait {
       closedLoop.sliding(2,1).foreach(p => {
         mesh.addFace(new Vec3D(p(0).x,p(0).y, 0), new Vec3D(p(1).x,p(1).y, 0), realCenter3d)
       })
-    for (xp <- 0 until 100; yp <-0 until 100) {
+    for (xp <- 0 until steps; yp <-0 until steps) {
       val insidePoints = new ArrayBuffer[Vec2D]
       val outsidePoints = new ArrayBuffer[Vec2D]
       val p2 = new Vec2D(aabb.x + xp*deltaX, aabb.y + yp*deltaY)
@@ -89,6 +103,12 @@ class MeshGeneratorOperation extends CommandProcessorTrait {
       val cp1 = containsPoint(p1)
       val cp2 = containsPoint(p2)
       val cp3 = containsPoint(p3)
+      if (cp0 || cp1 || cp2 || cp3) {
+        println("p0=" + p0 + " is " + (if (cp0) "inside" else "outside"))
+        println("p1=" + p1 + " is " + (if (cp1) "inside" else "outside"))
+        println("p2=" + p2 + " is " + (if (cp2) "inside" else "outside"))
+        println("p3=" + p3 + " is " + (if (cp3) "inside" else "outside"))
+      }
       
       if (cp0 && cp1 && cp2 && cp3) {
         val p03d = calculateZ(p0, realCenter2d, radius)
@@ -128,33 +148,47 @@ class MeshGeneratorOperation extends CommandProcessorTrait {
         p.foreach(v => v.subSelf(realCenter2d))
         if (!cp0) {
           val edge = tree.searchIntervalWithLimits(p0.heading)
-          p = clipper.clipPolygon(p, new Line2D(edge.get._1.pos.sub(realCenter2d),edge.get._2.pos.sub(realCenter2d)))
+          p = clipper.clipPolygon(p, new Line2D(edge.get._1.pos,edge.get._2.pos))
         }
         if (!cp1) {
           val edge = tree.searchIntervalWithLimits(p1.heading)
-          p = clipper.clipPolygon(p, new Line2D(edge.get._1.pos.sub(realCenter2d),edge.get._2.pos.sub(realCenter2d)))
+          p = clipper.clipPolygon(p, new Line2D(edge.get._1.pos,edge.get._2.pos))
         }
         if (!cp2) {
           val edge = tree.searchIntervalWithLimits(p2.heading)
-          p = clipper.clipPolygon(p, new Line2D(edge.get._1.pos.sub(realCenter2d),edge.get._2.pos.sub(realCenter2d)))
+          p = clipper.clipPolygon(p, new Line2D(edge.get._1.pos,edge.get._2.pos))
         }
         if (!cp3) {
           val edge = tree.searchIntervalWithLimits(p3.heading)
-          p = clipper.clipPolygon(p, new Line2D(edge.get._1.pos.sub(realCenter2d),edge.get._2.pos.sub(realCenter2d)))
+          p = clipper.clipPolygon(p, new Line2D(edge.get._1.pos,edge.get._2.pos))
         }
         // move back
         p.foreach(v => v.addSelf(realCenter2d))
         if (p.size == 3) {
+          println("size=" + p.size + " : " + p.mkString(","))
           mesh.addFace(calculateZ(p.get(0), realCenter2d, radius), calculateZ(p.get(1), realCenter2d, radius), calculateZ(p.get(2), realCenter2d, radius) )
         } else if (p.size > 3) {
           println("size=" + p.size + " : " + p.mkString(","))
-          p.toMesh(mesh)
+          println("b4")
+          mesh.getVertices.map(v => if (v.x.isNaN || v.y.isNaN || v.z.isNaN ) println(v))
+          //if (p.last != p.head) 
+          //   p.add(p.head)
+          
+          val centroid = p.foldLeft(new Vec2D)((x,s) => x.addSelf(s)).scaleSelf(1f/p.size.toFloat)
+          p.toMesh(mesh, centroid, 0f)
+          
+          println("after")
+          mesh.getVertices.map(v => if (v.x.isNaN || v.y.isNaN || v.z.isNaN ) println(v))
         }
       }
     }
-      
+    //println(mesh.vertices.mkString(","))
+    println("mesh:")
+    mesh.getVertices.map(v => if (v.x.isNaN || v.y.isNaN || v.z.isNaN ) println(v))
     val rv = Mesh3DConverter(mesh, "procedural mesh")
+    println(rv.getVertices.mkString(","))
     if (edges.transforms.size > 0) rv.transform(edges.transforms(0) )
+    println(rv.getVertices.mkString(","))
     rv
   }
   

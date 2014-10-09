@@ -97,7 +97,7 @@ object Payload {
   def apply(angle:Double, distance:Double, pos:ReadonlyVec2D) = new Payload(angle, distance, pos)
 }
 
-class CyclicTree(private val seq:IndexedSeq[Payload], private val tree:Tree){
+class CyclicTree(val seq:IndexedSeq[Payload], private val tree:Tree, val clockwise:Boolean){
    
   def searchIntervalWithLimits(searchAngle:Double) : Option[(Payload,Payload)] = {
     if (seq.size <= 0) {
@@ -135,34 +135,78 @@ class CyclicTree(private val seq:IndexedSeq[Payload], private val tree:Tree){
 }
 
 object CyclicTree {
+  /**
+   * http://en.wikipedia.org/wiki/Shoelace_formula
+   * Returns true if the polygon is clockwise
+   */
+  def shoelace(seq:IndexedSeq[Payload]):Boolean = {
+    //var sum=0f
+    //for (i <- 0 until seq.size-1) sum += seq(i).pos.x*(seq(i+1).pos.y-seq(i+1).pos.x*seq(i).pos.x)
+    //sum += seq.last.pos.x*seq.head.pos.y - seq.head.pos.x*seq.last.pos.y
+    var sum2 = (0 until seq.size-1).foldLeft(0d) ((s,i)=>s+seq(i).pos.x*(seq(i+1).pos.y-seq(i+1).pos.x*seq(i).pos.x)) +
+               seq.last.pos.x*seq.head.pos.y - seq.head.pos.x*seq.last.pos.y
+    //if (sum != sum2) println("sum2differ " + sum + " " + sum2)
+    sum2 < 0
+  }
   
   /**
-   * makes sure the smallest element of the sequence is at the head by copying the sequence if needed
+   * makes sure the elements of the sequence is in order. Cyclic ordering is not altered
+   * @param clockwise: if the ordering is known it can be specified here, if not - use None and it will be calculated
    */
-  def inOrder(seq:IndexedSeq[Payload]) : IndexedSeq[Payload] = {
+  def inOrder(seq:IndexedSeq[Payload], clockwise:Option[Boolean]=None) : (IndexedSeq[Payload],Boolean) = {
     if (seq.size > 0) {
-      val smallest = (0 until seq.size).reduceLeft( (x,a) => if (seq(x).angle<seq(a).angle) x else a )
-      if (smallest == 0) {
-        seq
+      val isClockwise = if (clockwise.isDefined) clockwise.get else shoelace(seq)
+      //println("clockwise=" + isClockwise )
+      //println("original=" + seq.map(v=> "@" + v.angle*180d/math.Pi).mkString(","))
+          
+      if (isClockwise) {
+        // clockwise: angles should decrease as we go down the sequence
+        val largestAtPos = (0 until seq.size).reduceLeft( (x,a) => if (seq(x).angle>seq(a).angle) x else a )
+        if (largestAtPos == 0) {
+          (seq,isClockwise)
+        } else {
+          val rv = new Array[Payload](seq.size)
+          var dest = 0
+          for (i <- largestAtPos until seq.size) {
+            rv(dest) = seq(i)
+            dest+=1
+          }
+          for (i <- 0 until largestAtPos) {
+            rv(dest) = seq(i)
+            dest+=1
+          }
+          //println("clockwise=" + isClockwise + " largestAtPos=" + largestAtPos)
+          //println("converted=" + rv.map(v=>"" + "@" + v.angle*180d/math.Pi).mkString(","))
+          (0 until rv.size).reduceLeft( (a,x) => if (rv(x).angle>rv(a).angle) throw new ToxicblendException("Non-convex shape?") else x)
+          (rv,isClockwise)
+        }
       } else {
-        val rv = new Array[Payload](seq.size)
-        var dest = 0
-        for (i <- smallest until seq.size) {
-          rv(dest) = seq(i)
-          dest+=1
+        // Anti-clockwise: angles should increase as we go down the sequence
+        val smallestAtPos = (0 until seq.size).reduceLeft( (x,a) => if (seq(x).angle<seq(a).angle) x else a )
+        if (smallestAtPos == 0) {
+          (seq,isClockwise)
+        } else {
+          val rv = new Array[Payload](seq.size)
+          var dest = 0
+          for (i <- smallestAtPos until seq.size) {
+            rv(dest) = seq(i)
+            dest+=1
+          }
+          for (i <- 0 until smallestAtPos) {
+            rv(dest) = seq(i)
+            dest+=1
+          }
+          //println("clockwise=" + isClockwise + " smallestAtPos=" + smallestAtPos)
+          //println("converted=" + rv.map(v=>"" + "@" + v.angle).mkString(","))
+          (0 until rv.size).reduceLeft( (a,x) => if (rv(x).angle<rv(a).angle) throw new ToxicblendException("Non-convex shape?") else x)
+          (rv,isClockwise)
         }
-        for (i <- 0 until smallest) {
-          rv(dest) = seq(i)
-          dest+=1
-        }
-        (0 until rv.size).reduceLeft( (x,a) => if (rv(x).angle>rv(a).angle) throw new ToxicblendException("Non-convex shape?") else a)
-        rv
       }
-    } else seq
+    } else (seq, false)
   }
   
   def apply(aSeq:IndexedSeq[Payload]):CyclicTree  = {
-    val seq = inOrder(aSeq)
+    val (seq, clockwise) = inOrder(aSeq)
     val rootNode = if (seq.size > 0) {
       val centerPos = (seq.size-1)/2
       val leftPos = 0
@@ -171,7 +215,7 @@ object CyclicTree {
     } else {
       Empty
     }
-    new CyclicTree(seq, rootNode)
+    new CyclicTree(seq, rootNode, clockwise)
   }
   
   private def apply(values:IndexedSeq[Payload], leftPos:Int, centerPos:Int, rightPos:Int) : Tree = {
