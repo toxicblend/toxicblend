@@ -8,7 +8,6 @@ import toxi.geom.Line2D.LineIntersection.Type.INTERSECTING
 import toxi.geom.ReadonlyVec3D
 import toxi.geom.ReadonlyVec2D
 import toxi.geom.Polygon2D
-
 import scala.collection.mutable.ArrayBuffer
 
 import scala.collection.JavaConversions._
@@ -52,95 +51,92 @@ import scala.collection.JavaConversions._
  */
 class SutherlandHodgemanClipper {
   val center:ReadonlyVec2D = new Vec2D
+    
+  def isInside(point:ReadonlyVec2D, edge:Line2D):Boolean = 
+    (edge.a.x-point.x)*(edge.b.y-point.y)>(edge.a.y-point.y)*(edge.b.x-point.x)
   
-  def clockwiseFactor(edge:Line2D) = {
-    /* val realSign = {
-      val poly = new Polygon2D
-      poly.add(edge.a)
-      poly.add(edge.b)
-      poly.add(center.copy)
-      if (poly.isClockwise) -1f else 1f
-    } */
-    val sign = if (edge.b.sub(edge.a).cross(center.sub(edge.a)) >= 0 ) 1f else -1f
-    //if (sign != realSign) println("sign != realSign")
-    sign
-  }
-  
-  def isInside(point:ReadonlyVec2D, edge:Line2D, sign:Float):Boolean = {
-    val dotProduct =  (edge.a.x - point.x) * (edge.b.y - point.y) > (edge.a.y - point.y) * (edge.b.x - point.x);
-    //val cross = edge.b.sub(edge.a).cross(point.sub(edge.a))
-    //val rv = sign*cross >= 0
-    if (sign > 0) dotProduct else !dotProduct
-    /*val anotherRv = {
-      val cp = getClippedPosOnEdge(edge, point, center)
-      cp.isDefined && cp.get.sub(center).magSquared <= point.sub(center).magSquared
-    }
-    if (rv != anotherRv)
-      println("isInside fail: point=" + point + " edge=" + edge + " center=" + center + " rv=" + rv + " anotherRv=" + anotherRv)
-    //else 
-    //  println("isInside ok: point=" + point + " edge=" + edge + " center=" + center + " rv=" + rv + " anotherRv=" + anotherRv)
-    anotherRv*/
-    //rv
-  }
-  
-  def getClippedPosOnEdge(edge:Line2D, p1:ReadonlyVec2D, p2:ReadonlyVec2D): Option[ReadonlyVec2D] = {
-    val inter = edge.intersectLine(new Line2D(p1,p2))
-    val iType = inter.getType
-    if (iType == INTERSECTING ) {
-      Option(inter.getPos)
-    } else if (iType == NON_INTERSECTING ) {
-      val ub = inter.getCoefficients()(1)
-      if (ub < 0f || ub > 1f) {
-        Option(inter.getPos)
-      } else None
-    } else None
-  }
+  @inline protected def append(v:Vec2D, buf:ArrayBuffer[Vec2D]):Unit = 
+    if (!(buf.size>0 && buf.last==v)) buf += v
     
   /**
    * Clips a polygon with regards to one single edge.
-   * Origo is always assumed to be on the 'inside' side of the edge 
    */
-  def clipPolygon(poly:Polygon2D, edge:Line2D ) : Polygon2D = {
-    val points = new ArrayBuffer[ReadonlyVec2D](poly.size+1); points.insertAll(0,poly.vertices.toTraversable)
-    val output = new ArrayBuffer[ReadonlyVec2D] // outputList
-    val sign = clockwiseFactor(edge)
+  def clipPolygon(input:IndexedSeq[Vec2D], edge:Line2D ) : IndexedSeq[Vec2D] = {
+    val output = new ArrayBuffer[Vec2D] // outputList
       
-    (0 until points.size).foreach( i => {
-      val current = points(i)
-      val previous = if (i==0) points.last else points(i-1)
-      
-      val currentInside= isInside(current, edge, sign)
-      val previousInside = isInside(previous, edge, sign)
-    
-      if (currentInside) {
-         if (!previousInside) {
+    (0 until input.size).foreach( i => {
+      val inputSize = input.size
+      val current = input(i)
+      val previous = input((i+inputSize-1)%inputSize)
+         
+      if (isInside(current, edge)) {
+         if (!isInside(previous, edge)) {
            val iPoint = SutherlandHodgemanClipper.getIntersectionPosOnInfiniteLine(edge, previous, current)
            if (iPoint.isDefined) {
-             output.add(iPoint.get)
+             append(iPoint.get, output)
            } else {
              println(" No intersection found: edge=" + edge + " previous=" + previous + " current=" + current)
            }
          }
-         output.add(current)
-      } else if (previousInside) {
+         append(current, output)
+      } else if (isInside(previous, edge)) {
         val iPoint = SutherlandHodgemanClipper.getIntersectionPosOnInfiniteLine(edge, previous, current)
         if (iPoint.isDefined) {
-          output.add(iPoint.get)
+          append(iPoint.get, output)
         } else {
           println(" No intersection found: edge=" + edge + " previous=" + previous + " current=" + current)
         }
       }
     })
     
-    new Polygon2D(output.iterator)//.removeDuplicates(0.001f);
+    output
   }
 }
 
 object SutherlandHodgemanClipper {
+  
+  val epsilon = 0.00001f
+  
+  def intersection(a:Vec2D, b:Vec2D, p:Vec2D, q:Vec2D) : Vec2D = {
+    val A1 = b.y.toDouble - a.y.toDouble
+    val B1 = a.x.toDouble - b.x.toDouble
+    val C1 = A1 * a.x.toDouble + B1 * a.y.toDouble
+ 
+    val A2 = q.y.toDouble - p.y.toDouble
+    val B2 = p.x.toDouble - q.x.toDouble
+    val C2 = A2 * p.x.toDouble + B2 * p.y.toDouble
+ 
+    val det = A1 * B2 - A2 * B1
+    val x = (B2 * C1 - B1 * C2) / det
+    val y = (A1 * C2 - A2 * C1) / det
+ 
+    return new Vec2D(x.toFloat, y.toFloat)
+  }
+  
   /**
    * Returns the intersection point between an infinite line and one finite line (segment)
    */
-  def getIntersectionPosOnInfiniteLine(infiniteLine:Line2D, fromV:ReadonlyVec2D, toV:ReadonlyVec2D): Option[ReadonlyVec2D] = {
+  def getIntersectionPosOnInfiniteLine(infiniteLine:Line2D, fromV:Vec2D, toV:Vec2D): Option[Vec2D] = {
+    val p = getIntersectionPosOnInfiniteLineReal(infiniteLine,fromV, toV)
+    if (p.isDefined) {
+      val p2 = intersection(infiniteLine.a, infiniteLine.b, fromV, toV)
+      if (math.abs(p.get.x - p2.x) < epsilon && math.abs(p.get.y - p2.y) < epsilon) {
+        p
+      } else {
+        println("!##differ!" + p.get + " != " + p2)
+        p
+      }
+    } else {
+      //val p2 = intersection(infiniteLine.a, infiniteLine.b, fromV, toV)
+      //println("no intersection found " + infiniteLine.a + "->" + infiniteLine.b + "  " + fromV + "->" + toV + "\nbut 'intersection' found: " + p2)
+      p 
+    }
+  }
+  
+  /**
+   * Returns the intersection point between an infinite line and one finite line (segment)
+   */
+  def getIntersectionPosOnInfiniteLineReal(infiniteLine:Line2D, fromV:Vec2D, toV:Vec2D): Option[Vec2D] = {
     val x1 = infiniteLine.a.x.toDouble
     val y1 = infiniteLine.a.y.toDouble
     val x2 = infiniteLine.b.x.toDouble
@@ -184,8 +180,7 @@ object Test extends App {
   val p2 = new Vec2D(-1,1)
   val p3 = new Vec2D(1,1)
   
-  var polygon = new Polygon2D
-  Array(p0.scale(10), p1.scale(10), p2.scale(10), p3.scale(10)).foreach( v => polygon.add(v))
+  var polygon:IndexedSeq[Vec2D] = Array(p0.scale(10), p1.scale(10), p2.scale(10), p3.scale(10))
   val clipper = new SutherlandHodgemanClipper
   
   println(polygon)
@@ -204,11 +199,10 @@ object Test extends App {
   println
   
   iLine = new Line2D(p2, p3)
-  val insideSign = clipper.clockwiseFactor(iLine)
-  println("p0: " + clipper.isInside(p0, iLine, insideSign))
-  println("p1: " + clipper.isInside(p1, iLine, insideSign))
-  println("p2: " + clipper.isInside(p2, iLine, insideSign))
-  println("p3: " + clipper.isInside(p3, iLine, insideSign))
+  println("p0: " + clipper.isInside(p0, iLine))
+  println("p1: " + clipper.isInside(p1, iLine))
+  println("p2: " + clipper.isInside(p2, iLine))
+  println("p3: " + clipper.isInside(p3, iLine))
   polygon = clipper.clipPolygon(polygon, iLine)
   println("line=" + iLine)
   println(polygon)

@@ -52,9 +52,11 @@ trait Tree {
     }
     x.value.get
   }
+  
 
-  protected[meshgenerator] def searchWithLimits(seq:IndexedSeq[Payload], searchAngle:Double, lowerLimit:Int, upperLimit:Int) : Option[(Int,Int)] = {
-    if ( searchAngle < seq(value.get).angle) {
+  protected[meshgenerator] def 
+  searchWithLimits(seq:IndexedSeq[Payload], searchAngle:Double, lowerLimit:Int, upperLimit:Int) : Option[(Int,Int)] = {
+    if (searchAngle < seq(value.get).angle) {
       val l1 = left
       if (l1.isDefined && l1.get.hasValue)
         l1.get.searchWithLimits(seq, searchAngle, lowerLimit, value.get)
@@ -68,7 +70,7 @@ trait Tree {
         Some(value.get, upperLimit)
     }      
   }
-    
+  
   private def toSequenceRec(seq:IndexedSeq[Payload], b:Buffer[Payload]):Unit = {
     if (left.isDefined) 
       left.get.toSequenceRec(seq, b)
@@ -91,47 +93,40 @@ case object Empty extends Tree {
   override def hasValue = false
 }
 
-class Payload (val angle:Double, val distance:Double, val pos:ReadonlyVec2D)
+class Payload (val angle:Double, val distance:Double, val pos:Vec2D)
 object Payload {
   def apply(angle:Double) = new Payload(angle, 0, new Vec2D(0,0))
-  def apply(angle:Double, distance:Double, pos:ReadonlyVec2D) = new Payload(angle, distance, pos)
+  def apply(angle:Double, distance:Double, pos:Vec2D) = new Payload(angle, distance, pos)
 }
 
 class CyclicTree(val seq:IndexedSeq[Payload], private val tree:Tree, val clockwise:Boolean){
-   
+  
+  @inline protected final def isFlipside(searchAngle:Double) =
+    (clockwise && (searchAngle < seq.last.angle || searchAngle >= seq.head.angle) ||
+     !clockwise && (searchAngle > seq.last.angle || searchAngle <= seq.head.angle)) 
+  
   def searchIntervalWithLimits(searchAngle:Double) : Option[(Payload,Payload)] = {
-    if (seq.size <= 0) {
-      None
-    } else {
-      if (searchAngle > seq.last.angle ) {
-        Some(seq.last, seq.head)
-      } else  if (searchAngle <= seq.head.angle) {
-        Some(seq.last, seq.head)
-      } else {
-        
-        val res = tree.searchWithLimits(seq, searchAngle, -1, -1)
-        if (res.isDefined) {
-          var result = res.get 
-          if (result._1 == -1) {
-            result = (0,result._2)
-          }
-          if (result._2 == -1) {
-            if (result._1 == seq.size-1) 
-              result = (result._1,0) 
-            else 
-              result = (result._1,seq.size-1)
-          }
-          Some(seq(result._1), seq(result._2) )
-        } else {
-          None
+    if (seq.size <= 0) None
+    else {
+      val res = if (isFlipside(searchAngle)) Some(seq.size-1, 0)
+                else tree.searchWithLimits(seq, searchAngle, -1, -1) 
+      if (res.isDefined) {
+        var result = res.get 
+        if (result._1 == -1) result = (0,result._2)
+        if (result._2 == -1) {
+          if (result._1 == seq.size-1) result = (result._1,0) 
+          else result = (result._1,seq.size-1)
         }
-      }  
+        Some(seq(result._1), seq(result._2) )
+      } else None
     }
   }
   
   override def toString = {
     tree.toSequence(seq).mkString(",")
   }
+  
+  def toSequence = tree.toSequence(seq)
 }
 
 object CyclicTree {
@@ -150,14 +145,14 @@ object CyclicTree {
   }
   
   /**
-   * makes sure the elements of the sequence is in order. Cyclic ordering is not altered
+   * makes sure the elements of the sequence are in order. Cyclic ordering is not altered
    * @param clockwise: if the ordering is known it can be specified here, if not - use None and it will be calculated
    */
   def inOrder(seq:IndexedSeq[Payload], clockwise:Option[Boolean]=None) : (IndexedSeq[Payload],Boolean) = {
     if (seq.size > 0) {
       val isClockwise = if (clockwise.isDefined) clockwise.get else shoelace(seq)
       //println("clockwise=" + isClockwise )
-      //println("original=" + seq.map(v=> "@" + v.angle*180d/math.Pi).mkString(","))
+      //println("original=" + seq.map(v=> "@" + v.angle).mkString(","))
           
       if (isClockwise) {
         // clockwise: angles should decrease as we go down the sequence
@@ -205,40 +200,37 @@ object CyclicTree {
     } else (seq, false)
   }
   
-  def apply(aSeq:IndexedSeq[Payload]):CyclicTree  = {
-    val (seq, clockwise) = inOrder(aSeq)
+  def apply(aSeq:IndexedSeq[Payload], inClockwise:Option[Boolean]=None):CyclicTree  = {
+    val (seq, clockwise) = inOrder(aSeq, inClockwise)
+    //println(seq.map(p=>p.angle))
     val rootNode = if (seq.size > 0) {
       val centerPos = (seq.size-1)/2
       val leftPos = 0
       val rightPos = seq.size-1
-      this.apply(seq, leftPos, centerPos, rightPos)
+      apply(seq, leftPos, centerPos, rightPos, clockwise)
     } else {
       Empty
     }
     new CyclicTree(seq, rootNode, clockwise)
   }
   
-  private def apply(values:IndexedSeq[Payload], leftPos:Int, centerPos:Int, rightPos:Int) : Tree = {
-    //println("leftPos=" + leftPos + " centerPos=" + centerPos + " rightPos=" + rightPos)
+  private def apply(values:IndexedSeq[Payload], leftPos:Int, centerPos:Int, rightPos:Int, clockwise:Boolean) : Tree = {
     if (centerPos < 0 || leftPos < 0 || rightPos < 0){
       Empty
-    }
-    if (centerPos - leftPos == 0 && rightPos - centerPos == 0) {
+    } else if (centerPos - leftPos == 0 && rightPos - centerPos == 0) {
       Leaf(centerPos)
-    }
-    else 
-    {
+    } else {
       val left = centerPos - leftPos match {
         case 0 => Empty
         case 1 => Leaf(leftPos)
-        case x:Int => this.apply(values, leftPos, leftPos + (centerPos-leftPos)/2,  centerPos-1)
+        case x:Int => apply(values, leftPos, leftPos + (centerPos-leftPos)/2,  centerPos-1, clockwise)
       }
       val right = rightPos - centerPos match {
         case 0 => Empty
         case 1 => Leaf(rightPos)
-        case x:Int => this.apply(values, centerPos+1, centerPos + (1+rightPos-centerPos)/2, rightPos)
+        case x:Int => apply(values, centerPos+1, centerPos + (1+rightPos-centerPos)/2, rightPos, clockwise)
       }
-     new Node(centerPos, left, right)
+      if (clockwise) new Node(centerPos, right, left) else new Node(centerPos, left, right)
     }
   }
 }

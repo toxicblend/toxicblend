@@ -44,7 +44,7 @@ class SutherlandHodgemanClipperTest extends FlatSpec with Matchers {
     val i1 = new Vec2D(1,-1f)
     
     val iLine = new Line2D(i1, i0)
-    val polygon = ArrayBuffer(p0, p1, p2, p3)
+    val polygon = ArrayBuffer(p0, p1, p2, p3, p0)
     val clipper = new SutherlandHodgemanClipper
     
     val clipped = indexByHeading(clipper.clipPolygon(polygon, iLine).toIndexedSeq)
@@ -58,12 +58,12 @@ class SutherlandHodgemanClipperTest extends FlatSpec with Matchers {
   }
   
   /** 
-   *   ____  /          ____ 
-   *  |    |/          |    |
-   *  |    /       =>  |   /
-   *  |   /|           |  /
-   *  |_/__|           |_/
-   *   /   
+   *   ____  /             /
+   *  |    |/             /|
+   *  |    /       =>    / |
+   *  |   /|            /  |
+   *  |_/__|           /___|
+   *   /              /               
    */
   "SutherlandHodgemanClipperTest-2" should "clip just fine" in {
     
@@ -75,17 +75,18 @@ class SutherlandHodgemanClipperTest extends FlatSpec with Matchers {
     val i1 = new Vec2D(-1,0)
     
     val iLine = new Line2D(i0, i1)
-    val polygon = ArrayBuffer(p0, p1, p2, p3)
+    val polygon = ArrayBuffer(p0, p1, p2, p3, p0)
     val clipper = new SutherlandHodgemanClipper
     
     val clipped = indexByHeading(clipper.clipPolygon(polygon, iLine).toIndexedSeq)
-    
-    clipped.size should be (5)
+    println("SutherlandHodgemanClipperTest-2:" + clipped.mkString(","))
+    clipped.size should be (6)
     clipped.get(0) should be (i1)
     clipped.get(1) should be (i0)
     clipped.get(2) should be (p3)
     clipped.get(3) should be (p0)
     clipped.get(4) should be (p1)
+    clipped.get(5) should be (p0)
   }
     
   /**
@@ -99,7 +100,7 @@ class SutherlandHodgemanClipperTest extends FlatSpec with Matchers {
     val p3 = new Vec2D(1,1)
     
     
-    var polygon:IndexedSeq[Vec2D] = ArrayBuffer(p0.scale(10), p1.scale(10), p2.scale(10), p3.scale(10))
+    var polygon:IndexedSeq[Vec2D] = ArrayBuffer(p0.scale(10), p1.scale(10), p2.scale(10), p3.scale(10), p0.scale(10))
     val clipper = new SutherlandHodgemanClipper
     
     //println(polygon)
@@ -299,33 +300,38 @@ class SutherlandHodgemanClipperTest extends FlatSpec with Matchers {
     clipEdges += clipEdges.head
     val center = clipEdges.foldLeft(new Vec2D)((x,s)=> x.addSelf(s)).scaleSelf(1f/clipEdges.size.toFloat)
     
-    // Re-center to origo
-    println("polygon: " + polygon)
-    println("clipEdges: " + clipEdges)
-    println("center: " + center)
+    //println("polygon: " + polygon)
+    //println("clipEdges: " + clipEdges)
+    //println("center: " + center)
     
-    polygon.foreach(p => p.subSelf(center))
-    clipEdges.foreach(p => p.subSelf(center))
     val clipper = new SutherlandHodgemanClipper
     
-    println("polygon: " + polygon)
-    println("clipEdges: " + clipEdges)
-    println("center: " + center)
-    println
+    //println("polygon: " + polygon)
+    //println("clipEdges: " + clipEdges)
+    //println("center: " + center)
+    //println
     val clipped = clipEdges.sliding(2).foldLeft(polygon:IndexedSeq[Vec2D])((x,e) => {
       val edge = new Line2D(e.head, e.last)
       val p = clipper.clipPolygon(x, edge)
-      println("clipped with : " + edge)
-      println("result : " + p)
+      //println("clipped with : " + edge)
+      //println("result : " + p)
       p
     })
-    clipped.foreach(p=>p.addSelf(center))
-    println
-    println("clipped: " + clipped)
-    //var iLine = new Line2D(p0, p1)
-    //polygon = clipper.clipPolygon(polygon, iLine)
-    //println(iLine)
-    //println(polygon)
-    //println
+    
+    val correctAnswer = Array((100.000000, 116.666667),
+                              (125.000000, 100.000000),
+                              (275.000000, 100.000000),
+                              (300.000000, 116.666667),
+                              (300.000000, 300.000000),
+                              (250.000000, 300.000000),
+                              (200.000000, 250.000000),
+                              (175.000000, 300.000000),
+                              (125.000000, 300.000000),
+                              (100.000000, 250.000000)).map(p=>new Vec2D(p._1.toFloat, p._2.toFloat))
+    clipped.size should be (correctAnswer.size)
+    (0 until clipped.size).foreach(i=>{
+      clipped(i).x should be ( correctAnswer(i).x plusOrMinus floatTolerance)
+      clipped(i).y should be ( correctAnswer(i).y plusOrMinus floatTolerance)
+    })
   }
 }
