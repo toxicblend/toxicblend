@@ -1,8 +1,7 @@
 package org.toxicblend.tests
 
+import org.toxicblend.attic.{CyclicTree,Payload}
 import org.scalatest._
-import org.toxicblend.operations.meshgenerator.CyclicTree
-import org.toxicblend.operations.meshgenerator.Payload
 import org.toxicblend.ToxicblendException
 
 class CyclicTreeTest extends FlatSpec with Matchers {

@@ -8,8 +8,7 @@ import toxi.geom.Vec2D
 import toxi.geom.ReadonlyVec2D
 import toxi.geom.Line2D
 import toxi.geom.Polygon2D
-import org.toxicblend.operations.meshgenerator.CyclicTree
-import org.toxicblend.operations.meshgenerator.Payload
+import org.toxicblend.attic.{CyclicTree,Payload}
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.JavaConversions._
 

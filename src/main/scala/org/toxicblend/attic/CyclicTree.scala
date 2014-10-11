@@ -1,4 +1,4 @@
-package org.toxicblend.operations.meshgenerator
+package org.toxicblend.attic
 
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.Buffer
@@ -54,7 +54,7 @@ trait Tree {
   }
   
 
-  protected[meshgenerator] def 
+  protected[attic] def 
   searchWithLimits(seq:IndexedSeq[Payload], searchAngle:Double, lowerLimit:Int, upperLimit:Int) : Option[(Int,Int)] = {
     if (searchAngle < seq(value.get).angle) {
       val l1 = left
