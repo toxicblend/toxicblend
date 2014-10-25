@@ -5,7 +5,6 @@ class Polygon2D (val vertices:IndexedSeq[Vec2D]) {
   
   /*
    * ported from toxiclibs Polygon2D.
-   * There seems to be a numerical problem when the point is on an edge
    */
   def containsPoint(p:Vec2D):Boolean = {
     
@@ -14,8 +13,10 @@ class Polygon2D (val vertices:IndexedSeq[Vec2D]) {
     val px = p.x
     val py = p.y
     vertices.foreach(vi => {
-      if (sqrDistanceToClosestPoint(p, vj, vi) <= Polygon2D.ε ) {
-        //println("containsPoint2 = true" + p + " vj:" + vj + " vi:" + vi)
+ 
+      val sqrDistanceToClosestPointSample = sqrDistanceToClosestPoint(p, vj, vi)
+      if ( sqrDistanceToClosestPointSample <= Polygon2D.ε && math.sqrt(sqrDistanceToClosestPointSample) <= Polygon2D.ε ) {
+        // point is on the edge 
         return true
       }
       if (vi.y < py && vj.y >= py || vj.y < py && vi.y >= py) {
@@ -30,7 +31,7 @@ class Polygon2D (val vertices:IndexedSeq[Vec2D]) {
     //}
     oddNodes
   }
-  
+  /*
   protected def rayIntersectsSegment(p:Vec2D, s1:Vec2D, s2:Vec2D): Boolean = {
     //A : the end-point of the segment with the smallest y coordinate
     //    (A must be "below" B)
@@ -54,7 +55,7 @@ class Polygon2D (val vertices:IndexedSeq[Vec2D]) {
       else false
     }
   }
-  
+  */
   protected def sqrDistanceToClosestPoint(p:Vec2D, s1:Vec2D, s2:Vec2D): Double = {
     if (s1.=~=(s2, Polygon2D.ε)) s1.distanceToSquared(p)
     else {
@@ -64,7 +65,7 @@ class Polygon2D (val vertices:IndexedSeq[Vec2D]) {
       p.distanceToSquared(x,y)
     }
   }
-  
+  /*
   def containsPoint2(p:Vec2D) : Boolean = {
     var oddNodes = false
     var vj = vertices.last
@@ -86,7 +87,7 @@ class Polygon2D (val vertices:IndexedSeq[Vec2D]) {
       println("clip contains " + p + "=" + oddNodes + " edges " + vertices.mkString(","))
     }
     oddNodes
-  }
+  }*/
 }
 
 object Polygon2D {

@@ -29,6 +29,7 @@ import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 import org.toxicblend.operations.meshgenerator.vecmath.SutherlandHodgemanClipper
 import org.toxicblend.operations.meshgenerator.vecmath.ImmutableVec2D
+import org.toxicblend.operations.meshgenerator.vecmath.MutableVec2D
 
 class MeshGeneratorOperation extends CommandProcessorTrait {
   
@@ -149,12 +150,8 @@ class MeshGeneratorOperation extends CommandProcessorTrait {
           //println("new "+ p.size + " Polygon2D is clockwise: " + new Polygon2D(p.iterator).isClockwise())
           mesh.getVertices.map(v => if (v.x.isNaN || v.y.isNaN || v.z.isNaN ) println(v))
           mesh.getVertices.map(v => if (v.x.isInfinite || v.y.isInfinite || v.z.isInfinite ) println(v))
-
-          //if (p.last != p.head) 
-          //  p.add(p.head)
-          
+         
           val centroid = p.foldLeft(new TVec2D)((x,s) => x.addSelf(s.x.toFloat, s.y.toFloat)).scaleSelf(1f/(p.size.toFloat))
-          //new Polygon2D(p.iterator).toMesh(mesh)
           new Polygon2D(p.map(v=>new TVec2D(v.x.toFloat, v.y.toFloat)).iterator).toMesh(mesh, centroid, 0f)
           
           println("centroid:" + centroid)

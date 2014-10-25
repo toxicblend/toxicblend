@@ -276,8 +276,9 @@ object WeilerAthertonClipperTest extends App {
   //val clipEdges = ArrayBuffer((-1, 1),(1,1),(0,-1)).map(p=>new Vertex2D(p._1,p._2))
   println("subject:" + subject.mkString(","))
   println("clipEdges:" + clipEdges.mkString(","))
-  
-  val clipped = WeilerAthertonClipper.clip(subject,new Polygon2D(clipEdges), 0.00001d)
+  val poly = new CachedPolygon2D(clipEdges)
+  val clipped = WeilerAthertonClipper.clip(subject, poly, 0.00001d)
   
   println("clipped.size=" + clipped.size + "\n" + clipped.mkString("\n"))
+  println(poly.hashmap)
 }
