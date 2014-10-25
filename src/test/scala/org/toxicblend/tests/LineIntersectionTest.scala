@@ -1,15 +1,15 @@
 package org.toxicblend.tests
 
 import org.scalatest._
-import org.toxicblend.operations.meshgenerator.SutherlandHodgemanClipper
+import org.toxicblend.operations.meshgenerator.vecmath.SutherlandHodgemanClipper
 import org.toxicblend.ToxicblendException
-import toxi.geom.Vec2D
-import toxi.geom.ReadonlyVec2D
-import toxi.geom.Line2D
+import org.toxicblend.operations.meshgenerator.vecmath.ImmutableVertex2D
+import org.toxicblend.operations.meshgenerator.vecmath.Vertex2D
+import org.toxicblend.operations.meshgenerator.vecmath.Line2D
 
 class LineIntersectionTest extends FlatSpec with Matchers {
   
-  val floatTolerance = 0.0001f
+  val doubleTolerance = 0.0001d
   
   /** 
    *  y = x
@@ -20,15 +20,13 @@ class LineIntersectionTest extends FlatSpec with Matchers {
    *    /
    */
   "LineIntersectionTest-1" should "work just fine" in {
-    val iLine = new Line2D(new Vec2D(-.1f,-.1f), new Vec2D(.1f,.1f))
+    val iLine = new Line2D(new ImmutableVertex2D(-.1f,-.1f), new ImmutableVertex2D(.1f,.1f))
     for( y<- -100 to 100) {
-      val fromV = new Vec2D(-100,y)
-      val toV = new Vec2D(100,y)
-      val rv = SutherlandHodgemanClipper.getIntersectionPosOnInfiniteLine(iLine, fromV, toV)
-      rv.isDefined should be (true)
-      val rvv = rv.get
-      rvv.x should be (y.toFloat plusOrMinus floatTolerance ) 
-      rvv.y should be (y.toFloat plusOrMinus floatTolerance)
+      val fromV = new ImmutableVertex2D(-100,y)
+      val toV = new ImmutableVertex2D(100,y)
+      val rv = SutherlandHodgemanClipper.singleton.intersection(iLine.a, iLine.b, fromV, toV)
+      rv.x should be (y.toDouble plusOrMinus doubleTolerance ) 
+      rv.y should be (y.toDouble plusOrMinus doubleTolerance)
     }
   }
   
@@ -42,15 +40,13 @@ class LineIntersectionTest extends FlatSpec with Matchers {
    *        \
    */
   "LineIntersectionTest-2" should "work just fine" in {
-    val iLine = new Line2D(new Vec2D(-.1f,.1f), new Vec2D(.1f,-.1f))
+    val iLine = new Line2D(new ImmutableVertex2D(-.1f,.1f), new ImmutableVertex2D(.1f,-.1f))
     for( y<- -100 to 100) {
-      val fromV = new Vec2D(-100,y)
-      val toV = new Vec2D(100,y)
-      val rv = SutherlandHodgemanClipper.getIntersectionPosOnInfiniteLine(iLine, fromV, toV)
-      rv.isDefined should be (true)
-      val rvv = rv.get
-      rvv.x should === (-y.toFloat plusOrMinus floatTolerance)
-      rvv.y should === (y.toFloat plusOrMinus floatTolerance)
+      val fromV = new ImmutableVertex2D(-100,y)
+      val toV = new ImmutableVertex2D(100,y)
+      val rv = SutherlandHodgemanClipper.singleton.intersection(iLine.a, iLine.b, fromV, toV)
+      rv.x should === (-y.toDouble plusOrMinus doubleTolerance)
+      rv.y should === (y.toDouble plusOrMinus doubleTolerance)
     }
   }
   
@@ -63,15 +59,13 @@ class LineIntersectionTest extends FlatSpec with Matchers {
    *    |
    */
   "LineIntersectionTest-3" should "work just fine" in {
-    val iLine = new Line2D(new Vec2D(0f,.1f), new Vec2D(0f,-.1f))
+    val iLine = new Line2D(new ImmutableVertex2D(0f,.1f), new ImmutableVertex2D(0f,-.1f))
     for( y<- -100 to 100) {
-      val fromV = new Vec2D(-10,y)
-      val toV = new Vec2D(10,y)
-      val rv = SutherlandHodgemanClipper.getIntersectionPosOnInfiniteLine(iLine, fromV, toV)
-      rv.isDefined should be (true)
-      val rvv = rv.get
-      rvv.x should === (0f plusOrMinus floatTolerance)
-      rvv.y should === (y.toFloat plusOrMinus floatTolerance)
+      val fromV = new ImmutableVertex2D(-10,y)
+      val toV = new ImmutableVertex2D(10,y)
+      val rv = SutherlandHodgemanClipper.singleton.intersection(iLine.a, iLine.b, fromV, toV)
+      rv.x should === (0d plusOrMinus doubleTolerance)
+      rv.y should === (y.toDouble plusOrMinus doubleTolerance)
     }
   }
   
@@ -84,16 +78,14 @@ class LineIntersectionTest extends FlatSpec with Matchers {
    *    |
    */
   "LineIntersectionTest-4" should "work just fine" in {
-    val iLine = new Line2D(new Vec2D(0f,-.1f), new Vec2D(0f,.1f))
+    val iLine = new Line2D(new ImmutableVertex2D(0f,-.1f), new ImmutableVertex2D(0f,.1f))
     for( y<- -100 to 100) {
-      val fromV = new Vec2D(-10,y)
-      val toV = new Vec2D(10,y)
+      val fromV = new ImmutableVertex2D(-10,y)
+      val toV = new ImmutableVertex2D(10,y)
       
-      val rv = SutherlandHodgemanClipper.getIntersectionPosOnInfiniteLine(iLine, fromV, toV)
-      rv.isDefined should be (true)
-      val rvv = rv.get
-      rvv.x should === (0f plusOrMinus floatTolerance)
-      rvv.y should === (y.toFloat plusOrMinus floatTolerance)
+      val rv = SutherlandHodgemanClipper.singleton.intersection(iLine.a, iLine.b, fromV, toV)
+      rv.x should === (0d plusOrMinus doubleTolerance)
+      rv.y should === (y.toDouble plusOrMinus doubleTolerance)
     }
   }
   
@@ -104,32 +96,36 @@ class LineIntersectionTest extends FlatSpec with Matchers {
    * -----/-------
    *     /
    *    /
-   */
+   *
   "LineIntersectionTest-5" should "not find any intersections" in {
-    val iLine = new Line2D(new Vec2D(-.1f,-.1f), new Vec2D(.1f,.1f))
+    val iLine = new Line2D(new Vertex2D(-.1f,-.1f), new Vertex2D(.1f,.1f))
     for( y<- -100 to 100) {
-      val fromV = new Vec2D(101,y)
-      val toV = new Vec2D(201,y)
-      val rv = SutherlandHodgemanClipper.getIntersectionPosOnInfiniteLine(iLine, fromV, toV)
-      rv.isDefined should be (false)
+      val fromV = new Vertex2D(101,y)
+      val toV = new Vertex2D(201,y)
+      val rv = SutherlandHodgemanClipper.singleton.intersection(iLine.a, iLine.b, fromV, toV)
+      rv.x.isNaN should be (true)
+      rv.y.isNaN should be (true)
     }
   }
   
-    /** 
+  /** 
    *  y = x
    *  ----  / 
    *       /
    * -----/-------
    *     /
    *    /
-   */
+   *
   "LineIntersectionTest-6" should "not find any intersections" in {
-    val iLine = new Line2D(new Vec2D(-.1f,-.1f), new Vec2D(.1f,.1f))
+    val iLine = new Line2D(new Vertex2D(-.1f,-.1f), new Vertex2D(.1f,.1f))
     for( y<- -100 to 100) {
-      val fromV = new Vec2D(-101,y)
-      val toV = new Vec2D(-201,y)
-      val rv = SutherlandHodgemanClipper.getIntersectionPosOnInfiniteLine(iLine, fromV, toV)
-      rv.isDefined should be (false)
+      val fromV = new Vertex2D(-101,y)
+      val toV = new Vertex2D(-201,y)
+      val rv = SutherlandHodgemanClipper.singleton.intersection(iLine.a, iLine.b, fromV, toV)
+      rv.x.isNaN should be (true)
+      rv.y.isNaN should be (true)
     }
   }
+  */
+  */
 }
