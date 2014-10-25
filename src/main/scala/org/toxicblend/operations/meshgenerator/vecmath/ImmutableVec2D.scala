@@ -5,7 +5,7 @@ class ImmutableVec2D(val x:Double, val y:Double) extends Vec2DBase {
   def interpolateTo(v:Vec2D, f:Double): Vec2D = new ImmutableVec2D(x + (v.x - x) * f, y + (v.y - y) * f)
   def interpolateTo(v:Vec2D): Vec2D = { 
     assert(false, "dont call this, this method is only here because of a bug in the compiler") 
-    new ImmutableVec2D(x + (v.x - x) * 0d, y + (v.y - y) * 0d)
+    new ImmutableVec2D()
   }
 }
 
