@@ -1,13 +1,13 @@
 package org.toxicblend.operations.meshgenerator.vecmath
 
-class Polygon2D (val vertices:IndexedSeq[Vertex2D]) {
+class Polygon2D (val vertices:IndexedSeq[Vec2D]) {
   val size = vertices.size
   
   /*
    * ported from toxiclibs Polygon2D.
    * There seems to be a numerical problem when the point is on an edge
    */
-  def containsPoint(p:Vertex2D):Boolean = {
+  def containsPoint(p:Vec2D):Boolean = {
     
     var oddNodes = false
     var vj = vertices.last
@@ -31,7 +31,7 @@ class Polygon2D (val vertices:IndexedSeq[Vertex2D]) {
     oddNodes
   }
   
-  protected def rayIntersectsSegment(p:Vertex2D, s1:Vertex2D, s2:Vertex2D): Boolean = {
+  protected def rayIntersectsSegment(p:Vec2D, s1:Vec2D, s2:Vec2D): Boolean = {
     //A : the end-point of the segment with the smallest y coordinate
     //    (A must be "below" B)
     //B : the end-point of the segment with the greatest y coordinate
@@ -55,7 +55,7 @@ class Polygon2D (val vertices:IndexedSeq[Vertex2D]) {
     }
   }
   
-  protected def sqrDistanceToClosestPoint(p:Vertex2D, s1:Vertex2D, s2:Vertex2D): Double = {
+  protected def sqrDistanceToClosestPoint(p:Vec2D, s1:Vec2D, s2:Vec2D): Double = {
     if (s1.=~=(s2, Polygon2D.ε)) s1.distanceToSquared(p)
     else {
       val u = ((p.x-s1.x)*(s2.x-s1.x)+(p.y-s1.y)*(s2.y-s1.y))/s1.distanceToSquared(s2)
@@ -65,7 +65,7 @@ class Polygon2D (val vertices:IndexedSeq[Vertex2D]) {
     }
   }
   
-  def containsPoint2(p:Vertex2D) : Boolean = {
+  def containsPoint2(p:Vec2D) : Boolean = {
     var oddNodes = false
     var vj = vertices.last
     val px = p.x
@@ -82,7 +82,7 @@ class Polygon2D (val vertices:IndexedSeq[Vertex2D]) {
       vj = vi
     })
     if (p.x == 100d && p.y == 250d) {
-      println("point:" + p + " ray=" + rayIntersectsSegment(p, ImmutableVertex2D(100.0,300.0),ImmutableVertex2D(100.0,100.0) ))
+      println("point:" + p + " ray=" + rayIntersectsSegment(p, ImmutableVec2D(100.0,300.0),ImmutableVec2D(100.0,100.0) ))
       println("clip contains " + p + "=" + oddNodes + " edges " + vertices.mkString(","))
     }
     oddNodes

@@ -4,9 +4,9 @@ package org.toxicblend.tests
 import org.scalatest._
 import org.toxicblend.operations.meshgenerator.vecmath.SutherlandHodgemanClipper
 import org.toxicblend.ToxicblendException
-import org.toxicblend.operations.meshgenerator.vecmath.ImmutableVertex2D
-import org.toxicblend.operations.meshgenerator.vecmath.MutableVertex2D
-import org.toxicblend.operations.meshgenerator.vecmath.Vertex2D
+import org.toxicblend.operations.meshgenerator.vecmath.ImmutableVec2D
+import org.toxicblend.operations.meshgenerator.vecmath.MutableVec2D
+import org.toxicblend.operations.meshgenerator.vecmath.Vec2D
 import org.toxicblend.operations.meshgenerator.vecmath.Line2D
 import toxi.geom.Polygon2D
 import org.toxicblend.attic.{CyclicTree,Payload}
@@ -17,7 +17,7 @@ class SutherlandHodgemanClipperTest extends FlatSpec with Matchers {
   
   val floatTolerance = 0.0001f
   
-  def indexByHeading(seq:IndexedSeq[Vertex2D] ) : IndexedSeq[Vertex2D] = {
+  def indexByHeading(seq:IndexedSeq[Vec2D] ) : IndexedSeq[Vec2D] = {
     val angleSequence = seq.map(v => new Payload(v.heading, 0, v) )
     //println(a.map(p=>p.pos).mkString(","))
     //println(a.map(p=>p.angle*180d/math.Pi).mkString(","))
@@ -36,12 +36,12 @@ class SutherlandHodgemanClipperTest extends FlatSpec with Matchers {
    */
   "SutherlandHodgemanClipperTest-1" should "clip just fine" in {
     
-    val p0 = ImmutableVertex2D(2,-1):Vertex2D
-    val p1 = ImmutableVertex2D(-1,-1):Vertex2D
-    val p2 = ImmutableVertex2D(-1,1):Vertex2D
-    val p3 = ImmutableVertex2D(2,1):Vertex2D
-    val i0 = ImmutableVertex2D(2,0):Vertex2D
-    val i1 = ImmutableVertex2D(1,-1):Vertex2D
+    val p0 = ImmutableVec2D(2,-1):Vec2D
+    val p1 = ImmutableVec2D(-1,-1):Vec2D
+    val p2 = ImmutableVec2D(-1,1):Vec2D
+    val p3 = ImmutableVec2D(2,1):Vec2D
+    val i0 = ImmutableVec2D(2,0):Vec2D
+    val i1 = ImmutableVec2D(1,-1):Vec2D
     
     val iLine = new Line2D(i1, i0)
     val polygon = ArrayBuffer(p0, p1, p2, p3, p0)
@@ -67,12 +67,12 @@ class SutherlandHodgemanClipperTest extends FlatSpec with Matchers {
    */
   "SutherlandHodgemanClipperTest-2" should "clip just fine" in {
     
-    val p0 = ImmutableVertex2D(2,-1)
-    val p1 = ImmutableVertex2D(-1,-1)
-    val p2 = ImmutableVertex2D(-1,1)
-    val p3 = ImmutableVertex2D(2,1)
-    val i0 = ImmutableVertex2D(1,1)
-    val i1 = ImmutableVertex2D(-1,0)
+    val p0 = ImmutableVec2D(2,-1)
+    val p1 = ImmutableVec2D(-1,-1)
+    val p2 = ImmutableVec2D(-1,1)
+    val p3 = ImmutableVec2D(2,1)
+    val i0 = ImmutableVec2D(1,1)
+    val i1 = ImmutableVec2D(-1,0)
     
     val iLine = new Line2D(i0, i1)
     val polygon = ArrayBuffer(p0, p1, p2, p3, p0)
@@ -94,13 +94,13 @@ class SutherlandHodgemanClipperTest extends FlatSpec with Matchers {
    */
   "SutherlandHodgemanClipperTest-3" should "clip just fine" in {
     
-    val p0 = ImmutableVertex2D(1,-1)
-    val p1 = ImmutableVertex2D(-1,-1)
-    val p2 = ImmutableVertex2D(-1,1)
-    val p3 = ImmutableVertex2D(1,1)
+    val p0 = ImmutableVec2D(1,-1)
+    val p1 = ImmutableVec2D(-1,-1)
+    val p2 = ImmutableVec2D(-1,1)
+    val p3 = ImmutableVec2D(1,1)
     
     
-    var polygon:IndexedSeq[Vertex2D] = ArrayBuffer(p0.scale(10), p1.scale(10), p2.scale(10), p3.scale(10), p0.scale(10))
+    var polygon:IndexedSeq[Vec2D] = ArrayBuffer(p0.scale(10), p1.scale(10), p2.scale(10), p3.scale(10), p0.scale(10))
     val clipper = new SutherlandHodgemanClipper
     
     //println(polygon)
@@ -144,13 +144,13 @@ class SutherlandHodgemanClipperTest extends FlatSpec with Matchers {
    */
   "SutherlandHodgemanClipperTest-4" should "clip just fine" in {
     
-    val p0 = ImmutableVertex2D(1,-1)
-    val p1 = ImmutableVertex2D(-1,-1)
-    val p2 = ImmutableVertex2D(-1,1)
-    val p3 = ImmutableVertex2D(1,1)
+    val p0 = ImmutableVec2D(1,-1)
+    val p1 = ImmutableVec2D(-1,-1)
+    val p2 = ImmutableVec2D(-1,1)
+    val p3 = ImmutableVec2D(1,1)
     
     
-    var polygon:IndexedSeq[Vertex2D] = ArrayBuffer(p2.scale(10), p1.scale(10), p0.scale(10), p3.scale(10))
+    var polygon:IndexedSeq[Vec2D] = ArrayBuffer(p2.scale(10), p1.scale(10), p0.scale(10), p3.scale(10))
     val clipper = new SutherlandHodgemanClipper
     
     //println(polygon)
@@ -194,13 +194,13 @@ class SutherlandHodgemanClipperTest extends FlatSpec with Matchers {
    */
   "SutherlandHodgemanClipperTest-5" should "clip counter-clockwise, coincident polygons" in {
     
-    val p0 = ImmutableVertex2D(1,-1)
-    val p1 = ImmutableVertex2D(-1,-1)
-    val p2 = ImmutableVertex2D(-1,1)
-    val p3 = ImmutableVertex2D(1,1)
+    val p0 = ImmutableVec2D(1,-1)
+    val p1 = ImmutableVec2D(-1,-1)
+    val p2 = ImmutableVec2D(-1,1)
+    val p3 = ImmutableVec2D(1,1)
     
     
-    var polygon:IndexedSeq[Vertex2D] = ArrayBuffer(p2.scale(10), p1.scale(10), p0.scale(10), p3.scale(10))
+    var polygon:IndexedSeq[Vec2D] = ArrayBuffer(p2.scale(10), p1.scale(10), p0.scale(10), p3.scale(10))
     val clipper = new SutherlandHodgemanClipper
     
     //println(polygon)
@@ -244,13 +244,13 @@ class SutherlandHodgemanClipperTest extends FlatSpec with Matchers {
    */
   "SutherlandHodgemanClipperTest-6" should "clip clockwise, coincident polygons" in {
     
-    val p0 = ImmutableVertex2D(1,-1)
-    val p1 = ImmutableVertex2D(-1,-1)
-    val p2 = ImmutableVertex2D(-1,1)
-    val p3 = ImmutableVertex2D(1,1)
+    val p0 = ImmutableVec2D(1,-1)
+    val p1 = ImmutableVec2D(-1,-1)
+    val p2 = ImmutableVec2D(-1,1)
+    val p3 = ImmutableVec2D(1,1)
     
     
-    var polygon:IndexedSeq[Vertex2D] = ArrayBuffer(p0, p1, p2, p3)
+    var polygon:IndexedSeq[Vec2D] = ArrayBuffer(p0, p1, p2, p3)
     val clipper = new SutherlandHodgemanClipper
     
     //println(polygon)
@@ -294,11 +294,11 @@ class SutherlandHodgemanClipperTest extends FlatSpec with Matchers {
    */
   "SutherlandHodgemanClipperTest-7" should "clip" in {
       
-    val polygon = ArrayBuffer((50,150),(200,50),(350,150),(350,300),(250,300),(200,250),(150,350),(100,250),(100,200)).map(p=>ImmutableVertex2D(p._1,p._2))
-    val clipEdges = ArrayBuffer((100,100),(300,100),(300,300),(100,300)).map(p=>ImmutableVertex2D(p._1,p._2))
+    val polygon = ArrayBuffer((50,150),(200,50),(350,150),(350,300),(250,300),(200,250),(150,350),(100,250),(100,200)).map(p=>ImmutableVec2D(p._1,p._2))
+    val clipEdges = ArrayBuffer((100,100),(300,100),(300,300),(100,300)).map(p=>ImmutableVec2D(p._1,p._2))
     polygon += polygon.head
     clipEdges += clipEdges.head
-    val center = clipEdges.foldLeft(new MutableVertex2D)((x,s)=> x.addSelf(s)).scaleSelf(1f/clipEdges.size.toFloat)
+    val center = clipEdges.foldLeft(new MutableVec2D)((x,s)=> x.addSelf(s)).scaleSelf(1f/clipEdges.size.toFloat)
     
     //println("polygon: " + polygon)
     //println("clipEdges: " + clipEdges)
@@ -310,7 +310,7 @@ class SutherlandHodgemanClipperTest extends FlatSpec with Matchers {
     //println("clipEdges: " + clipEdges)
     //println("center: " + center)
     //println
-    val clipped = clipEdges.sliding(2).foldLeft(polygon:IndexedSeq[Vertex2D])((x,e) => {
+    val clipped = clipEdges.sliding(2).foldLeft(polygon:IndexedSeq[Vec2D])((x,e) => {
       val edge = new Line2D(e.head, e.last)
       val p = clipper.clipPolygon(x, edge)
       //println("clipped with : " + edge)
@@ -327,7 +327,7 @@ class SutherlandHodgemanClipperTest extends FlatSpec with Matchers {
                               (200.000000, 250.000000),
                               (175.000000, 300.000000),
                               (125.000000, 300.000000),
-                              (100.000000, 250.000000)).map(p=>ImmutableVertex2D(p._1.toFloat, p._2.toFloat))
+                              (100.000000, 250.000000)).map(p=>ImmutableVec2D(p._1.toFloat, p._2.toFloat))
     clipped.size should be (correctAnswer.size)
     (0 until clipped.size).foreach(i=>{
       clipped(i).x should be ( correctAnswer(i).x plusOrMinus floatTolerance)

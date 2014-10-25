@@ -16,7 +16,7 @@ import org.toxicblend.typeconverters.Polygon2DConverter
 import org.toxicblend.typeconverters.Matrix4x4Converter
 import org.toxicblend.operations.boostmedianaxis.MedianAxisJni.simplify3D
 import toxi.geom.Vec3D
-import toxi.geom.Vec2D
+import toxi.geom.{Vec2D => TVec2D}
 import toxi.geom.ReadonlyVec3D
 import toxi.geom.ReadonlyVec2D
 import toxi.geom.Polygon2D
@@ -28,7 +28,7 @@ import toxi.geom.mesh.TriangleMesh
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 import org.toxicblend.operations.meshgenerator.vecmath.SutherlandHodgemanClipper
-import org.toxicblend.operations.meshgenerator.vecmath.ImmutableVertex2D
+import org.toxicblend.operations.meshgenerator.vecmath.ImmutableVec2D
 
 class MeshGeneratorOperation extends CommandProcessorTrait {
   
@@ -51,7 +51,7 @@ class MeshGeneratorOperation extends CommandProcessorTrait {
   
   def processData(edges:Polygon2DConverter, center:ReadonlyVec3D, subdivisions:Int, radius:Float) : Mesh3DConverter = {
     val polygon = edges.polygons(0)
-    val clipEdges = polygon.toIndexedSeq.map(v => new ImmutableVertex2D(v.x,v.y))
+    val clipEdges = polygon.toIndexedSeq.map(v => new ImmutableVec2D(v.x,v.y))
     
     val aabb = polygon.getBounds
     val deltaX = aabb.width / subdivisions.toFloat
@@ -77,10 +77,10 @@ class MeshGeneratorOperation extends CommandProcessorTrait {
     val mesh = new TriangleMesh
 
     for (xp <- 0 to subdivisions; yp <-0 to subdivisions) {
-      val p2 = new ImmutableVertex2D(aabb.x + xp*deltaX, aabb.y + yp*deltaY)
-      val p3 = new ImmutableVertex2D(p2.x-deltaX, p2.y)
-      val p0 = new ImmutableVertex2D(p2.x, p2.y-deltaY)
-      val p1 = new ImmutableVertex2D(p3.x, p0.y)
+      val p2 = new ImmutableVec2D(aabb.x + xp*deltaX, aabb.y + yp*deltaY)
+      val p3 = new ImmutableVec2D(p2.x-deltaX, p2.y)
+      val p0 = new ImmutableVec2D(p2.x, p2.y-deltaY)
+      val p1 = new ImmutableVec2D(p3.x, p0.y)
       /*
       val cp0 = containsPoint(p0)
       val cp1 = containsPoint(p1)
@@ -153,9 +153,9 @@ class MeshGeneratorOperation extends CommandProcessorTrait {
           //if (p.last != p.head) 
           //  p.add(p.head)
           
-          val centroid = p.foldLeft(new Vec2D)((x,s) => x.addSelf(s.x.toFloat, s.y.toFloat)).scaleSelf(1f/(p.size.toFloat))
+          val centroid = p.foldLeft(new TVec2D)((x,s) => x.addSelf(s.x.toFloat, s.y.toFloat)).scaleSelf(1f/(p.size.toFloat))
           //new Polygon2D(p.iterator).toMesh(mesh)
-          new Polygon2D(p.map(v=>new Vec2D(v.x.toFloat, v.y.toFloat)).iterator).toMesh(mesh, centroid, 0f)
+          new Polygon2D(p.map(v=>new TVec2D(v.x.toFloat, v.y.toFloat)).iterator).toMesh(mesh, centroid, 0f)
           
           println("centroid:" + centroid)
           mesh.getVertices.map(v => if (v.x.isNaN || v.y.isNaN || v.z.isNaN ) println(v))

@@ -2,8 +2,8 @@ package org.toxicblend.attic
 
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.Buffer
-import org.toxicblend.operations.meshgenerator.vecmath.ImmutableVertex2D
-import org.toxicblend.operations.meshgenerator.vecmath.Vertex2D
+import org.toxicblend.operations.meshgenerator.vecmath.ImmutableVec2D
+import org.toxicblend.operations.meshgenerator.vecmath.Vec2D
 import org.toxicblend.ToxicblendException
 //import scala.annotation.tailrec
 
@@ -93,10 +93,10 @@ case object Empty extends Tree {
   override def hasValue = false
 }
 
-class Payload (val angle:Double, val distance:Double, val pos:Vertex2D)
+class Payload (val angle:Double, val distance:Double, val pos:Vec2D)
 object Payload {
-  def apply(angle:Double) = new Payload(angle, 0, new ImmutableVertex2D(0,0))
-  def apply(angle:Double, distance:Double, pos:Vertex2D) = new Payload(angle, distance, pos)
+  def apply(angle:Double) = new Payload(angle, 0, new ImmutableVec2D(0,0))
+  def apply(angle:Double, distance:Double, pos:Vec2D) = new Payload(angle, distance, pos)
 }
 
 class CyclicTree(val seq:IndexedSeq[Payload], private val tree:Tree, val clockwise:Boolean){

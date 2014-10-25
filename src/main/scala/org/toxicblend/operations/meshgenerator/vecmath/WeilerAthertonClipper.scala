@@ -8,7 +8,7 @@ object SourceList extends Enumeration {
 }
 import SourceList._
 
-class VertexInfo(val v:Vertex2D, var otherList:Option[DoubleLinkedListElement[VertexInfo]]=None) {
+class VertexInfo(val v:Vec2D, var otherList:Option[DoubleLinkedListElement[VertexInfo]]=None) {
   
   def isIntersection = otherList.isDefined
   
@@ -25,11 +25,11 @@ class VertexInfo(val v:Vertex2D, var otherList:Option[DoubleLinkedListElement[Ve
 
 class WeilerAthertonClipper( private val subjectList:DoubleLinkedList[VertexInfo], 
                              private val clipList:DoubleLinkedList[VertexInfo], 
-                             private val subject:IndexedSeq[Vertex2D], 
+                             private val subject:IndexedSeq[Vec2D], 
                              private val clipPolygon:Polygon2D,
                              private val precision:Double) {
   
-  def this(subject:IndexedSeq[Vertex2D], clip:Polygon2D, precision:Double) = {
+  def this(subject:IndexedSeq[Vec2D], clip:Polygon2D, precision:Double) = {
     this(new DoubleLinkedList[VertexInfo], new DoubleLinkedList[VertexInfo], subject, clip, precision)  
   }
   
@@ -164,7 +164,7 @@ class WeilerAthertonClipper( private val subjectList:DoubleLinkedList[VertexInfo
     current
   }
   
-  protected def addVertices(first:DoubleLinkedListElement[VertexInfo], last:DoubleLinkedListElement[VertexInfo], rv:ArrayBuffer[Vertex2D], sourceList:SourceList) {
+  protected def addVertices(first:DoubleLinkedListElement[VertexInfo], last:DoubleLinkedListElement[VertexInfo], rv:ArrayBuffer[Vec2D], sourceList:SourceList) {
     var current = first
     if (rv.size==0 || rv.last!=current.data.v) {
       rv.append(current.data.v)
@@ -185,7 +185,7 @@ class WeilerAthertonClipper( private val subjectList:DoubleLinkedList[VertexInfo
     false
   }*/
   
-  protected def selectivelyAddVertices(prevI:DoubleLinkedListElement[VertexInfo], currentI:DoubleLinkedListElement[VertexInfo], clipPolygon:Polygon2D, rv:ArrayBuffer[Vertex2D]) {
+  protected def selectivelyAddVertices(prevI:DoubleLinkedListElement[VertexInfo], currentI:DoubleLinkedListElement[VertexInfo], clipPolygon:Polygon2D, rv:ArrayBuffer[Vec2D]) {
     //println("selectivelyAddVertices: " + prevI.data.v + " -..-> " + currentI.data.v)
     if (prevI.next == currentI) {
       // no non-intersection in between
@@ -204,7 +204,7 @@ class WeilerAthertonClipper( private val subjectList:DoubleLinkedList[VertexInfo
   /**
    * find segments in between intersection points and determine if the segment is inside or outside the clipping polygon
    */
-  protected def filter(clipPolygon:Polygon2D):IndexedSeq[Vertex2D] = {
+  protected def filter(clipPolygon:Polygon2D):IndexedSeq[Vec2D] = {
     
     val beginningI = subjectList.firstElement
     
@@ -214,7 +214,7 @@ class WeilerAthertonClipper( private val subjectList:DoubleLinkedList[VertexInfo
       return subjectList.toArray.map(d => d.v)
     }
     
-    val rv = new ArrayBuffer[Vertex2D]
+    val rv = new ArrayBuffer[Vec2D]
     var prevI = beginningI
     var currentI = beginningI
     rv.append(currentI.data.v)
@@ -228,30 +228,22 @@ class WeilerAthertonClipper( private val subjectList:DoubleLinkedList[VertexInfo
     rv.dropRight(1)
   }
   
-  protected def execute:IndexedSeq[Vertex2D] = {
+  protected def execute:IndexedSeq[Vec2D] = {
    
     val clipEdges = clipPolygon.vertices 
     // Step 1: insert the polygons into linked lists
     subject.foreach(v => subjectList.append(new VertexInfo(v)))
     clipEdges.foreach(v => clipList.append(new VertexInfo(v)))
-    
-    // close the loops if necessary
-    if (false) {
-      if (subjectList.head.data != subjectList.last.data ) subjectList.append(subjectList.head.data)
-      if (clipList.head.data != clipList.last.data ) clipList.append(clipList.head.data)
-    }
-    
+        
     //println("1-subject:" + subjectList.map(i => i.data.v.toString + b2s(i.data.isIntersection)).mkString(","))
     //println("1-clip:" + clipList.map(i => i.data.v.toString + b2s(i.data.isIntersection)).mkString(","))
     
-    // Step 2: iterate through the lists and insert intersections into both lists
-    
-    val containsIntersections = findIntersectons
-    if (containsIntersections) {  
+    // Step 2: iterate through the lists and insert intersections into both lists    
+    if (findIntersectons) {  
       //println("2-subject:" + subjectList.map(i => i.data.v.toIntString + b2s(i.data.isIntersection)).mkString(","))
       //println("2-clip:" + clipList.map(i => i.data.v.toIntString + b2s(i.data.isIntersection)).mkString(","))
       
-      // shift the polygons that they start with the same intersection
+      // shift the polygons so that they start with the same intersection
       shiftToFirstIntersection(subjectList, clipList)
       //println("3-subject:" + subjectList.map(i => i.data.v.toIntString + b2s(i.data.isIntersection)).mkString(","))
       //println("3-clip:" + clipList.map(i => i.data.v.toIntString + b2s(i.data.isIntersection)).mkString(","))
@@ -267,7 +259,7 @@ class WeilerAthertonClipper( private val subjectList:DoubleLinkedList[VertexInfo
 }
 
 object WeilerAthertonClipper {
-  def clip(subject:IndexedSeq[Vertex2D], clipPolygon:Polygon2D, precision:Double) = 
+  def clip(subject:IndexedSeq[Vec2D], clipPolygon:Polygon2D, precision:Double) = 
     new WeilerAthertonClipper(subject, clipPolygon, precision).execute
 }
 
@@ -275,11 +267,11 @@ object WeilerAthertonClipperTest extends App {
   //val subject = ArrayBuffer((50,150),(200,50),(350,150),(350,300),(250,300),(200,250),(150,350),(100,250),(100,200)).map(p=>ImmutableVertex2D(p._1,p._2))
   //val clipEdges = ArrayBuffer((100,100),(300,100),(300,300),(100,300)).map(p=>ImmutableVertex2D(p._1,p._2))
   val subject = {
-    val b = new ArrayBuffer[Vertex2D]
-    (0 until 100).foreach(i => b.append(ImmutableVertex2D(100d*math.sin(i*math.Pi/50d), 100d*math.cos(i*math.Pi/50d)) ))
+    val b = new ArrayBuffer[Vec2D]
+    (0 until 100).foreach(i => b.append(ImmutableVec2D(100d*math.sin(i*math.Pi/50d), 100d*math.cos(i*math.Pi/50d)) ))
     b
   }
-  val clipEdges = ArrayBuffer((0, 0), (100,0), (100,100), (0,100)).map(p=>ImmutableVertex2D(p._1,p._2))
+  val clipEdges = ArrayBuffer((0, 0), (100,0), (100,100), (0,100)).map(p=>ImmutableVec2D(p._1,p._2))
   //val subject = ArrayBuffer((0,1),(1,-1),(-1,-1)).map(p=>new Vertex2D(p._1,p._2))
   //val clipEdges = ArrayBuffer((-1, 1),(1,1),(0,-1)).map(p=>new Vertex2D(p._1,p._2))
   println("subject:" + subject.mkString(","))

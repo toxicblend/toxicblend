@@ -3,8 +3,8 @@ package org.toxicblend.tests
 import org.scalatest._
 import org.toxicblend.operations.meshgenerator.vecmath.SutherlandHodgemanClipper
 import org.toxicblend.ToxicblendException
-import org.toxicblend.operations.meshgenerator.vecmath.ImmutableVertex2D
-import org.toxicblend.operations.meshgenerator.vecmath.Vertex2D
+import org.toxicblend.operations.meshgenerator.vecmath.ImmutableVec2D
+import org.toxicblend.operations.meshgenerator.vecmath.Vec2D
 import org.toxicblend.operations.meshgenerator.vecmath.Line2D
 
 class LineIntersectionTest extends FlatSpec with Matchers {
@@ -20,10 +20,10 @@ class LineIntersectionTest extends FlatSpec with Matchers {
    *    /
    */
   "LineIntersectionTest-1" should "work just fine" in {
-    val iLine = new Line2D(new ImmutableVertex2D(-.1f,-.1f), new ImmutableVertex2D(.1f,.1f))
+    val iLine = new Line2D(new ImmutableVec2D(-.1f,-.1f), new ImmutableVec2D(.1f,.1f))
     for( y<- -100 to 100) {
-      val fromV = new ImmutableVertex2D(-100,y)
-      val toV = new ImmutableVertex2D(100,y)
+      val fromV = new ImmutableVec2D(-100,y)
+      val toV = new ImmutableVec2D(100,y)
       val rv = SutherlandHodgemanClipper.singleton.intersection(iLine.a, iLine.b, fromV, toV)
       rv.x should be (y.toDouble plusOrMinus doubleTolerance ) 
       rv.y should be (y.toDouble plusOrMinus doubleTolerance)
@@ -40,10 +40,10 @@ class LineIntersectionTest extends FlatSpec with Matchers {
    *        \
    */
   "LineIntersectionTest-2" should "work just fine" in {
-    val iLine = new Line2D(new ImmutableVertex2D(-.1f,.1f), new ImmutableVertex2D(.1f,-.1f))
+    val iLine = new Line2D(new ImmutableVec2D(-.1f,.1f), new ImmutableVec2D(.1f,-.1f))
     for( y<- -100 to 100) {
-      val fromV = new ImmutableVertex2D(-100,y)
-      val toV = new ImmutableVertex2D(100,y)
+      val fromV = new ImmutableVec2D(-100,y)
+      val toV = new ImmutableVec2D(100,y)
       val rv = SutherlandHodgemanClipper.singleton.intersection(iLine.a, iLine.b, fromV, toV)
       rv.x should === (-y.toDouble plusOrMinus doubleTolerance)
       rv.y should === (y.toDouble plusOrMinus doubleTolerance)
@@ -59,10 +59,10 @@ class LineIntersectionTest extends FlatSpec with Matchers {
    *    |
    */
   "LineIntersectionTest-3" should "work just fine" in {
-    val iLine = new Line2D(new ImmutableVertex2D(0f,.1f), new ImmutableVertex2D(0f,-.1f))
+    val iLine = new Line2D(new ImmutableVec2D(0f,.1f), new ImmutableVec2D(0f,-.1f))
     for( y<- -100 to 100) {
-      val fromV = new ImmutableVertex2D(-10,y)
-      val toV = new ImmutableVertex2D(10,y)
+      val fromV = new ImmutableVec2D(-10,y)
+      val toV = new ImmutableVec2D(10,y)
       val rv = SutherlandHodgemanClipper.singleton.intersection(iLine.a, iLine.b, fromV, toV)
       rv.x should === (0d plusOrMinus doubleTolerance)
       rv.y should === (y.toDouble plusOrMinus doubleTolerance)
@@ -78,10 +78,10 @@ class LineIntersectionTest extends FlatSpec with Matchers {
    *    |
    */
   "LineIntersectionTest-4" should "work just fine" in {
-    val iLine = new Line2D(new ImmutableVertex2D(0f,-.1f), new ImmutableVertex2D(0f,.1f))
+    val iLine = new Line2D(new ImmutableVec2D(0f,-.1f), new ImmutableVec2D(0f,.1f))
     for( y<- -100 to 100) {
-      val fromV = new ImmutableVertex2D(-10,y)
-      val toV = new ImmutableVertex2D(10,y)
+      val fromV = new ImmutableVec2D(-10,y)
+      val toV = new ImmutableVec2D(10,y)
       
       val rv = SutherlandHodgemanClipper.singleton.intersection(iLine.a, iLine.b, fromV, toV)
       rv.x should === (0d plusOrMinus doubleTolerance)
