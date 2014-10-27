@@ -3,10 +3,25 @@ package org.toxicblend.operations.meshgenerator.vecmath
 class Polygon2D (val vertices:IndexedSeq[Vec2D]) {
   val size = vertices.size
   
+  lazy val bounds = {
+    val min = new MutableVec2D(Double.PositiveInfinity, Double.PositiveInfinity)
+    val max = new MutableVec2D(Double.NegativeInfinity, Double.NegativeInfinity)
+    vertices.foreach(v => {
+      if (v.x > max.x) max.x = v.x
+      else if (v.x < min.x) min.x = v.x
+      if (v.y > max.y) max.y = v.y
+      else if (v.y < min.y) min.y = v.y
+    })
+    new AABB2D(min,max)
+  }
+  
+  
+  def toIndexedSeq = vertices
+  
   /*
    * ported from toxiclibs Polygon2D.
    */
-  def containsPoint(p:Vec2D):Boolean = {
+  protected def realContainsPoint(p:Vec2D):Boolean = {
     
     var oddNodes = false
     var vj = vertices.last
@@ -31,6 +46,9 @@ class Polygon2D (val vertices:IndexedSeq[Vec2D]) {
     //}
     oddNodes
   }
+  
+  def containsPoint(p:Vec2D):Boolean = bounds.containsPoint(p) || realContainsPoint(p)
+  
   /*
   protected def rayIntersectsSegment(p:Vec2D, s1:Vec2D, s2:Vec2D): Boolean = {
     //A : the end-point of the segment with the smallest y coordinate
