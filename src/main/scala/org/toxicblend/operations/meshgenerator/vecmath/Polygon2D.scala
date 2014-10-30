@@ -1,8 +1,8 @@
 package org.toxicblend.operations.meshgenerator.vecmath
 
-class Polygon2D (val vertices:IndexedSeq[Vec2D]) {
+class Polygon2D (val vertices:IndexedSeq[Vec2D], val ε:Double = Polygon2D.ε) {
   val size = vertices.size
-  
+   
   lazy val bounds = {
     val min = new MutableVec2D(Double.PositiveInfinity, Double.PositiveInfinity)
     val max = new MutableVec2D(Double.NegativeInfinity, Double.NegativeInfinity)
@@ -15,8 +15,64 @@ class Polygon2D (val vertices:IndexedSeq[Vec2D]) {
     new AABB2D(min,max)
   }
   
+  lazy val (minCenterDistanceSquared, centerIsInside) = {
+    val center = bounds
+    val size = vertices.size
+    var prevI = size-1
+    var rv = Double.PositiveInfinity
+    
+    (0 until size).foreach(i=>{
+      val d = FiniteLine2D.sqrDistanceToPoint(center, vertices(prevI), vertices(i))
+      if (d < rv) rv = d
+      prevI = i
+    })
+    (Option(rv), realContainsPoint(center) )
+  }
   
   def toIndexedSeq = vertices
+  
+  /**
+   * Computes the area of the polygon, provided it isn't self intersecting.
+   * Code ported from:
+   * http://paulbourke.net/geometry/polygonmesh/
+   * and toxiclibs
+   * 
+   * @return polygon area
+   */
+  def getArea:Double = {
+    val size = vertices.size
+    var area = 0d
+    var iPrev = size-1
+    (0 until size).foreach ( i=> {
+        val a = vertices(i)
+        val b = vertices(iPrev)
+        area += a.x * b.y;
+        area -= a.y * b.x;
+        iPrev = i
+    })
+    area*0.5d
+  }
+  
+  def isClockwise = getArea > 0d
+  
+  def isSelfIntersecting:Boolean = {
+    val size = vertices.size
+    if (size < 4) return false
+    var iPrev = size-1
+    var jPrev = 0
+    (0 until size-1).foreach( i => {
+      (i+2 until size-1).foreach(j => {
+        jPrev = (j + size -1) % size
+        if (FiniteLine2D.intersects(vertices(iPrev), vertices(i), vertices(jPrev), vertices(j))) {
+          //println("" + iPrev + "->" + i + " intersects " + jPrev + "->" +j )
+          //println("" + FiniteLine2D(vertices(iPrev), vertices(i)) + " intersects " + FiniteLine2D(vertices(jPrev), vertices(j)))
+          return true
+        } //else println("" + iPrev + "->" + i + " ! intersects " + jPrev + "->" +j )
+      })
+      iPrev = i
+    })
+    false
+  }
   
   /*
    * ported from toxiclibs Polygon2D.
@@ -29,9 +85,10 @@ class Polygon2D (val vertices:IndexedSeq[Vec2D]) {
     val py = p.y
     vertices.foreach(vi => {
  
-      val sqrDistanceToClosestPointSample = sqrDistanceToClosestPoint(p, vj, vi)
-      if ( sqrDistanceToClosestPointSample <= Polygon2D.ε && math.sqrt(sqrDistanceToClosestPointSample) <= Polygon2D.ε ) {
-        // point is on the edge 
+      val sqrDistanceToClosestPointSample = FiniteLine2D.sqrDistanceToPoint(p, vj, vi)
+      if ( sqrDistanceToClosestPointSample <= ε && math.sqrt(sqrDistanceToClosestPointSample) <= ε ) {
+        // point is less than ε length units from the edge 
+        // println("distance=" + sqrDistanceToClosestPointSample)
         return true
       }
       if (vi.y < py && vj.y >= py || vj.y < py && vi.y >= py) {
@@ -41,71 +98,15 @@ class Polygon2D (val vertices:IndexedSeq[Vec2D]) {
       }
       vj = vi
     })
-    //if (p.x == 100d && p.y == 250d) {
-    //  println("clip contains " + p + "=" + oddNodes)
-    //}
     oddNodes
   }
   
-  def containsPoint(p:Vec2D):Boolean = bounds.containsPoint(p) || realContainsPoint(p)
-  
-  /*
-  protected def rayIntersectsSegment(p:Vec2D, s1:Vec2D, s2:Vec2D): Boolean = {
-    //A : the end-point of the segment with the smallest y coordinate
-    //    (A must be "below" B)
-    //B : the end-point of the segment with the greatest y coordinate
-    //    (B must be "above" A)
-    
-    val (a,b) = if (s1.y < s2.y) (s1,s2)
-    else if (s2.y < s1.y) (s2,s1)
-    else (s1.add(0,Polygon2D.ε),s2)
-    
-    if (p.y < a.y || p.y > b.y) return false
-    else if (p.x > math.max(a.x, b.x)) return false
-    else if (p.x < math.min(a.x, b.x)) return true
-    else {
-      val m_red = if (a.x != b.x) (b.y - a.y)/(b.x - a.x)
-                  else Double.PositiveInfinity 
-        
-      val m_blue = if (a.x != p.x) (p.y - a.y)/(p.x - a.x)
-                  else Double.PositiveInfinity
-      if (m_blue >= m_red ) true
-      else false
-    }
+  def containsPoint(p:Vec2D):Boolean = {
+    if ( ! bounds.containsPoint(p) ) return false
+    if ( minCenterDistanceSquared.isDefined && p.distanceToSquared(bounds) <= minCenterDistanceSquared.get) return centerIsInside
+    else realContainsPoint(p)
   }
-  */
-  protected def sqrDistanceToClosestPoint(p:Vec2D, s1:Vec2D, s2:Vec2D): Double = {
-    if (s1.=~=(s2, Polygon2D.ε)) s1.distanceToSquared(p)
-    else {
-      val u = ((p.x-s1.x)*(s2.x-s1.x)+(p.y-s1.y)*(s2.y-s1.y))/s1.distanceToSquared(s2)
-      val x = s1.x + u*(s2.x-s1.x)
-      val y = s1.y + u*(s2.y-s1.y)
-      p.distanceToSquared(x,y)
-    }
-  }
-  /*
-  def containsPoint2(p:Vec2D) : Boolean = {
-    var oddNodes = false
-    var vj = vertices.last
-    val px = p.x
-    val py = p.y
-    vertices.foreach(vi => {
-      if (p.x == 100d && p.y == 250d) {
-        println("ray test. p=" + p + " vj=" + vj + " vi=" + vi + " " + rayIntersectsSegment(p, vj, vi))
-      }
-      if (sqrDistanceToClosestPoint(p, vj, vi) <= Polygon2D.ε ) {
-        println("containsPoint2 = true" + p + " vj:" + vj + " vi:" + vi)
-        return true
-      }
-      if (rayIntersectsSegment(p, vj, vi)) oddNodes = !oddNodes
-      vj = vi
-    })
-    if (p.x == 100d && p.y == 250d) {
-      println("point:" + p + " ray=" + rayIntersectsSegment(p, ImmutableVec2D(100.0,300.0),ImmutableVec2D(100.0,100.0) ))
-      println("clip contains " + p + "=" + oddNodes + " edges " + vertices.mkString(","))
-    }
-    oddNodes
-  }*/
+ 
 }
 
 object Polygon2D {

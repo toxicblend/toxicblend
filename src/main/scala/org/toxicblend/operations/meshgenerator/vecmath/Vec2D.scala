@@ -10,6 +10,7 @@ trait Vec2D {
   def sub(xp:Double, yp:Double): Vec2D
   def sub(v:Vec2D): Vec2D
   def =~=(v:Vec2D, p:Double): Boolean
+  def normalize:Vec2D
   def magnitude:Double
   def magnitudeSquared:Double
   def distanceTo(vx:Double, vy:Double): Double
@@ -21,10 +22,28 @@ trait Vec2D {
   def toIntString:String
   def canEqual(other: Any):Boolean
   def copy:Vec2D
+  def cross(v:Vec2D)
+  def dot(v:Vec2D)  
 }
 
 object Vec2D {
   def apply(x:Int, y:Int) = new ImmutableVec2D(x, y)
   def apply(x:Double, y:Double) = new ImmutableVec2D(x, y)
   def apply() = new ImmutableVec2D(0d, 0d)
+  
+  @inline def distanceToSquared(p1x:Double, p1y:Double, p2x:Double, p2y:Double) = {
+    val dx = p1x - p2x
+    val dy = p1y - p2y
+    dx*dx + dy*dy
+  }
+  
+  @inline def cross(v1x:Double, v1y:Double, v2x:Double, v2y:Double ) = (v1x * v2y) - (v1y * v2x)
+  
+  @inline def dot(v1x:Double, v1y:Double, v2x:Double, v2y:Double ) = (v1x * v2x) + (v1y * v2y)
+  /**
+   * returns +1 if a->b->c is a counterclockwise angle
+   * -1 if a->b->c is a clockwise angle
+   * and 0 if a->b->c are collinear
+   */
+  @inline def ccw(a:Vec2D, b:Vec2D, c:Vec2D) = (b.x - a.x) * (c.y - a.y) - (c.x - a.x) * (b.y - a.y)
 }

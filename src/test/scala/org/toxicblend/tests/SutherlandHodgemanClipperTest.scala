@@ -7,7 +7,7 @@ import org.toxicblend.ToxicblendException
 import org.toxicblend.operations.meshgenerator.vecmath.ImmutableVec2D
 import org.toxicblend.operations.meshgenerator.vecmath.MutableVec2D
 import org.toxicblend.operations.meshgenerator.vecmath.Vec2D
-import org.toxicblend.operations.meshgenerator.vecmath.Line2D
+import org.toxicblend.operations.meshgenerator.vecmath.FiniteLine2D
 import toxi.geom.Polygon2D
 import org.toxicblend.attic.{CyclicTree,Payload}
 import scala.collection.mutable.ArrayBuffer
@@ -43,7 +43,7 @@ class SutherlandHodgemanClipperTest extends FlatSpec with Matchers {
     val i0 = Vec2D(2,0):Vec2D
     val i1 = Vec2D(1,-1):Vec2D
     
-    val iLine = new Line2D(i1, i0)
+    val iLine = new FiniteLine2D(i1, i0)
     val polygon = ArrayBuffer(p0, p1, p2, p3)
     
     val clipped = indexByHeading(SutherlandHodgemanClipper.clip(polygon, iLine).toIndexedSeq)
@@ -73,7 +73,7 @@ class SutherlandHodgemanClipperTest extends FlatSpec with Matchers {
     val i0 = Vec2D(1,1)
     val i1 = Vec2D(-1,0)
     
-    val iLine = new Line2D(i0, i1)
+    val iLine = new FiniteLine2D(i0, i1)
     val polygon = ArrayBuffer(p0, p1, p2, p3)
     val clipper = new SutherlandHodgemanClipper
     
@@ -109,7 +109,7 @@ class SutherlandHodgemanClipperTest extends FlatSpec with Matchers {
       println
     }
     
-    var iLine = new Line2D(p0, p1)
+    var iLine = new FiniteLine2D(p0, p1)
     polygon = clipper.clipPolygon(polygon, iLine)
     if (trace) {
       println("iLine=" + iLine)
@@ -118,7 +118,7 @@ class SutherlandHodgemanClipperTest extends FlatSpec with Matchers {
     }
     polygon.size should be (4)
     
-    iLine = new Line2D(p1, p2)
+    iLine = new FiniteLine2D(p1, p2)
     polygon = clipper.clipPolygon(polygon, iLine)
     if (trace) {
       println("iLine=" + iLine)
@@ -127,7 +127,7 @@ class SutherlandHodgemanClipperTest extends FlatSpec with Matchers {
     }
     polygon.size should be (4)
     
-    iLine = new Line2D(p2, p3)
+    iLine = new FiniteLine2D(p2, p3)
     polygon = clipper.clipPolygon(polygon, iLine)
     if (trace) {
       println("iLine=" + iLine)
@@ -136,7 +136,7 @@ class SutherlandHodgemanClipperTest extends FlatSpec with Matchers {
     }
     polygon.size should be (4)
     
-    iLine = new Line2D(p3, p0)
+    iLine = new FiniteLine2D(p3, p0)
     polygon = clipper.clipPolygon(polygon, iLine)
     if (trace) {
       println("iLine=" + iLine)
@@ -176,7 +176,7 @@ class SutherlandHodgemanClipperTest extends FlatSpec with Matchers {
       println
     }
     
-    var iLine = new Line2D(p0, p1)
+    var iLine = new FiniteLine2D(p0, p1)
     polygon = clipper.clipPolygon(polygon, iLine)
     if (trace) {
       println("iLine=" + iLine)
@@ -185,7 +185,7 @@ class SutherlandHodgemanClipperTest extends FlatSpec with Matchers {
     }
     polygon.size should be (4)
     
-    iLine = new Line2D(p1, p2)
+    iLine = new FiniteLine2D(p1, p2)
     polygon = clipper.clipPolygon(polygon, iLine)
     if (trace) {
       println("iLine=" + iLine)
@@ -194,7 +194,7 @@ class SutherlandHodgemanClipperTest extends FlatSpec with Matchers {
     }
     polygon.size should be (4)
     
-    iLine = new Line2D(p2, p3)
+    iLine = new FiniteLine2D(p2, p3)
     polygon = clipper.clipPolygon(polygon, iLine)
     if (trace) {
       println("iLine=" + iLine)
@@ -203,7 +203,7 @@ class SutherlandHodgemanClipperTest extends FlatSpec with Matchers {
     }
     polygon.size should be (4)
     
-    iLine = new Line2D(p3, p0)
+    iLine = new FiniteLine2D(p3, p0)
     polygon = clipper.clipPolygon(polygon, iLine)
     if (trace) {
       println("iLine=" + iLine)
@@ -238,25 +238,25 @@ class SutherlandHodgemanClipperTest extends FlatSpec with Matchers {
     //println(polygon)
     //println
     
-    var iLine = new Line2D(p0, p1)
+    var iLine = new FiniteLine2D(p0, p1)
     polygon = clipper.clipPolygon(polygon, iLine)
     //println(iLine)
     //println(polygon)
     //println
     
-    iLine = new Line2D(p1, p2)
+    iLine = new FiniteLine2D(p1, p2)
     polygon = clipper.clipPolygon(polygon, iLine)
     //println(iLine)
     //println(polygon)
     //println
     
-    iLine = new Line2D(p2, p3)
+    iLine = new FiniteLine2D(p2, p3)
     polygon = clipper.clipPolygon(polygon, iLine)
     //println(iLine)
     //println(polygon)
     //println
     
-    iLine = new Line2D(p3, p0)
+    iLine = new FiniteLine2D(p3, p0)
     polygon = clipper.clipPolygon(polygon, iLine)
     //println(iLine)
     //println(polygon)
@@ -287,25 +287,25 @@ class SutherlandHodgemanClipperTest extends FlatSpec with Matchers {
     //println(polygon)
     //println
     
-    var iLine = new Line2D(p0, p1)
+    var iLine = new FiniteLine2D(p0, p1)
     polygon = clipper.clipPolygon(polygon, iLine)
     //println(iLine)
     //println(polygon)
     //println
     
-    iLine = new Line2D(p1, p2)
+    iLine = new FiniteLine2D(p1, p2)
     polygon = clipper.clipPolygon(polygon, iLine)
     //println(iLine)
     //println(polygon)
     //println
     
-    iLine = new Line2D(p2, p3)
+    iLine = new FiniteLine2D(p2, p3)
     polygon = clipper.clipPolygon(polygon, iLine)
     //println(iLine)
     //println(polygon)
     //println
     
-    iLine = new Line2D(p3, p0)
+    iLine = new FiniteLine2D(p3, p0)
     polygon = clipper.clipPolygon(polygon, iLine)
     //println(iLine)
     //println(polygon)
@@ -340,7 +340,7 @@ class SutherlandHodgemanClipperTest extends FlatSpec with Matchers {
     //println("center: " + center)
     //println
     val clipped = clipEdges.sliding(2).foldLeft(polygon:IndexedSeq[Vec2D])((x,e) => {
-      val edge = new Line2D(e.head, e.last)
+      val edge = new FiniteLine2D(e.head, e.last)
       val p = SutherlandHodgemanClipper.clip(x, edge)
       //println("clipped with : " + edge)
       //println("result : " + p)

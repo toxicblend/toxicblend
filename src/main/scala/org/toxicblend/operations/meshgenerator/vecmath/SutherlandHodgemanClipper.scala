@@ -23,10 +23,7 @@ class SutherlandHodgemanClipper {
     (0 until input.size).foldLeft(new ArrayBuffer[Vec2D]) ((x,i) => {
       val current = input(i)
       val previous = input(previousI)//input((i+input.size-1)%input.size)
-      val r1 = isInside(current, a, b)
-      val r2 = isInside(previous, a, b)
-      //println("edge = " + previous + "->" + current + ":" + (r1,r2))
-      (r1,r2) match {
+      (isInside(current, a, b),isInside(previous, a, b)) match {
         case (true,true) => x += current
         case (true,false) => x += intersection(a,b,current,previous) += current
         case (false,true) => x += intersection(a,b,current,previous)
@@ -37,7 +34,7 @@ class SutherlandHodgemanClipper {
     })
   }
   
-  def clipPolygon(input:IndexedSeq[Vec2D], clipEdge:Line2D):IndexedSeq[Vec2D] = 
+  def clipPolygon(input:IndexedSeq[Vec2D], clipEdge:FiniteLine2D):IndexedSeq[Vec2D] = 
     clipPolygon(input, clipEdge.a, clipEdge.b)
     
   def clipPolygon(input:IndexedSeq[Vec2D], clipEdges:IndexedSeq[Vec2D]):IndexedSeq[Vec2D] = {
@@ -50,8 +47,8 @@ class SutherlandHodgemanClipper {
 object SutherlandHodgemanClipper {
   lazy val singleton = new SutherlandHodgemanClipper
   
-  def clip(subject:IndexedSeq[Vec2D], clipPolygon:Polygon2D)=singleton.clipPolygon(subject, clipPolygon.toIndexedSeq)
+  def clip(subject:Polygon2D, clipPolygon:Polygon2D)=new Polygon2D(singleton.clipPolygon(subject.toIndexedSeq, clipPolygon.toIndexedSeq))
   def clip(subject:IndexedSeq[Vec2D], clipEdges:IndexedSeq[Vec2D])=singleton.clipPolygon(subject, clipEdges)
-  def clip(subject:IndexedSeq[Vec2D], clipEdge:Line2D)=singleton.clipPolygon(subject, clipEdge)
+  def clip(subject:IndexedSeq[Vec2D], clipEdge:FiniteLine2D)=singleton.clipPolygon(subject, clipEdge)
   def clip(subject:IndexedSeq[Vec2D], clipV1:Vec2D, clipV2:Vec2D)=singleton.clipPolygon(subject, clipV1, clipV2)
 }
