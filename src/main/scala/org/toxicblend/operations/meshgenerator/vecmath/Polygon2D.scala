@@ -3,28 +3,18 @@ package org.toxicblend.operations.meshgenerator.vecmath
 class Polygon2D (val vertices:IndexedSeq[Vec2D], val ε:Double = Polygon2D.ε) {
   val size = vertices.size
    
-  lazy val bounds = {
-    val min = new MutableVec2D(Double.PositiveInfinity, Double.PositiveInfinity)
-    val max = new MutableVec2D(Double.NegativeInfinity, Double.NegativeInfinity)
-    vertices.foreach(v => {
-      if (v.x > max.x) max.x = v.x
-      else if (v.x < min.x) min.x = v.x
-      if (v.y > max.y) max.y = v.y
-      else if (v.y < min.y) min.y = v.y
-    })
-    new AABB2D(min,max)
-  }
+  lazy val bounds = AABB2D(vertices)
   
   lazy val (minCenterDistanceSquared, centerIsInside) = {
     val center = bounds
     val size = vertices.size
-    var prevI = size-1
+    var prev = size-1
     var rv = Double.PositiveInfinity
     
-    (0 until size).foreach(i=>{
-      val d = FiniteLine2D.sqrDistanceToPoint(center, vertices(prevI), vertices(i))
+    (0 until size).foreach(current=>{
+      val d = FiniteLine2D.sqrDistanceToPoint(center, vertices(prev), vertices(current))
       if (d < rv) rv = d
-      prevI = i
+      prev = current
     })
     (Option(rv), realContainsPoint(center) )
   }
@@ -42,15 +32,42 @@ class Polygon2D (val vertices:IndexedSeq[Vec2D], val ε:Double = Polygon2D.ε) {
   def getArea:Double = {
     val size = vertices.size
     var area = 0d
-    var iPrev = size-1
-    (0 until size).foreach ( i=> {
-        val a = vertices(i)
-        val b = vertices(iPrev)
-        area += a.x * b.y;
-        area -= a.y * b.x;
-        iPrev = i
+    var prev = size-1
+    (0 until size).foreach( current=> {
+        val v = vertices(prev)      // == v(i)
+        val vp1 = vertices(current) // == v(i+1)
+        area += v.x * vp1.y - vp1.x * v.y 
+        prev = current
     })
     area*0.5d
+  }
+  
+  /**
+   * Computes the centroid of the polygon
+   * Code ported from: http://paulbourke.net/geometry/polygonmesh/
+   * 
+   * @return polygon centroid
+   */
+  def getCentroid:Vec2D = {
+    val size = vertices.size
+    var area = 0d
+    var cx = 0d
+    var cy = 0d
+    
+    var prev = size-1
+    (0 until size).foreach ( current=> {
+        val v = vertices(prev)    // == x(i)  
+        val vp1 = vertices(current) // == x(i+1)
+        
+        area += v.x * vp1.y - vp1.x * v.y
+        val m = v.x*vp1.y-vp1.x*v.y
+        cx += (v.x + vp1.x) * m
+        cy += (v.y + vp1.y) * m
+        prev = current
+    })
+    area = area*0.5d
+    assert(area == getArea, "area:" + area + " != " + "getArea:" + getArea)
+    Vec2D(cx/(6d*area), cy/(6d*area))
   }
   
   def isClockwise = getArea > 0d
