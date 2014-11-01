@@ -12,6 +12,9 @@ class AABB2D (val min:Vec2D, val max:Vec2D) extends ImmutableVec2D((max.x-min.x)
   def height = max.y-min.y
   override def toString = "AABB(" + min + "->" + max + ")"
   
+  /**
+   * returns a new instance that contains the sample point
+   */
   def growToContainPoint(v:Vec2D):AABB2D = {
     val minx = if (v.x < min.x) v.x else min.x
     val miny = if (v.y < min.y) v.y else min.y
@@ -28,4 +31,19 @@ class AABB2D (val min:Vec2D, val max:Vec2D) extends ImmutableVec2D((max.x-min.x)
     else IndexedSeq(Vec2D(max.x, max.y), Vec2D(max.x, min.y), Vec2D(min.x, min.y), Vec2D(min.x, max.y))
     
   def toPolygon2D(clockwise:Boolean=false)=new Polygon2D(toIndexedSeq(clockwise))
-}  
+}
+
+object AABB2D {
+  
+  def apply(vertices:Seq[Vec2D]) = {
+    val min = new MutableVec2D(Double.PositiveInfinity, Double.PositiveInfinity)
+    val max = new MutableVec2D(Double.NegativeInfinity, Double.NegativeInfinity)
+    vertices.foreach(v => {
+      if (v.x > max.x) max.x = v.x
+      if (v.x < min.x) min.x = v.x
+      if (v.y > max.y) max.y = v.y
+      if (v.y < min.y) min.y = v.y
+    })
+    new AABB2D(min,max)
+  }
+}
