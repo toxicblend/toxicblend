@@ -130,9 +130,59 @@ class LineIntersectionTest extends FlatSpec with Matchers {
   
   * */
   
-  "LineIntersectionTest-7" should "not find any intersections" in {
-    val p = new Polygon2D(IndexedSeq((0,0), (10,0), (0,10)).map(v=>Vec2D(v._1,v._2)))
-    p.isClockwise should be (false)
+  "LineIntersectionTest-7" should "test isClockwise" in {
+    val p = new Polygon2D(IndexedSeq((1,0),(0,1),(0,0)).map(v=>Vec2D(v._1,v._2)))
+    p.isClockwise should be (true)
     p.isSelfIntersecting should be (false)
+    p.getCentroid should be (Vec2D(1d/3d, 1d/3d))
+    p.getArea should be (0.5d)
+  }
+  
+  "LineIntersectionTest-8" should "test isClockwise" in {
+    val seq = scala.collection.mutable.ArrayBuffer((1,0),(0,0),(0,1)).map(v=>Vec2D(v._1,v._2))
+    (0 to 3).foreach(i => {
+      //println(seq)
+      val p = new Polygon2D(seq)
+      p.isClockwise should be (false)
+      val v = seq.head
+      seq.remove(0)
+      seq.append(v)
+    })
+  }
+  
+  "LineIntersectionTest-9" should "test isClockwise" in {
+    val seq = scala.collection.mutable.ArrayBuffer((1,0),(0,1),(0,0)).map(v=>Vec2D(v._1,v._2))
+    (0 to 3).foreach(i => {
+      //println(seq)
+      val p = new Polygon2D(seq)
+      p.isClockwise should be (true)
+      val v = seq.head
+      seq.remove(0)
+      seq.append(v)
+    })
+  }
+  
+  "LineIntersectionTest-10" should "test isSelfIntersecting" in {
+    val seq = scala.collection.mutable.ArrayBuffer((0,0),(1,0),(0,1),(1,1)).map(v=>Vec2D(v._1,v._2))
+    (0 to 5).foreach(i => {
+      //println(seq)
+      val p = new Polygon2D(seq)
+      p.isSelfIntersecting should be (true)
+      val v = seq.head
+      seq.remove(0)
+      seq.append(v)
+    })
+  }
+  
+  "LineIntersectionTest-11" should "test isSelfIntersecting" in {
+    val seq = scala.collection.mutable.ArrayBuffer((0,0),(1,0),(1,1),(0,1)).map(v=>Vec2D(v._1,v._2))
+    (0 to 5).foreach(i => {
+      //println(seq)
+      val p = new Polygon2D(seq)
+      p.isSelfIntersecting should be (false)
+      val v = seq.head
+      seq.remove(0)
+      seq.append(v)
+    })
   }
 }
