@@ -46,8 +46,7 @@ class SutherlandHodgemanClipper {
 
 object SutherlandHodgemanClipper {
   lazy val singleton = new SutherlandHodgemanClipper
-  
-  def clip(subject:Polygon2D, clipPolygon:Polygon2D)=new Polygon2D(singleton.clipPolygon(subject.toIndexedSeq, clipPolygon.toIndexedSeq))
+  def clip(subject:Polygon2D, clipPolygon:Polygon2D, precision:Double=Polygon2D.ε)=Polygon2D(singleton.clipPolygon(subject.toIndexedSeq, clipPolygon.toIndexedSeq), precision)
   def clip(subject:IndexedSeq[Vec2D], clipEdges:IndexedSeq[Vec2D])=singleton.clipPolygon(subject, clipEdges)
   def clip(subject:IndexedSeq[Vec2D], clipEdge:FiniteLine2D)=singleton.clipPolygon(subject, clipEdge)
   def clip(subject:IndexedSeq[Vec2D], clipV1:Vec2D, clipV2:Vec2D)=singleton.clipPolygon(subject, clipV1, clipV2)

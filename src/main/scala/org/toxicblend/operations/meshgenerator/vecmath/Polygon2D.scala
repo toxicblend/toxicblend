@@ -1,6 +1,10 @@
 package org.toxicblend.operations.meshgenerator.vecmath
 
-class Polygon2D (val vertices:IndexedSeq[Vec2D], val ε:Double = Polygon2D.ε) {
+/**
+ * A 2 dimensional polygon representation.
+ * Any point within ε distance from an edge is considered 'inside' the polygon
+ */
+class Polygon2D(val vertices:IndexedSeq[Vec2D], val ε:Double = Polygon2D.ε) {
   val size = vertices.size
    
   lazy val bounds = AABB2D(vertices)
@@ -25,7 +29,6 @@ class Polygon2D (val vertices:IndexedSeq[Vec2D], val ε:Double = Polygon2D.ε) {
    * Computes the area of the polygon, provided it isn't self intersecting.
    * Code ported from:
    * http://paulbourke.net/geometry/polygonmesh/
-   * and toxiclibs
    * 
    * @return polygon area
    */
@@ -56,7 +59,7 @@ class Polygon2D (val vertices:IndexedSeq[Vec2D], val ε:Double = Polygon2D.ε) {
     
     var prev = size-1
     (0 until size).foreach ( current=> {
-        val v = vertices(prev)    // == x(i)  
+        val v = vertices(prev)      // == x(i)  
         val vp1 = vertices(current) // == x(i+1)
         
         area += v.x * vp1.y - vp1.x * v.y
@@ -66,10 +69,15 @@ class Polygon2D (val vertices:IndexedSeq[Vec2D], val ε:Double = Polygon2D.ε) {
         prev = current
     })
     area = area*0.5d
-    assert(area == getArea, "area:" + area + " != " + "getArea:" + getArea)
+    //assert(area == getArea, "area:" + area + " != " + "getArea:" + getArea)
     Vec2D(cx/(6d*area), cy/(6d*area))
   }
   
+  /**
+   * Returns true if the polygon is clockwise
+   * Code ported from: http://paulbourke.net/geometry/polygonmesh/
+   * (0,0),(1,0),(0,1) is, imho, a clockwise polygon
+   */
   def isClockwise = getArea > 0d
   
   def isSelfIntersecting:Boolean = {
@@ -77,14 +85,16 @@ class Polygon2D (val vertices:IndexedSeq[Vec2D], val ε:Double = Polygon2D.ε) {
     if (size < 4) return false
     var iPrev = size-1
     var jPrev = 0
-    (0 until size-1).foreach( i => {
-      (i+2 until size-1).foreach(j => {
+    (0 until size).foreach( i => {
+      (i+2 until size).foreach(j => {
+        
         jPrev = (j + size -1) % size
-        if (FiniteLine2D.intersects(vertices(iPrev), vertices(i), vertices(jPrev), vertices(j))) {
-          //println("" + iPrev + "->" + i + " intersects " + jPrev + "->" +j )
-          //println("" + FiniteLine2D(vertices(iPrev), vertices(i)) + " intersects " + FiniteLine2D(vertices(jPrev), vertices(j)))
-          return true
-        } //else println("" + iPrev + "->" + i + " ! intersects " + jPrev + "->" +j )
+        if (j!=i && j!=iPrev && jPrev!=i && jPrev!=iPrev)
+          if (FiniteLine2D.intersects(vertices(iPrev), vertices(i), vertices(jPrev), vertices(j))) {
+            //println("" + iPrev + "->" + i + " intersects " + jPrev + "->" +j )
+            //println("" + FiniteLine2D(vertices(iPrev), vertices(i)) + " intersects " + FiniteLine2D(vertices(jPrev), vertices(j)))
+            return true
+          } //else println("" + iPrev + "->" + i + " does not intersect " + jPrev + "->" +j )
       })
       iPrev = i
     })
@@ -128,4 +138,26 @@ class Polygon2D (val vertices:IndexedSeq[Vec2D], val ε:Double = Polygon2D.ε) {
 
 object Polygon2D {
   val ε = 0.00000001
+  
+  def apply(vertices:IndexedSeq[Vec2D], ε:Double = Polygon2D.ε) = {
+    
+    def containsIdenticalConsecutivePoints:Boolean = {
+      vertices.sliding(2).foreach( v=> {
+        if (v(0).=~=(v(1),ε)) return true 
+      })
+      false 
+    }
+    if (containsIdenticalConsecutivePoints) {
+      val buffer = new collection.mutable.ArrayBuffer[Vec2D](vertices.size-1)
+      buffer.append(vertices.head)
+      (1 until vertices.size).foreach(i=> {
+        if (! vertices(i).=~=(buffer.last, ε)) {
+          buffer.append(vertices(i))
+        }
+      })
+      new Polygon2D(buffer,ε)
+    } else {
+      new Polygon2D(vertices,ε)
+    } 
+  }
 }

@@ -52,13 +52,13 @@ class FiniteLine2D(val a:Vec2D, val b:Vec2D) {
       val ub = nb / denom
       if (ua >= 0d && ua <= 1d && ub >= 0d && ub <= 1d) {
         val intersection = a.interpolateTo(b, ua)
-        println("" + this + " intersects " + l + " at " + intersection)
+        //println("" + this + " intersects " + l + " at " + intersection)
         Option(new SimpleIntersection(intersection))
       } else return None
     } else if (na == 0.0 && nb == 0.0) {
       val r = intersectCoincidentLine(a, b, l.a, l.b)
-      if (r.size>0) println("" + this + " is coincident with " + l )
-      else println("" + this + " is coincident with " + l + " but no intersection")
+      //if (r.size>0) println("" + this + " is coincident with " + l )
+      //else println("" + this + " is coincident with " + l + " but no intersection")
       
       r.size match {
         case 0 => None
@@ -66,31 +66,6 @@ class FiniteLine2D(val a:Vec2D, val b:Vec2D) {
         case 2 => Option(new CoincidentIntersection(r(0), r(1)))
         case _ => assert(false, "should never happen"); None
       }
-      
-      /*
-      val aTobSquared = a.distanceToSquared(b)
-      val aToLaSquared = a.distanceToSquared(l.a)
-      val aToLbSquared = a.distanceToSquared(l.b)
-      
-      println("aTobSquared=" + aTobSquared)
-      println("aToLaSquared=" + aToLaSquared)
-      println("aToLbSquared=" + aToLbSquared)
-      
-      if (aTobSquared < aToLaSquared && aTobSquared < aToLbSquared) 
-        return None // coincident non-intersecting
-      
-      if (aTobSquared >= aToLaSquared && aTobSquared >= aToLbSquared){
-        if (aToLaSquared > aToLbSquared) return Option(new CoincidentIntersection(l.b,l.a))
-        else return Option(new CoincidentIntersection(l.a,l.b))
-      }
-          
-      if (aToLaSquared < aTobSquared ) return Option(new CoincidentIntersection(l.a,b))
-      if (aToLbSquared < aTobSquared ) return Option(new CoincidentIntersection(l.b,b))
-      if (aToLaSquared == aTobSquared ) return Option(new SimpleIntersection(l.a))
-      if (aToLbSquared == aTobSquared ) return Option(new SimpleIntersection(l.b))
-      
-      assert(false, "no more options left")
-      None*/
     } else None
   }
   

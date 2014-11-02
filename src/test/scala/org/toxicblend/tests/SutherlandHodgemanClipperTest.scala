@@ -15,7 +15,7 @@ import scala.collection.JavaConversions._
 
 class SutherlandHodgemanClipperTest extends FlatSpec with Matchers {
   
-  val floatTolerance = 0.0001f
+  val tolerance = 0.0001d
   
   def indexByHeading(seq:IndexedSeq[Vec2D] ) : IndexedSeq[Vec2D] = {
     val angleSequence = seq.map(v => new Payload(v.heading, 0, v) )
@@ -359,8 +359,8 @@ class SutherlandHodgemanClipperTest extends FlatSpec with Matchers {
                               (100.000000, 250.000000)).map(p=>Vec2D(p._1.toFloat, p._2.toFloat))
     clipped.size should be (correctAnswer.size)
     (0 until clipped.size).foreach(i=>{
-      clipped(i).x should be ( correctAnswer(i).x plusOrMinus floatTolerance)
-      clipped(i).y should be ( correctAnswer(i).y plusOrMinus floatTolerance)
+      clipped(i).x should be ( correctAnswer(i).x plusOrMinus tolerance)
+      clipped(i).y should be ( correctAnswer(i).y plusOrMinus tolerance)
     })
   }
 }
