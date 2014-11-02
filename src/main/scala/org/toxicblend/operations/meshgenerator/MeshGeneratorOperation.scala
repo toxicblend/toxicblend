@@ -61,7 +61,14 @@ class MeshGeneratorOperation extends CommandProcessorTrait {
     println("clockwisePolygon.isSelfIntersecting=" + clockwisePolygon.isSelfIntersecting)
     println("clockwisePolygon.isClockwise=" + clockwisePolygon.isClockwise)
 
-    val reducedClipPolygon = WeilerAthertonClipper.clip(clockwisePolygon, aabb.toPolygon2D(true), 0.0001)
+    val reducedClipPolygon = {
+      val p = SutherlandHodgemanClipper.clip(clockwisePolygon, aabb.toPolygon2D(true), 0.0001)
+      if (p.isClockwise) p
+      else {
+        println("********** reducedClipPolygon was anti-clockwise. was forced to reverse it")
+        new Polygon2D(p.vertices.reverse)
+      }
+    }
     val reducedAABB = reducedClipPolygon.bounds
     
     println("aabb=" + aabb)
@@ -75,6 +82,7 @@ class MeshGeneratorOperation extends CommandProcessorTrait {
     println("subdivisionsX=" + subdivisionsX)
     println("subdivisionsY=" + subdivisionsY)
     
+    println("reducedAABB=" + reducedAABB)
     println("reducedClipPolygon=" + reducedClipPolygon.vertices.mkString(","))
     println("reducedClipPolygon.isClockwise=" + reducedClipPolygon.isClockwise)
     println("reducedClipPolygon.isSelfIntersecting=" + reducedClipPolygon.isSelfIntersecting)
@@ -90,8 +98,8 @@ class MeshGeneratorOperation extends CommandProcessorTrait {
     for (xp <- 0 to subdivisionsX; yp <-0 to subdivisionsY) yield {
       val p2 = Vec2D(aabb.min.x + xp*delta, aabb.min.y + yp*delta)
       val p3 = Vec2D(p2.x+delta, p2.y)
-      val p0 = Vec2D(p2.x, p2.y+delta)
-      val p1 = Vec2D(p3.x, p0.y)
+      val p1 = Vec2D(p2.x, p2.y+delta)
+      val p0 = Vec2D(p3.x, p1.y)
       
       val cp0 = reducedClipPolygon.containsPoint(p0)
       val cp1 = reducedClipPolygon.containsPoint(p1)
@@ -110,63 +118,76 @@ class MeshGeneratorOperation extends CommandProcessorTrait {
         val p13d = calculateZ(p1)
         val p23d = calculateZ(p2)
         val p33d = calculateZ(p3)
-        rvMesh.addFace(p03d, p23d, p13d)
-        rvMesh.addFace(p13d, p23d, p33d)
-        //println("new Polygon2D is clockwise: " + new Polygon2D(Array(p0, p1, p2).iterator).isClockwise())
+        rvMesh.addFace(p23d, p13d, p03d)
+        rvMesh.addFace(p03d, p33d, p23d)
+        //val p = new Polygon2D(Array(p0, p1, p2, p3))
+        //println("new Polygon p0, p1, p3, p2 is clockwise: " + p.isClockwise)
+        //println("new Polygon p0, p1, p3, p2 is isSelfIntersecting: " + p.isSelfIntersecting)
         //println("new Polygon2D is clockwise: " + new Polygon2D(Array(p1, p3, p2).iterator).isClockwise()) 
-      } else if (cp0 && cp1 && cp2 ) {
+      } /*else if (cp0 && cp1 && cp3 ) {
         val p03d = calculateZ(p0)
         val p13d = calculateZ(p1)
-        val p23d = calculateZ(p2)
+        val p33d = calculateZ(p3)
         //println("new Polygon2D is clockwise: " + new Polygon2D(Array(p0, p1, p2).iterator).isClockwise())
-        rvMesh.addFace(p03d, p23d, p13d)
+        rvMesh.addFace(p03d, p13d, p33d)
       } else if (cp1 && cp3 && cp2 ) {
         val p13d = calculateZ(p1)
         val p23d = calculateZ(p2)
         val p33d = calculateZ(p3)
-        rvMesh.addFace(p13d, p23d, p33d)
+        rvMesh.addFace(p13d, p33d, p23d)
         //println("new Polygon2D is clockwise: " + new Polygon2D(Array(p1, p3, p2).iterator).isClockwise())
-      } else if (cp0 && cp1 && cp3 ) {
+      } else if (cp3 && cp2 && cp0 ) {
+        val p03d = calculateZ(p0)
+        val p23d = calculateZ(p2)
+        val p33d = calculateZ(p3)
+        rvMesh.addFace(p03d, p33d, p23d)
+        //println("new Polygon2D is clockwise: " + new Polygon2D(Array(p0, p1, p3).iterator).isClockwise())
+      } else if (cp2 && cp0 && cp1 ) {
+        val p23d = calculateZ(p2)
         val p03d = calculateZ(p0)
         val p13d = calculateZ(p1)
-        val p33d = calculateZ(p3)
-        rvMesh.addFace(p03d, p33d, p13d)
-        //println("new Polygon2D is clockwise: " + new Polygon2D(Array(p0, p1, p3).iterator).isClockwise())
-      } else if (cp0 && cp3 && cp2 ) {
-        val p03d = calculateZ(p0)
-        val p33d = calculateZ(p3)
-        val p23d = calculateZ(p2)
-        rvMesh.addFace(p03d, p23d, p33d)
+        rvMesh.addFace(p23d, p03d, p13d)
         //println("new Polygon2D is clockwise: " + new Polygon2D(Array(p0, p3, p2).iterator).isClockwise())
-      } else if (cp0 || cp1 || cp2 || cp3) { 
+      } */ else if (cp0 || cp1 || cp2 || cp3) { 
         
-        val p = new Polygon2D(IndexedSeq(p2, p3, p1, p0))
-        println("p is Clockwice: " + p.isClockwise)
+        val p = new Polygon2D(IndexedSeq(p0, p1, p2, p3))
+        //println("p is clockwise: " + p.isClockwise)
         //println("p is selfintersecting: " + p.isSelfIntersecting)
-        println("p.size = " + p.size )
-        println("p.bounds = " + p.bounds )
-        println("p.center = " + p.bounds.x + "," + p.bounds.y  )
-        println("p = " + p.vertices.mkString(","))
-         
+            
         //println("new Polygon2D is clockwise: " + new Polygon2D(p.iterator).isClockwise())
-        val clipped = WeilerAthertonClipper.clip(p, reducedClipPolygon, Polygon2D.ε )
-        
-        println("clipped.isClockwise = " + clipped.isClockwise )
-        println("clipped.size = " + clipped.size )
-        println("clipped.bounds = " + clipped.bounds )
-        println("clipped.center = " + clipped.bounds.x + "," + clipped.bounds.y  )
-        println("clipped = " + clipped.vertices.mkString(","))
-        
-        if (clipped.size >= 3) {
-          //rvMesh.getVertices.map(v => if (v.x.isNaN || v.y.isNaN || v.z.isNaN ) println(v))
-          //rvMesh.getVertices.map(v => if (v.x.isInfinite || v.y.isInfinite || v.z.isInfinite ) println(v))
-         
-          val centroid = new TVec2D(clipped.bounds.x.toFloat,clipped.bounds.y.toFloat)
-          new TPolygon2D(clipped.vertices.map(v=>new TVec2D(v.x.toFloat, v.y.toFloat)).iterator).toMesh(rvMesh, centroid, 0f)
-          
-          println("centroid:" + centroid)
-          //rvMesh.getVertices.map(v => if (v.x.isNaN || v.y.isNaN || v.z.isNaN ) println(v))
-        }
+        WeilerAthertonClipper.clip(p, reducedClipPolygon, Polygon2D.ε ).foreach(clipped=>{ 
+          if(false) {
+            
+            println("p.size = " + p.size )
+            println("p.bounds = " + p.bounds )
+            println("p.center = " + p.bounds.x + "," + p.bounds.y  )
+            println("p = " + p.vertices.mkString(","))
+            println("p=" + p)
+            println("reducedClipPolygon=" + reducedClipPolygon)
+          } 
+          if (clipped.size >= 3) {
+            if(false) {
+              println("clipped.isClockwise = " + clipped.isClockwise )
+              println("clipped.size = " + clipped.size )
+              println("clipped.bounds = " + clipped.bounds )
+              println("clipped.center = " + clipped.bounds.x + "," + clipped.bounds.y  )
+              println("clipped = " + clipped.vertices.mkString(","))
+            }
+             
+            //rvMesh.getVertices.map(v => if (v.x.isNaN || v.y.isNaN || v.z.isNaN ) println(v))
+            //rvMesh.getVertices.map(v => if (v.x.isInfinite || v.y.isInfinite || v.z.isInfinite ) println(v))
+           
+            val centroid = {
+              val c = clipped.getCentroid
+              new TVec2D(c.x.toFloat, c.y.toFloat)
+            }
+            //println("clipped.centroid = " + centroid )
+            new TPolygon2D(clipped.vertices.map(v=>new TVec2D(v.x.toFloat, v.y.toFloat)).iterator).toMesh(rvMesh, centroid, 0f)
+            
+            //println("centroid:" + centroid)
+            //rvMesh.getVertices.map(v => if (v.x.isNaN || v.y.isNaN || v.z.isNaN ) println(v))
+          }
+        })
       }
     }
     //println(mesh.vertices.mkString(","))
@@ -176,9 +197,12 @@ class MeshGeneratorOperation extends CommandProcessorTrait {
   
   def processData(edges:Polygon2DConverter, center:ReadonlyVec3D, subdivisions:Int, radius:Float) : Mesh3DConverter = {
     
-    val polygon = {
+    val (polygon,scale) = {
       val polygon = if (edges.polygons(0).isClockwise) edges.polygons(0) else edges.polygons(0).flipVertexOrder
-      new Polygon2D(polygon.toIndexedSeq.map(v => Vec2D(v.x,v.y)))
+      val aabb = polygon.getBounds
+      val maxDimension = if (aabb.width > aabb.height) aabb.width else aabb.height
+      val scale = 500d/maxDimension
+      (Polygon2D(polygon.toIndexedSeq.map(v => Vec2D(v.x*scale,v.y*scale))),scale)
     }
     
     val aabb = polygon.bounds
@@ -197,8 +221,8 @@ class MeshGeneratorOperation extends CommandProcessorTrait {
     val resultingMesh = processDataPerThread(polygon,aabb,delta)
     
     //mesh.getVertices.map(v => if (v.x.isNaN || v.y.isNaN || v.z.isNaN ) println(v))
-    val rv = Mesh3DConverter(resultingMesh.faceOutwards, "procedural mesh")
-    println(rv.getVertices.mkString(","))
+    val rv = Mesh3DConverter(resultingMesh.scale(1f/scale.toFloat), "procedural mesh")
+    //println(rv.getVertices.mkString(","))
     if (edges.transforms.size > 0) rv.transform(edges.transforms(0) )
     //println(rv.getVertices.mkString(","))
     rv
