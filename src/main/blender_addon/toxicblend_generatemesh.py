@@ -16,6 +16,7 @@ class ToxicBlend_GenerateMesh(bpy.types.Operator):
   bl_idname = "object.toxicblend_meshgenerator"
   bl_label = "Toxicblend:GenerateMesh"
   bl_options = {'REGISTER', 'UNDO'}  # enable undo for the operator.
+  subdivisionProperty = bpy.props.IntProperty(name="sub divisions", description="The number of sub divisions", default=5, min=1, max=100)
   radiusProperty = bpy.props.FloatProperty(name="Radius [mm]", description="The radius of the curvature (in mm)", default=2.0, min=0.0, max=10000.0)
   useMultiThreadingProperty = bpy.props.EnumProperty(
     description="Each continous ring segment will be processed in a separate thread",
@@ -23,10 +24,7 @@ class ToxicBlend_GenerateMesh(bpy.types.Operator):
     items=(("TRUE", "True",""),
            ("FALSE", "False","")),
            default="FALSE" )
-           
-  subdivisionProperty = bpy.props.IntProperty(name="subdivisions", description="The number of subdivisions", default=5, min=1, max=100)
-  
-
+             
   @classmethod
   def poll(cls, context):
     return context.active_object is not None
