@@ -16,7 +16,9 @@ import scala.collection.JavaConversions._
 class WeilerAthertonTest extends FlatSpec with Matchers {
   
   val tolerance = 0.0001d
-  def toPolygon2D(seq:Seq[(Int,Int)]):Polygon2D = new Polygon2D(seq.toIndexedSeq.map(p=>Vec2D(p._1,p._2)))
+  def toPolygon2D(seq:Seq[(Double,Double)], scale:Double=1d, x:Double=0d, y:Double=0d):Polygon2D = {
+    Polygon2D(seq.toIndexedSeq.map(p=>Vec2D(p._1*scale+x,p._2*scale+y)))
+  }
   
   def indexByHeading(seq:IndexedSeq[Vec2D] ) : IndexedSeq[Vec2D] = {
     val angleSequence = seq.map(v => new Payload(v.heading, 0, v) )
@@ -29,7 +31,7 @@ class WeilerAthertonTest extends FlatSpec with Matchers {
   
   "WeilerAthertonTest-1" should "clip just fine" in {
     
-    val subject = toPolygon2D(Seq((10,10),(10,0),(0,0),(0,10)).map(p=>(p._1-0,p._2-0)))
+    val subject = toPolygon2D(Seq((10,10),(10,0),(0,0),(0,10)))
     val clip = toPolygon2D(Seq((100,100),(100,0),(0,0),(0,100)))
     //println("subject=" + subject.vertices.mkString(","))
     //println("clip=" + clip.vertices.mkString(","))
@@ -49,7 +51,7 @@ class WeilerAthertonTest extends FlatSpec with Matchers {
   
   "WeilerAthertonTest-2" should "clip just fine" in {
     
-    val subject = toPolygon2D(Seq((10,10),(10,0),(0,0),(0,10)).map(p=>(p._1+90,p._2-0)))
+    val subject = toPolygon2D(Seq((10,10),(10,0),(0,0),(0,10)))
     val clip = toPolygon2D(Seq((100,100),(100,0),(0,0),(0,100)))
     //println("subject=" + subject.vertices.mkString(","))
     //println("clip=" + clip.vertices.mkString(","))
@@ -69,7 +71,7 @@ class WeilerAthertonTest extends FlatSpec with Matchers {
   
   "WeilerAthertonTest-3" should "clip just fine" in {
    
-    val subject = toPolygon2D(Seq((10,10),(10,0),(0,0),(0,10)).map(p=>(p._1+150,p._2+50)))
+    val subject = toPolygon2D(Seq((10,10),(10,0),(0,0),(0,10)),x=150,y=50)
     val clip = toPolygon2D(Seq((100,100),(100,0),(0,0),(0,100)))
   
     //println("subject=" + subject.vertices.mkString(","))
@@ -97,4 +99,28 @@ class WeilerAthertonTest extends FlatSpec with Matchers {
     clipped.get(1) should be (Vec2D(100.0,50.0))
     clipped.get(2) should be (Vec2D(50.0,25.0))
   }
+  
+  "WeilerAthertonTest-5" should "clip just fine" in {
+   
+    val subject = toPolygon2D(Seq((10d,10d),(10d,100d),(100d,100d),(100d,10d)).reverse,x=100, y=100)
+    val clip = toPolygon2D(Seq((0d,0d),(0d,110d),(80d,110d),(110d,50d),(80d,0d)).reverse,x=100, y=100)
+  
+    //println("subject=" + subject.vertices.mkString(","))
+    //println("clip=" + clip.vertices.mkString(","))
+    
+    val clipped = {
+      val rv = WeilerAthertonClipper.clip(subject, clip)
+      rv.size should be (1)
+      rv.head.vertices
+    }
+    //println("clipped=" + clipped.mkString(","))
+    clipped.size should be (6)
+    clipped.get(0) should be (Vec2D(200.0,133.33333333333331))
+    clipped.get(1) should be (Vec2D(200.0,170.0))
+    clipped.get(2) should be (Vec2D(185.0,200.0))
+    clipped.get(3) should be (Vec2D(110.0,200.0))
+    clipped.get(4) should be (Vec2D(110.0,110.0))
+    clipped.get(5) should be (Vec2D(186.0,110.0))        
+  }
+  
 }
