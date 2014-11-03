@@ -179,56 +179,141 @@ class WeilerAthertonClipper( private val subjectList:DoubleLinkedList[VertexInfo
     current
   }
   
-  protected def addVertices(first:DoubleLinkedListElement[VertexInfo], last:DoubleLinkedListElement[VertexInfo], rv:ArrayBuffer[Vec2D], sourceList:SourceList) {
+  /**
+   * Adds vertices until the next intersection is detected. Then that element is returned as a subject list element
+   * The vertex of the last intersection will not be added to the result buffer
+   */
+  protected def addVerticesUntilNextIntersection(first:DoubleLinkedListElement[VertexInfo], rv:ArrayBuffer[Vec2D], sourceList:SourceList):DoubleLinkedListElement[VertexInfo] = {
     var current = first
-    if (rv.size==0 || rv.last!=current.data.v) {
-      rv.append(current.data.v)
-      //println("addVertices added" + current.data.v + " " + sourceList)
-    }
+    conditionalAppend(rv,current.data.v)
     do {
       current = next(current,sourceList)
-      rv.append(current.data.v)
+      conditionalAppend(rv,current.data.v)
       //println("addVertices added" + current.data.v + " " + sourceList)
-    } while (current != last)
+    } while (!current.data.isIntersection)
+    sourceList match {
+      case SUBJECT_LIST => current
+      case CLIP_LIST => current.data.otherList.get
+    }
   }
-   
-  protected def selectivelyAddVertices(prevI:DoubleLinkedListElement[VertexInfo], currentI:DoubleLinkedListElement[VertexInfo], clipPolygon:Polygon2D, rv:ArrayBuffer[Vec2D]) {
-    //println("selectivelyAddVertices: " + prevI.data.v + " -..-> " + currentI.data.v)
-    if (next(prevI, SUBJECT_LIST) == currentI) {
+  
+  /**
+   * prevSI: previous subject intersection
+   */
+  protected def selectivelyAddVertices(prevSI:DoubleLinkedListElement[VertexInfo], rv:ArrayBuffer[Vec2D]):(DoubleLinkedListElement[VertexInfo],Boolean) = {
+    //println("selectivelyAddVertices: " + prevSI.data.v )
+    val nextS = next(prevSI, SUBJECT_LIST)
+    if (nextS.data.isIntersection) {
       // no non-intersection in between
-      if (rv.size==0 || rv.last!=prevI.data.v) {
-        rv.append(prevI.data.v)
-        println("1selectivelyAddVertices added" + prevI.data.v )
-      }
-      rv.append(currentI.data.v)
-      println("2selectivelyAddVertices added" + currentI.data.v )
+      conditionalAppend(rv,prevSI.data.v)
+      conditionalAppend(rv,nextS.data.v)
+      //println("2selectivelyAddVertices added" + nextS.data.v )
+      (nextS,false)
     } else {
-      val samplePointS = next(prevI, SUBJECT_LIST)
-      if ( clipPolygon.containsPoint(samplePointS.data.v)) {
-       //println("samplepoint:" +samplePointS.data.v + " was inside clip. Getting samples from the subject list") 
-       addVertices(prevI, currentI, rv, SUBJECT_LIST)
+      if ( clipPolygon.containsPoint(nextS.data.v)) {
+        //println("samplepoint:" +samplePointS.data.v + " was inside clip. Getting samples from the subject list") 
+        val nextSIntersection = addVerticesUntilNextIntersection(prevSI, rv, SUBJECT_LIST)
+        if (nextSIntersection.data.v == rv.head) {
+          //println("nextSIntersection.data.v == rv.head -> fail")
+          (nextSIntersection,true)
+        }
+        else (nextSIntersection,false)
       } else {
-        val samplePointC = next(prevI.data.otherList.get, CLIP_LIST)
+        val samplePointC = next(prevSI.data.otherList.get, CLIP_LIST)
         if ( subjectPolygon.containsPoint(samplePointC.data.v)) {
-          println("samplepoint:" +samplePointS.data.v + " was not inside clip polygon. Getting samples from the clip list")
-          println("samplePointC:" +samplePointC.data.v + b2s(samplePointC.data.isIntersection) )
-          val nextCIntersection = findNextIntersection(prevI.data.otherList.get, CLIP_LIST)
-          addVertices(prevI.data.otherList.get, nextCIntersection, rv, CLIP_LIST)
+          //println("samplepointS:" +nextS.data.v + " was not inside clip polygon. Getting samples from the clip list")
+          //println("samplePointC:" +samplePointC.data.v + b2s(samplePointC.data.isIntersection) )
+          val nextSIntersection = addVerticesUntilNextIntersection(prevSI.data.otherList.get, rv, CLIP_LIST)
+          //println("nextSIntersection:" +nextSIntersection.data.v + b2s(nextSIntersection.data.isIntersection) )
+          //println("rv:" + rv)
+
+          if (nextSIntersection.data.v == rv.head) {
+            //println("nextSIntersection.data.v == rv.head -> fail")
+            (findNextIntersection(prevSI,SUBJECT_LIST),true)
+          } else {
+            (nextSIntersection,false)
+          }
         } else {
           println("wtf?")
           println("subjectPolygon=" + subjectPolygon.vertices.mkString(","))
           println("clipPolygon=" + clipPolygon.vertices.mkString(","))
-          println("generated a bobo")
-          val nextCIntersection = findNextIntersection(prevI.data.otherList.get, CLIP_LIST)
+          println("generated a bobo, list should end here")
+          val nextCIntersection = findNextIntersection(prevSI.data.otherList.get, CLIP_LIST)
+          (nextCIntersection.data.otherList.get,true)
         }
       }
     }
   }
   
+  def countNumberOfIntersections = {
+    val firstElement = subjectList.firstElement
+    var currentS = firstElement
+    var numberOfIntersections = 0
+    do {
+      currentS = findNextIntersection(currentS, SUBJECT_LIST)
+      numberOfIntersections += 1
+    } while (currentS!=firstElement)
+    numberOfIntersections
+  }
+  
   /**
    * find segments in between intersection points and determine if the segment is inside or outside the clipping polygon
    */
-  protected def filter(clipPolygon:Polygon2D):IndexedSeq[IndexedSeq[Vec2D]] = {
+  protected def filter2:IndexedSeq[IndexedSeq[Vec2D]] = {
+    
+    val usedSubjectIntersections = new collection.mutable.HashSet[DoubleLinkedListElement[VertexInfo]]
+    val numberOfIntersections = countNumberOfIntersections
+    val firstElement = subjectList.firstElement
+    var currentS = firstElement
+    var loopBeginningS = firstElement
+    var loopBeginningC = loopBeginningS.data.otherList.get
+    var fail = false
+    var usedIntersections = 0
+    val rv = new ArrayBuffer[IndexedSeq[Vec2D]]
+    do {
+      //println("*1-loopBeginningC=" + loopBeginningC)
+      val currentBuffer = new ArrayBuffer[Vec2D]
+      
+      // find an unused intersection point 
+      if (usedSubjectIntersections.contains(loopBeginningS)) do {
+        loopBeginningC = findNextIntersection(loopBeginningC, CLIP_LIST)
+        loopBeginningS = loopBeginningC.data.otherList.get
+      } while (usedSubjectIntersections.contains(loopBeginningS))
+      
+      //println("*2-loopBeginning=" + loopBeginning)
+        
+      // Iterate though the subject loop
+      currentS = loopBeginningS
+      do {
+        val (s,f) = selectivelyAddVertices(currentS, currentBuffer)
+        /*if (usedSubjectIntersections.contains(currentS)) {
+          println("rv=" + rv.mkString(","))
+          println("currentBuffer=" + currentBuffer.mkString(","))
+          println("loopBeginningS=" + loopBeginningS)
+          println("currentS=" + currentS)
+          //assert(!usedSubjectIntersections.contains(currentS), "" + currentS + " was already used")
+        }*/
+        usedSubjectIntersections.add(currentS)
+        usedIntersections += 1
+        currentS = s   
+        fail = f
+        //println("*3-currentS=" + currentS)
+      } while ((!fail) && !usedSubjectIntersections.contains(currentS))
+      // remove last element if it's the same as the head (why is it added in the first place?)
+      if (currentBuffer.size>1 && currentBuffer.last == currentBuffer.head) currentBuffer.remove(currentBuffer.size-1)
+      if (currentBuffer.size>0) rv.append(currentBuffer)
+      loopBeginningC = findNextIntersection(loopBeginningC, CLIP_LIST)
+      loopBeginningS = loopBeginningC.data.otherList.get
+    } while (numberOfIntersections != usedIntersections)
+    rv
+  }
+  
+  @inline protected def conditionalAppend(buffer:ArrayBuffer[Vec2D], v:Vec2D) = if (buffer.size==0 || buffer.last!=v) buffer.append(v)  
+  
+  /**
+   * find segments in between intersection points and determine if the segment is inside or outside the clipping polygon
+   */
+  protected def malfunctionFilter:IndexedSeq[IndexedSeq[Vec2D]] = {
     
     val beginningS = subjectList.firstElement
     
@@ -242,22 +327,20 @@ class WeilerAthertonClipper( private val subjectList:DoubleLinkedList[VertexInfo
     val rv = new ArrayBuffer[IndexedSeq[Vec2D]]
     var currentBuffer = new ArrayBuffer[Vec2D]
     var prevS = beginningS
-    var currentS = findNextIntersection(prevS, SUBJECT_LIST)
     currentBuffer.append(prevS.data.v)
-    if (currentS != beginningS) do {
+    do {
       //println("prev=" + prevS.data.v + b2s(prevS.data.isIntersection) + " current=" + currentS.data.v + b2s(currentS.data.isIntersection))
-      selectivelyAddVertices(prevS, currentS, clipPolygon, currentBuffer)
+      val (currentS,fail) = selectivelyAddVertices(prevS, currentBuffer)
       prevS = currentS
-      currentS = findNextIntersection(currentS, SUBJECT_LIST)
-      if (currentBuffer.size >= 1 && currentBuffer.head == currentS.data.v ) {
-        currentBuffer.dropRight(1)
+      //currentS = findNextIntersection(currentS, SUBJECT_LIST)
+      if (fail) {
         rv.append(currentBuffer)
         currentBuffer = new ArrayBuffer[Vec2D]
         println("switched buffers")
       }
-    } while (currentS != beginningS &&  currentS != prevS)
+    } while (prevS != beginningS)
     //currentI = findNextIntersection(next(prevI))
-    selectivelyAddVertices(prevS, currentS, clipPolygon, currentBuffer)
+    selectivelyAddVertices(prevS, currentBuffer)
     currentBuffer.dropRight(1)
     rv.append(currentBuffer)
     rv
@@ -281,11 +364,11 @@ class WeilerAthertonClipper( private val subjectList:DoubleLinkedList[VertexInfo
       
       // shift the polygons so that they start with the same intersection
       shiftToFirstIntersection(subjectList, clipList)
-      println("3-subject:" + subjectList.map(i => i.data.v.toIntString + b2s(i.data.isIntersection)).mkString(","))
-      println("3-clip:" + clipList.map(i => i.data.v.toIntString + b2s(i.data.isIntersection)).mkString(","))
+      //println("3-subject:" + subjectList.map(i => i.data.v.toIntString + b2s(i.data.isIntersection)).mkString(","))
+      //println("3-clip:" + clipList.map(i => i.data.v.toIntString + b2s(i.data.isIntersection)).mkString(","))
         
       // step 3: filter out "in between" intersection segments that are outside the clip polygon
-      filter(clipPolygon)
+      filter2
     } else {
       // no intersections found
       if (clipPolygon.containsPoint(subjectEdges.head)) IndexedSeq[IndexedSeq[Vec2D]](subjectEdges)
