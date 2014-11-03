@@ -147,7 +147,7 @@ object Polygon2D {
       })
       false 
     }
-    if (containsIdenticalConsecutivePoints) {
+    if (vertices.size >= 2 && containsIdenticalConsecutivePoints) {
       val buffer = new collection.mutable.ArrayBuffer[Vec2D](vertices.size-1)
       buffer.append(vertices.head)
       (1 until vertices.size).foreach(i=> {
