@@ -23,6 +23,14 @@ class AABB2D (val min:Vec2D, val max:Vec2D) extends ImmutableVec2D((max.x-min.x)
     new AABB2D(minx, miny, maxx, maxy)
   }
   
+  def intersects(other:AABB2D):Boolean = {
+    if (max.x < other.min.x) return false
+    if (min.x > other.max.x) return false
+    if (max.y < other.min.y) return false
+    if (min.y > other.max.y) return false
+    true
+  }
+  
   /**
    * Copy to an array of vertices
    */
