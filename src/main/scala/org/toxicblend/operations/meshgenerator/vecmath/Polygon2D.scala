@@ -101,6 +101,146 @@ class Polygon2D(val vertices:IndexedSeq[Vec2D], val ε:Double = Polygon2D.ε) {
     false
   }
   
+  /**
+   * Checks if the polygon is convex.
+   * Ported from toxiclibs
+   * 
+   * @return true, if convex.
+   */
+  def isConvex:Boolean = {
+    var isPositive = false
+    val size = vertices.size
+    var prev = size-2
+    var i = size-1
+    (0 until size).foreach(next => {
+        //println("prev="+prev+" i="+i+" next="+next)
+        val d0 = vertices(i).sub(vertices(prev))
+        val d1 = vertices(next).sub(vertices(i))
+        val newIsP = d0.cross(d1) > 0
+        if (next == 0) isPositive = newIsP
+        else if (isPositive != newIsP) return false
+        prev = i
+        i = next
+    })
+    return true;
+  }
+  
+  /**
+   * compute the convex hull using the gift wrapping algorithm
+   * http://en.wikipedia.org/wiki/Gift_wrapping_algorithm
+   * 
+   * pointOnHull = leftmost point in S
+   * i = 0
+   * repeat
+   *    P[i] = pointOnHull
+   *    endpoint = S[0]         // initial endpoint for a candidate edge on the hull
+   *    for j from 1 to |S|
+   *       if (endpoint == pointOnHull) or (S[j] is on left of line from P[i] to endpoint)
+   *          endpoint = S[j]   // found greater left turn, update endpoint
+   *    i = i+1
+   *    pointOnHull = endpoint
+   *  until endpoint == P[0]      // wrapped around to first hull point
+   */
+  def toConvexHull:Polygon2D = {
+    
+    var pointOnHull = vertices.foldLeft(vertices.head)((b,a) => if (a.x < b.x) a else b)
+    var endPoint = pointOnHull
+    val rv = new collection.mutable.ArrayBuffer[Vec2D](1)
+    val size = this.vertices.size
+       
+    do {
+      rv.append(pointOnHull)
+      (0 until size).foreach(j=>{
+          if (endPoint==pointOnHull) endPoint=vertices(j)
+          else 
+            if (Vec2D.cross(rv.last, endPoint, vertices(j)) < 0d) endPoint = vertices(j)
+        })
+      pointOnHull = endPoint
+    } while (endPoint!=rv(0))
+    new Polygon2D(rv)
+  }
+  
+  /**
+   * Compute the convex hull using the Andrew's monotone chain convex hull algorithm
+   * 
+   * http://en.wikibooks.org/wiki/Algorithm_Implementation/Geometry/Convex_hull/Monotone_chain
+   */
+  def toConvexHull2:Polygon2D = {
+    
+    val sortedV = vertices.sortWith{(a,b) => 
+      val cmpX=a.x-b.x
+      (if (cmpX==0) a.y-b.y else cmpX) > 0
+    }
+    val size = sortedV.size
+    
+    if (size>=3) {
+      var k = 0
+      val rv = new Array[Vec2D](size*2)
+    
+      // Build lower hull
+      (0 until size).foreach(i => {
+        while (k >= 2 && Vec2D.cross(rv(k - 2), rv(k - 1), sortedV(i)) <= 0)
+          k -= 1
+        
+        rv(k) = sortedV(i)
+        k+=1
+      })
+      
+      // Build upper hull
+      val t = k+1
+      for (i<- (size-2) to 0 by -1) {
+        while (k >= t && Vec2D.cross(rv(k - 2), rv(k - 1), sortedV(i)) <= 0)
+          k-=1
+        rv(k) = sortedV(i)
+        k+=1
+      }
+      return new Polygon2D ( if (k > 1) rv.slice(0, k - 1) else rv)
+    }
+    this
+  }
+  
+  /**
+   * return the shortest distance to any edge of this polygon to the point
+   */
+  def sqrDistanceToPoint(p:Vec2D,ε:Double=Polygon2D.ε):Double = {
+    val size = vertices.size
+    var iPrev = size-1
+    var minDistance = Double.PositiveInfinity
+    (0 until size).foreach( i => {
+      val distance = FiniteLine2D.sqrDistanceToPoint(p, vertices(iPrev), vertices(i), ε)
+      if (distance < minDistance) minDistance = distance
+    })
+    minDistance
+  }
+  
+
+    
+  /**
+   * returns true if any of the edges of the other polygon intersects any edge of this polygon
+   * return false if 'this' or 'other' is completely contained inside the other polygon
+   */
+  def intersects(other:Polygon2D):Boolean = {
+    if (!bounds.intersects(other.bounds)) return false
+    val sizeThis = vertices.size
+    val sizeOther = other.vertices.size
+    val tV = this.vertices
+    val oV = other.vertices
+    var iPrev = sizeThis-1
+    var jPrev = sizeOther-1
+    (0 until sizeThis).foreach( i => {
+      val iV1 = tV(iPrev)
+      val iV2 = tV(i)
+      (0 until sizeOther).foreach( j => {
+        val jV1 = oV(jPrev)
+        val jV2 = oV(j)
+        if (FiniteLine2D.intersects(iV1, iV2, jV1, jV2)) return true
+        jPrev = j
+      })
+      iPrev = i
+    })
+    false
+  }
+  
   /*
    * ported from toxiclibs Polygon2D.
    */
@@ -133,7 +273,17 @@ class Polygon2D(val vertices:IndexedSeq[Vec2D], val ε:Double = Polygon2D.ε) {
     if ( minCenterDistanceSquared.isDefined && p.distanceToSquared(bounds) <= minCenterDistanceSquared.get) return centerIsInside
     else realContainsPoint(p)
   }
- 
+  
+  /**
+   * Returns a new Polygon2D with the vertex array shifted by one, just for testing purposes
+   */
+  def shift1:Polygon2D = {
+    val s = new collection.mutable.ArrayBuffer[Vec2D](vertices.size) 
+    s ++= vertices.drop(1)
+    s.append(vertices.head)
+    new Polygon2D(s)
+  }
+  
 }
 
 object Polygon2D {
