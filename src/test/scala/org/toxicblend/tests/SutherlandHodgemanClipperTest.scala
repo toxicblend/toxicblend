@@ -9,7 +9,9 @@ import org.toxicblend.operations.meshgenerator.vecmath.MutableVec2D
 import org.toxicblend.operations.meshgenerator.vecmath.Vec2D
 import org.toxicblend.operations.meshgenerator.vecmath.FiniteLine2D
 import toxi.geom.Polygon2D
-import org.toxicblend.attic.{CyclicTree,Payload}
+import org.toxicblend.operations.meshgenerator.vecmath.Payload
+import org.toxicblend.operations.meshgenerator.vecmath.CyclicTree
+
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.JavaConversions._
 

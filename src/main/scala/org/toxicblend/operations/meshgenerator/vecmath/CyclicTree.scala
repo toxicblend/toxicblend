@@ -1,11 +1,8 @@
-package org.toxicblend.attic
+package org.toxicblend.operations.meshgenerator.vecmath
 
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.Buffer
-import org.toxicblend.operations.meshgenerator.vecmath.ImmutableVec2D
-import org.toxicblend.operations.meshgenerator.vecmath.Vec2D
 import org.toxicblend.ToxicblendException
-//import scala.annotation.tailrec
 
 trait Tree {
  
@@ -54,7 +51,7 @@ trait Tree {
   }
   
 
-  protected[attic] def 
+  protected[vecmath] def 
   searchWithLimits(seq:IndexedSeq[Payload], searchAngle:Double, lowerLimit:Int, upperLimit:Int) : Option[(Int,Int)] = {
     if (searchAngle < seq(value.get).angle) {
       val l1 = left
@@ -122,6 +119,17 @@ class CyclicTree(val seq:IndexedSeq[Payload], private val tree:Tree, val clockwi
     }
   }
   
+  def getIntersectonPoint(searchAngle:Double, center:Vec2D):Option[Vec2D] = {
+    val interval = searchIntervalWithLimits(searchAngle)
+    if (interval.isDefined) {
+      val i1 = new InfiniteLine2D(center, center.add(Vec2D(searchAngle)))
+      val i2 = new InfiniteLine2D(interval.get._1.pos, interval.get._2.pos)
+      i1.intersectLine(i2)
+    } else {
+      None
+    }
+  }
+  
   override def toString = {
     tree.toSequence(seq).mkString(",")
   }
@@ -130,18 +138,16 @@ class CyclicTree(val seq:IndexedSeq[Payload], private val tree:Tree, val clockwi
 }
 
 object CyclicTree {
+  
   /**
    * http://en.wikipedia.org/wiki/Shoelace_formula
    * Returns true if the polygon is clockwise
    */
   def shoelace(seq:IndexedSeq[Payload]):Boolean = {
-    //var sum=0f
-    //for (i <- 0 until seq.size-1) sum += seq(i).pos.x*(seq(i+1).pos.y-seq(i+1).pos.x*seq(i).pos.x)
-    //sum += seq.last.pos.x*seq.head.pos.y - seq.head.pos.x*seq.last.pos.y
-    var sum2 = (0 until seq.size-1).foldLeft(0d) ((s,i)=>s+seq(i).pos.x*(seq(i+1).pos.y-seq(i+1).pos.x*seq(i).pos.x)) +
+    
+    var sum = (0 until seq.size-1).foldLeft(0d) ((s,i)=>s+seq(i).pos.x*(seq(i+1).pos.y-seq(i+1).pos.x*seq(i).pos.x)) +
                seq.last.pos.x*seq.head.pos.y - seq.head.pos.x*seq.last.pos.y
-    //if (sum != sum2) println("sum2differ " + sum + " " + sum2)
-    sum2 < 0
+    sum < 0
   }
   
   /**
@@ -170,8 +176,8 @@ object CyclicTree {
             rv(dest) = seq(i)
             dest+=1
           }
-          //println("clockwise=" + isClockwise + " largestAtPos=" + largestAtPos)
-          //println("converted=" + rv.map(v=>"" + "@" + v.angle*180d/math.Pi).mkString(","))
+          println("clockwise=" + isClockwise + " largestAtPos=" + largestAtPos)
+          println("converted=" + rv.map(v=>"" + "@" + v.angle*180d/math.Pi).mkString(","))
           (0 until rv.size).reduceLeft( (a,x) => if (rv(x).angle>rv(a).angle) throw new ToxicblendException("Non-convex shape?") else x)
           (rv,isClockwise)
         }
@@ -200,8 +206,17 @@ object CyclicTree {
     } else (seq, false)
   }
   
-  def apply(aSeq:IndexedSeq[Payload], inClockwise:Option[Boolean]=None):CyclicTree  = {
-    val (seq, clockwise) = inOrder(aSeq, inClockwise)
+  def apply(convexHull:Polygon2D, center:Vec2D):CyclicTree = {
+    val vertices = convexHull.vertices.map(p => {
+      val v = p.sub(center)
+      new Payload(angle=v.heading,distance=v.magnitude,p)
+    })
+    //assert(convexHull.isClockwise == shoelace(vertices)) // TODO: remove
+    this.apply(vertices)
+  }
+  
+  def apply(aSeq:IndexedSeq[Payload], inputIsClockwise:Option[Boolean]=None):CyclicTree  = {
+    val (seq, clockwise) = inOrder(aSeq, inputIsClockwise)
     //println(seq.map(p=>p.angle))
     val rootNode = if (seq.size > 0) {
       val centerPos = (seq.size-1)/2
