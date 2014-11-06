@@ -14,7 +14,8 @@ class CyclicTreeTest extends FlatSpec with Matchers {
     val data = Array(5d,6d,7d,8d,-1d,0d,1d,2d,3d,4d).map(p=>Payload(p))
     val tree = CyclicTree(data, Option(false))
     for ( x <- 0 until 8 ) {
-      val rv = tree.searchIntervalWithLimits(0.5+x)
+      val rv = tree.searchIntervalWithLimits(0.5+x.toDouble)
+      //println("searching for " + (0.5+x.toDouble) + " gave " + rv.get._1.angle + " to " + rv.get._2.angle)
       rv.isDefined should be (true)
       rv.get._1.angle should be (0.0 + x)
       rv.get._2.angle should be (1.0 + x)

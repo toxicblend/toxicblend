@@ -20,7 +20,7 @@ class Polygon2DTest extends FlatSpec with Matchers {
     val s = Array((100.0,200.0),(158.77852522924732,180.90169943749476),
                   (195.10565162951536,130.90169943749476),(195.10565162951536,100.0),
                   (300.0,100.0),(300.0,300.0),(100.0,300.0)).map(v=>Vec2D(v._1, v._2))
-    val p = new Polygon2D(s)
+    val p = Polygon2D(s)
     p.containsPoint(Vec2D(100,100)) should be (false)
   }
   
@@ -44,30 +44,72 @@ class Polygon2DTest extends FlatSpec with Matchers {
   
   "Polygon2DTest-4" should "test convexHull" in {
     var p = toPolygon2D(Seq((0,0),(3,0),(3,3),(1,1),(0,3)))
-    p.isConvex should be (false)
-    p.isSelfIntersecting should be (false)
     var c = p
     (0 until 6).foreach(i=>{
-      c = p.toConvexHull
+      p.isClockwise should be (false)
+      p.isConvex should be (false)
+      p.isSelfIntersecting should be (false)
+      
+      c = p.toConvexHull(Option(true))
       //println(c.vertices.mkString(","))
       c.size should be (4)
       c.isConvex should be (true)
       c.isClockwise should be (true)
+      
       p = p.shift1
     }) 
   }
   
-  "Polygon2DTest-5" should "test convexHull2" in {
-    var p = toPolygon2D(Seq((0,0),(3,0),(3,3),(1,1),(0,3)))
-    p.isConvex should be (false)
-    p.isSelfIntersecting should be (false)
+  "Polygon2DTest-5" should "test convexHull" in {
+    var p = toPolygon2D(Seq((0d,0d),(3d,0d),(3d,3d),(1d,1d),(0d,3d)).reverse)
     var c = p
     (0 until 6).foreach(i=>{
-      c = p.toConvexHull2
+      p.isClockwise should be (true)
+      p.isConvex should be (false)
+      p.isSelfIntersecting should be (false)
+      
+      c = p.toConvexHull(Option(false))
+      //println(c.vertices.mkString(","))
+      c.size should be (4)
+      c.isConvex should be (true)
+      c.isClockwise should be (false)
+      
+      p = p.shift1
+    }) 
+  }
+  
+  "Polygon2DTest-6" should "test convexHull2" in {
+    var p = toPolygon2D(Seq((0d,0d),(3d,0d),(3d,3d),(1d,1d),(0d,3d)))
+    var c = p
+    (0 until 6).foreach(i=>{
+      p.isClockwise should be (false)
+      p.isConvex should be (false)
+      p.isSelfIntersecting should be (false)
+      
+      c = p.toConvexHull2(Option(false))
+      //println(c.vertices.mkString(","))
+      c.size should be (4)
+      c.isConvex should be (true)
+      c.isClockwise should be (false)
+      
+      p = p.shift1
+    }) 
+  }
+  
+  "Polygon2DTest-7" should "test convexHull2" in {
+    var p = toPolygon2D(Seq((0d,0d),(3d,0d),(3d,3d),(1d,1d),(0d,3d)).reverse)
+    var c = p
+    (0 until 6).foreach(i=>{
+      p.isClockwise should be (true)
+      p.isConvex should be (false)
+      p.isSelfIntersecting should be (false)
+      
+      c = p.toConvexHull2(Option(true))
       //println(c.vertices.mkString(","))
       c.size should be (4)
       c.isConvex should be (true)
       c.isClockwise should be (true)
+      
       p = p.shift1
     }) 
   }
