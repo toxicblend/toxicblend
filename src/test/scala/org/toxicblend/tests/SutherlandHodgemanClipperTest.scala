@@ -8,7 +8,8 @@ import org.toxicblend.operations.meshgenerator.vecmath.ImmutableVec2D
 import org.toxicblend.operations.meshgenerator.vecmath.MutableVec2D
 import org.toxicblend.operations.meshgenerator.vecmath.Vec2D
 import org.toxicblend.operations.meshgenerator.vecmath.FiniteLine2D
-import toxi.geom.Polygon2D
+import org.toxicblend.operations.meshgenerator.vecmath.Polygon2D
+//import toxi.geom.{Polygon2D=>TPolygon2D}
 import org.toxicblend.operations.meshgenerator.vecmath.Payload
 import org.toxicblend.operations.meshgenerator.vecmath.CyclicTree
 
@@ -20,9 +21,14 @@ class SutherlandHodgemanClipperTest extends FlatSpec with Matchers {
   val tolerance = 0.0001d
   
   def indexByHeading(seq:IndexedSeq[Vec2D] ) : IndexedSeq[Vec2D] = {
-    val angleSequence = seq.map(v => new Payload(v.heading, 0, v) )
-    //println(a.map(p=>p.pos).mkString(","))
-    //println(a.map(p=>p.angle*180d/math.Pi).mkString(","))
+    //println("seq.isClockwise=" + Polygon2D.isClockwise(seq))
+    //println("seq.isSelfIntersecting=" + Polygon2D.isSelfIntersecting(seq))
+    val centroid = Polygon2D.getCentroid(seq)
+    //println("centroid=" + centroid)
+    val angleSequence = seq.map(v => new Payload(v.sub(centroid).heading, 0, v) )
+    //println(angleSequence.map(p=>p.pos).mkString(","))
+    //println(angleSequence.map(p=>"" + p.pos + "@" + p.angle*180d/math.Pi).mkString(","))
+    //println("isClockwise2=" + Polygon2D.isClockwise(angleSequence.map(p=>p.pos) ))
     val rv = CyclicTree.inOrder(angleSequence)._1.map( p => p.pos )
     //println(rv.map(v=>"" + v + "@" + v.heading*180d/math.Pi).mkString(","))
     rv
@@ -38,17 +44,17 @@ class SutherlandHodgemanClipperTest extends FlatSpec with Matchers {
    */
   "SutherlandHodgemanClipperTest-1" should "clip just fine" in {
     
-    val p0 = Vec2D(2,-1):Vec2D
-    val p1 = Vec2D(-1,-1):Vec2D
-    val p2 = Vec2D(-1,1):Vec2D
-    val p3 = Vec2D(2,1):Vec2D
-    val i0 = Vec2D(2,0):Vec2D
-    val i1 = Vec2D(1,-1):Vec2D
+    val p0 = Vec2D(2,-1)
+    val p1 = Vec2D(-1,-1)
+    val p2 = Vec2D(-1,1)
+    val p3 = Vec2D(2,1)
+    val i0 = Vec2D(2,0)
+    val i1 = Vec2D(1,-1)
     
     val iLine = new FiniteLine2D(i1, i0)
     val polygon = ArrayBuffer(p0, p1, p2, p3)
     
-    val clipped = indexByHeading(SutherlandHodgemanClipper.clip(polygon, iLine).toIndexedSeq)
+    val clipped = indexByHeading(SutherlandHodgemanClipper.clip(polygon, iLine, Polygon2D.ε).toIndexedSeq)
     //println(clipped.mkString(","))
     clipped.size should be (5)
     clipped.get(0) should be (p2)
@@ -79,7 +85,7 @@ class SutherlandHodgemanClipperTest extends FlatSpec with Matchers {
     val polygon = ArrayBuffer(p0, p1, p2, p3)
     val clipper = new SutherlandHodgemanClipper
     
-    val clipped = indexByHeading(clipper.clipPolygon(polygon, iLine).toIndexedSeq)
+    val clipped = indexByHeading(clipper.clipPolygon(polygon, iLine, Polygon2D.ε ).toIndexedSeq)
     //println("SutherlandHodgemanClipperTest-2: polygon=" + clipped.mkString(","))
     //println("SutherlandHodgemanClipperTest-2: clipline=" + iLine )
     //println("SutherlandHodgemanClipperTest-2: clipped=" + clipped.mkString(","))
@@ -94,7 +100,7 @@ class SutherlandHodgemanClipperTest extends FlatSpec with Matchers {
     
   /**
    * Rectangular, clockwise clipping 
-   *
+   
   "SutherlandHodgemanClipperTest-3" should "clip just fine" in {
     
     val p0 = Vec2D(1,-1)
@@ -112,7 +118,7 @@ class SutherlandHodgemanClipperTest extends FlatSpec with Matchers {
     }
     
     var iLine = new FiniteLine2D(p0, p1)
-    polygon = clipper.clipPolygon(polygon, iLine)
+    polygon = clipper.clipPolygon(polygon, iLine, Polygon2D.ε)
     if (trace) {
       println("iLine=" + iLine)
       println("polygon=" + polygon)
@@ -121,7 +127,7 @@ class SutherlandHodgemanClipperTest extends FlatSpec with Matchers {
     polygon.size should be (4)
     
     iLine = new FiniteLine2D(p1, p2)
-    polygon = clipper.clipPolygon(polygon, iLine)
+    polygon = clipper.clipPolygon(polygon, iLine, Polygon2D.ε)
     if (trace) {
       println("iLine=" + iLine)
       println("polygon=" + polygon)
@@ -130,7 +136,7 @@ class SutherlandHodgemanClipperTest extends FlatSpec with Matchers {
     polygon.size should be (4)
     
     iLine = new FiniteLine2D(p2, p3)
-    polygon = clipper.clipPolygon(polygon, iLine)
+    polygon = clipper.clipPolygon(polygon, iLine, Polygon2D.ε)
     if (trace) {
       println("iLine=" + iLine)
       println("polygon=" + polygon)
@@ -139,7 +145,7 @@ class SutherlandHodgemanClipperTest extends FlatSpec with Matchers {
     polygon.size should be (4)
     
     iLine = new FiniteLine2D(p3, p0)
-    polygon = clipper.clipPolygon(polygon, iLine)
+    polygon = clipper.clipPolygon(polygon, iLine, Polygon2D.ε)
     if (trace) {
       println("iLine=" + iLine)
       println("polygon=" + polygon)
@@ -158,10 +164,11 @@ class SutherlandHodgemanClipperTest extends FlatSpec with Matchers {
     rv.get(2) should be (p0)
     rv.get(3) should be (p1)
   }
+  */
   
-  **
+  /**
    * Rectangular, counter-clockwise clipping 
-   *
+   
   "SutherlandHodgemanClipperTest-4" should "clip just fine" in {
     
     val p0 = Vec2D(1,-1)
@@ -179,7 +186,7 @@ class SutherlandHodgemanClipperTest extends FlatSpec with Matchers {
     }
     
     var iLine = new FiniteLine2D(p0, p1)
-    polygon = clipper.clipPolygon(polygon, iLine)
+    polygon = clipper.clipPolygon(polygon, iLine, Polygon2D.ε)
     if (trace) {
       println("iLine=" + iLine)
       println("polygon=" + polygon)
@@ -188,7 +195,7 @@ class SutherlandHodgemanClipperTest extends FlatSpec with Matchers {
     polygon.size should be (4)
     
     iLine = new FiniteLine2D(p1, p2)
-    polygon = clipper.clipPolygon(polygon, iLine)
+    polygon = clipper.clipPolygon(polygon, iLine, Polygon2D.ε)
     if (trace) {
       println("iLine=" + iLine)
       println("polygon=" + polygon)
@@ -197,7 +204,7 @@ class SutherlandHodgemanClipperTest extends FlatSpec with Matchers {
     polygon.size should be (4)
     
     iLine = new FiniteLine2D(p2, p3)
-    polygon = clipper.clipPolygon(polygon, iLine)
+    polygon = clipper.clipPolygon(polygon, iLine, Polygon2D.ε)
     if (trace) {
       println("iLine=" + iLine)
       println("polygon=" + polygon)
@@ -206,7 +213,7 @@ class SutherlandHodgemanClipperTest extends FlatSpec with Matchers {
     polygon.size should be (4)
     
     iLine = new FiniteLine2D(p3, p0)
-    polygon = clipper.clipPolygon(polygon, iLine)
+    polygon = clipper.clipPolygon(polygon, iLine, Polygon2D.ε)
     if (trace) {
       println("iLine=" + iLine)
       println("polygon=" + polygon)
@@ -222,10 +229,10 @@ class SutherlandHodgemanClipperTest extends FlatSpec with Matchers {
     rv.get(2) should be (p3)
     rv.get(3) should be (p2)
   }
-  
-  **
+  */
+  /**
    *  Rectangular, counter-clockwise, coincident clipping 
-   *
+   
   "SutherlandHodgemanClipperTest-5" should "clip counter-clockwise, coincident polygons" in {
     
     val p0 = Vec2D(1,-1)
@@ -241,25 +248,25 @@ class SutherlandHodgemanClipperTest extends FlatSpec with Matchers {
     //println
     
     var iLine = new FiniteLine2D(p0, p1)
-    polygon = clipper.clipPolygon(polygon, iLine)
+    polygon = clipper.clipPolygon(polygon, iLine, Polygon2D.ε)
     //println(iLine)
     //println(polygon)
     //println
     
     iLine = new FiniteLine2D(p1, p2)
-    polygon = clipper.clipPolygon(polygon, iLine)
+    polygon = clipper.clipPolygon(polygon, iLine, Polygon2D.ε)
     //println(iLine)
     //println(polygon)
     //println
     
     iLine = new FiniteLine2D(p2, p3)
-    polygon = clipper.clipPolygon(polygon, iLine)
+    polygon = clipper.clipPolygon(polygon, iLine, Polygon2D.ε)
     //println(iLine)
     //println(polygon)
     //println
     
     iLine = new FiniteLine2D(p3, p0)
-    polygon = clipper.clipPolygon(polygon, iLine)
+    polygon = clipper.clipPolygon(polygon, iLine, Polygon2D.ε)
     //println(iLine)
     //println(polygon)
     //println
@@ -272,10 +279,10 @@ class SutherlandHodgemanClipperTest extends FlatSpec with Matchers {
     rv.get(2) should be (p3)
     rv.get(3) should be (p2)
   }
-  
-  **
+  */
+  /**
    *  Rectangular, coincident, clockwise clipping 
-   *
+   
   "SutherlandHodgemanClipperTest-6" should "clip clockwise, coincident polygons" in {
     
     val p0 = Vec2D(1,-1)
@@ -290,25 +297,25 @@ class SutherlandHodgemanClipperTest extends FlatSpec with Matchers {
     //println
     
     var iLine = new FiniteLine2D(p0, p1)
-    polygon = clipper.clipPolygon(polygon, iLine)
+    polygon = clipper.clipPolygon(polygon, iLine, Polygon2D.ε)
     //println(iLine)
     //println(polygon)
     //println
     
     iLine = new FiniteLine2D(p1, p2)
-    polygon = clipper.clipPolygon(polygon, iLine)
+    polygon = clipper.clipPolygon(polygon, iLine, Polygon2D.ε)
     //println(iLine)
     //println(polygon)
     //println
     
     iLine = new FiniteLine2D(p2, p3)
-    polygon = clipper.clipPolygon(polygon, iLine)
+    polygon = clipper.clipPolygon(polygon, iLine, Polygon2D.ε)
     //println(iLine)
     //println(polygon)
     //println
     
     iLine = new FiniteLine2D(p3, p0)
-    polygon = clipper.clipPolygon(polygon, iLine)
+    polygon = clipper.clipPolygon(polygon, iLine, Polygon2D.ε)
     //println(iLine)
     //println(polygon)
     //println
@@ -321,9 +328,7 @@ class SutherlandHodgemanClipperTest extends FlatSpec with Matchers {
     rv.get(2) should be (p0)
     rv.get(3) should be (p1)
   }
- 
   */
-  
   /**
    *  Rectangular clipping from http://rosettacode.org/wiki/Sutherland-Hodgman_polygon_clipping
    */
@@ -343,7 +348,7 @@ class SutherlandHodgemanClipperTest extends FlatSpec with Matchers {
     //println
     val clipped = clipEdges.sliding(2).foldLeft(polygon:IndexedSeq[Vec2D])((x,e) => {
       val edge = new FiniteLine2D(e.head, e.last)
-      val p = SutherlandHodgemanClipper.clip(x, edge)
+      val p = SutherlandHodgemanClipper.clip(x, edge, Polygon2D.ε)
       //println("clipped with : " + edge)
       //println("result : " + p)
       p
