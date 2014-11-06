@@ -1,11 +1,13 @@
 package org.toxicblend.operations.meshgenerator.vecmath
 
+//import scala.collection.immutable.IndexedSeq
+
 /**
  * A 2 dimensional polygon representation.
  * Any point within ε distance from an edge is considered 'inside' the polygon
  */
-class Polygon2D(val vertices:IndexedSeq[Vec2D], val ε:Double = Polygon2D.ε) {
-  val size = vertices.size
+class Polygon2D protected (val vertices:IndexedSeq[Vec2D], val ε:Double = Polygon2D.ε) extends Iterable[Vec2D]{
+  override val size = vertices.size
    
   lazy val bounds = AABB2D(vertices)
   
@@ -16,14 +18,14 @@ class Polygon2D(val vertices:IndexedSeq[Vec2D], val ε:Double = Polygon2D.ε) {
     var rv = Double.PositiveInfinity
     
     (0 until size).foreach(current=>{
-      val d = FiniteLine2D.sqrDistanceToPoint(center, vertices(prev), vertices(current))
-      if (d < rv) rv = d
+      val distance = FiniteLine2D.sqrDistanceToPoint(center, vertices(prev), vertices(current))
+      if (distance < rv) rv = distance
       prev = current
     })
-    (Option(rv), realContainsPoint(center) )
+    (rv, realContainsPoint(center) )
   }
   
-  def toIndexedSeq = vertices
+  def iterator = vertices.iterator
   
   /**
    * Computes the area of the polygon, provided it isn't self intersecting.
@@ -32,18 +34,7 @@ class Polygon2D(val vertices:IndexedSeq[Vec2D], val ε:Double = Polygon2D.ε) {
    * 
    * @return polygon area
    */
-  def getArea:Double = {
-    val size = vertices.size
-    var area = 0d
-    var prev = size-1
-    (0 until size).foreach( current=> {
-        val v = vertices(prev)      // == v(i)
-        val vp1 = vertices(current) // == v(i+1)
-        area += v.x * vp1.y - vp1.x * v.y 
-        prev = current
-    })
-    area*0.5d
-  }
+  def getArea:Double = Polygon2D.getArea(vertices)
   
   /**
    * Computes the centroid of the polygon
@@ -51,55 +42,16 @@ class Polygon2D(val vertices:IndexedSeq[Vec2D], val ε:Double = Polygon2D.ε) {
    * 
    * @return polygon centroid
    */
-  def getCentroid:Vec2D = {
-    val size = vertices.size
-    var area = 0d
-    var cx = 0d
-    var cy = 0d
-    
-    var prev = size-1
-    (0 until size).foreach ( current=> {
-        val v = vertices(prev)      // == x(i)  
-        val vp1 = vertices(current) // == x(i+1)
-        
-        area += v.x * vp1.y - vp1.x * v.y
-        val m = v.x*vp1.y-vp1.x*v.y
-        cx += (v.x + vp1.x) * m
-        cy += (v.y + vp1.y) * m
-        prev = current
-    })
-    area = area*0.5d
-    //assert(area == getArea, "area:" + area + " != " + "getArea:" + getArea)
-    Vec2D(cx/(6d*area), cy/(6d*area))
-  }
+  def getCentroid = Polygon2D.getCentroid(vertices) 
   
   /**
    * Returns true if the polygon is clockwise
    * Code ported from: http://paulbourke.net/geometry/polygonmesh/
-   * (0,0),(1,0),(0,1) is, imho, a clockwise polygon
+   * (0,0),(0,1),(1,0) is, imho, a clockwise 2D polygon
    */
-  def isClockwise = getArea > 0d
+  def isClockwise = Polygon2D.isClockwise(vertices)
   
-  def isSelfIntersecting:Boolean = {
-    val size = vertices.size
-    if (size < 4) return false
-    var iPrev = size-1
-    var jPrev = 0
-    (0 until size).foreach( i => {
-      (i+2 until size).foreach(j => {
-        
-        jPrev = (j + size -1) % size
-        if (j!=i && j!=iPrev && jPrev!=i && jPrev!=iPrev)
-          if (FiniteLine2D.intersects(vertices(iPrev), vertices(i), vertices(jPrev), vertices(j))) {
-            //println("" + iPrev + "->" + i + " intersects " + jPrev + "->" +j )
-            //println("" + FiniteLine2D(vertices(iPrev), vertices(i)) + " intersects " + FiniteLine2D(vertices(jPrev), vertices(j)))
-            return true
-          } //else println("" + iPrev + "->" + i + " does not intersect " + jPrev + "->" +j )
-      })
-      iPrev = i
-    })
-    false
-  }
+  def isSelfIntersecting = Polygon2D.isSelfIntersecting(vertices)
   
   /**
    * Checks if the polygon is convex.
@@ -107,97 +59,14 @@ class Polygon2D(val vertices:IndexedSeq[Vec2D], val ε:Double = Polygon2D.ε) {
    * 
    * @return true, if convex.
    */
-  def isConvex:Boolean = {
-    var isPositive = false
-    val size = vertices.size
-    var prev = size-2
-    var i = size-1
-    (0 until size).foreach(next => {
-        //println("prev="+prev+" i="+i+" next="+next)
-        val d0 = vertices(i).sub(vertices(prev))
-        val d1 = vertices(next).sub(vertices(i))
-        val newIsP = d0.cross(d1) > 0
-        if (next == 0) isPositive = newIsP
-        else if (isPositive != newIsP) return false
-        prev = i
-        i = next
-    })
-    return true;
-  }
+  def isConvex:Boolean = Polygon2D.isConvex(vertices)
   
-  /**
-   * compute the convex hull using the gift wrapping algorithm
-   * http://en.wikipedia.org/wiki/Gift_wrapping_algorithm
-   * 
-   * pointOnHull = leftmost point in S
-   * i = 0
-   * repeat
-   *    P[i] = pointOnHull
-   *    endpoint = S[0]         // initial endpoint for a candidate edge on the hull
-   *    for j from 1 to |S|
-   *       if (endpoint == pointOnHull) or (S[j] is on left of line from P[i] to endpoint)
-   *          endpoint = S[j]   // found greater left turn, update endpoint
-   *    i = i+1
-   *    pointOnHull = endpoint
-   *  until endpoint == P[0]      // wrapped around to first hull point
-   */
-  def toConvexHull:Polygon2D = {
-    
-    var pointOnHull = vertices.foldLeft(vertices.head)((b,a) => if (a.x < b.x) a else b)
-    var endPoint = pointOnHull
-    val rv = new collection.mutable.ArrayBuffer[Vec2D](1)
-    val size = this.vertices.size
-       
-    do {
-      rv.append(pointOnHull)
-      (0 until size).foreach(j=>{
-          if (endPoint==pointOnHull) endPoint=vertices(j)
-          else 
-            if (Vec2D.cross(rv.last, endPoint, vertices(j)) < 0d) endPoint = vertices(j)
-        })
-      pointOnHull = endPoint
-    } while (endPoint!=rv(0))
-    new Polygon2D(rv)
-  }
   
-  /**
-   * Compute the convex hull using the Andrew's monotone chain convex hull algorithm
-   * 
-   * http://en.wikibooks.org/wiki/Algorithm_Implementation/Geometry/Convex_hull/Monotone_chain
-   */
-  def toConvexHull2:Polygon2D = {
+  def toConvexHull(forceClockwise:Option[Boolean]=None):Polygon2D = 
+    Polygon2D(Polygon2D.toConvexHull(vertices, forceClockwise))
     
-    val sortedV = vertices.sortWith{(a,b) => 
-      val cmpX=a.x-b.x
-      (if (cmpX==0) a.y-b.y else cmpX) > 0
-    }
-    val size = sortedV.size
-    
-    if (size>=3) {
-      var k = 0
-      val rv = new Array[Vec2D](size*2)
-    
-      // Build lower hull
-      (0 until size).foreach(i => {
-        while (k >= 2 && Vec2D.cross(rv(k - 2), rv(k - 1), sortedV(i)) <= 0)
-          k -= 1
-        
-        rv(k) = sortedV(i)
-        k+=1
-      })
-      
-      // Build upper hull
-      val t = k+1
-      for (i<- (size-2) to 0 by -1) {
-        while (k >= t && Vec2D.cross(rv(k - 2), rv(k - 1), sortedV(i)) <= 0)
-          k-=1
-        rv(k) = sortedV(i)
-        k+=1
-      }
-      return new Polygon2D ( if (k > 1) rv.slice(0, k - 1) else rv)
-    }
-    this
-  }
+  def toConvexHull2(forceClockwise:Option[Boolean]=None):Polygon2D = 
+    Polygon2D(Polygon2D.toConvexHull2(vertices, forceClockwise))
   
   /**
    * return the shortest distance to any edge of this polygon to the point
@@ -212,9 +81,7 @@ class Polygon2D(val vertices:IndexedSeq[Vec2D], val ε:Double = Polygon2D.ε) {
     })
     minDistance
   }
-  
-
-    
+      
   /**
    * returns true if any of the edges of the other polygon intersects any edge of this polygon
    * return false if 'this' or 'other' is completely contained inside the other polygon
@@ -268,9 +135,14 @@ class Polygon2D(val vertices:IndexedSeq[Vec2D], val ε:Double = Polygon2D.ε) {
     oddNodes
   }
   
+  /**
+   * returns a new polygon with reversed vertex order
+   */
+  def reverse:Polygon2D = new Polygon2D(vertices.reverse) 
+  
   def containsPoint(p:Vec2D):Boolean = {
     if ( ! bounds.containsPoint(p) ) return false
-    if ( minCenterDistanceSquared.isDefined && p.distanceToSquared(bounds) <= minCenterDistanceSquared.get) return centerIsInside
+    if ( p.distanceToSquared(bounds) <= minCenterDistanceSquared) return centerIsInside
     else realContainsPoint(p)
   }
   
@@ -289,25 +161,194 @@ class Polygon2D(val vertices:IndexedSeq[Vec2D], val ε:Double = Polygon2D.ε) {
 object Polygon2D {
   val ε = 0.00000001
   
-  def apply(vertices:IndexedSeq[Vec2D], ε:Double = Polygon2D.ε) = {
+  def getArea(vertices:IndexedSeq[Vec2D]):Double = {
+    val size = vertices.size
+    var area = 0d
+    var prev = size-1
+    (0 until size).foreach( current=> {
+        val v = vertices(prev)      // == v(i)
+        val vp1 = vertices(current) // == v(i+1)
+        area += v.x * vp1.y - vp1.x * v.y 
+        prev = current
+    })
+    area*0.5d
+  }
+  
+  def isClockwise(vertices:IndexedSeq[Vec2D]) = getArea(vertices) < 0d
+  
+  def isSelfIntersecting(vertices:IndexedSeq[Vec2D]):Boolean = {
+    val size = vertices.size
+    if (size < 4) return false
+    var iPrev = size-1
+    var jPrev = 0
+    (0 until size).foreach( i => {
+      (i+2 until size).foreach(j => {
+        
+        jPrev = (j + size -1) % size
+        if (j!=i && j!=iPrev && jPrev!=i && jPrev!=iPrev)
+          if (FiniteLine2D.intersects(vertices(iPrev), vertices(i), vertices(jPrev), vertices(j))) {
+            //println("" + iPrev + "->" + i + " intersects " + jPrev + "->" +j )
+            //println("" + FiniteLine2D(vertices(iPrev), vertices(i)) + " intersects " + FiniteLine2D(vertices(jPrev), vertices(j)))
+            return true
+          } //else println("" + iPrev + "->" + i + " does not intersect " + jPrev + "->" +j )
+      })
+      iPrev = i
+    })
+    false
+  }
+  
+  def getCentroid(vertices:IndexedSeq[Vec2D]):Vec2D = {
+    val size = vertices.size
+    var area = 0d
+    var cx = 0d
+    var cy = 0d
+    
+    var prev = size-1
+    (0 until size).foreach ( current=> {
+        val v = vertices(prev)      // == x(i)  
+        val vp1 = vertices(current) // == x(i+1)
+        
+        area += v.x * vp1.y - vp1.x * v.y
+        val m = v.x*vp1.y-vp1.x*v.y
+        cx += (v.x + vp1.x) * m
+        cy += (v.y + vp1.y) * m
+        prev = current
+    })
+    area = area*0.5d
+    //assert(area == getArea, "area:" + area + " != " + "getArea:" + getArea)
+    Vec2D(cx/(6d*area), cy/(6d*area))
+  }
+  
+  def isConvex(vertices:IndexedSeq[Vec2D]):Boolean = {
+    var isPositive = false
+    val size = vertices.size
+    var prev = size-2
+    var i = size-1
+    (0 until size).foreach(next => {
+        //println("prev="+prev+" i="+i+" next="+next)
+        val d0 = vertices(i).sub(vertices(prev))
+        val d1 = vertices(next).sub(vertices(i))
+        val newIsP = d0.cross(d1) > 0
+        if (next == 0) isPositive = newIsP
+        else if (isPositive != newIsP) return false
+        prev = i
+        i = next
+    })
+    return true
+  }
+  
+  private def dropConsecutiveDoubles(vertices:IndexedSeq[Vec2D], ε:Double):IndexedSeq[Vec2D] = {
     
     def containsIdenticalConsecutivePoints:Boolean = {
-      vertices.sliding(2).foreach( v=> {
-        if (v(0).=~=(v(1),ε)) return true 
+      val size = vertices.size
+      var prev = size-1
+      (0 until size).foreach( next => {
+        if (vertices(next).=~=(vertices(prev),ε)) return true 
+        prev = next
       })
       false 
     }
+    
     if (vertices.size >= 2 && containsIdenticalConsecutivePoints) {
       val buffer = new collection.mutable.ArrayBuffer[Vec2D](vertices.size-1)
       buffer.append(vertices.head)
       (1 until vertices.size).foreach(i=> {
         if (! vertices(i).=~=(buffer.last, ε)) {
           buffer.append(vertices(i))
+        } else {
+          println("Polygon2D.dropConsecutiveDoubles: removed one superfluous vertex:" + vertices(i))
+          println("Polygon2D.dropConsecutiveDoubles: input was: " + vertices)
         }
       })
-      new Polygon2D(buffer,ε)
+      if (buffer.head.=~=(buffer.last, ε)) {
+        println("Polygon2D.dropConsecutiveDoubles removed one superfluous vertex from the end:" + buffer.last)
+        buffer.remove(buffer.size-1)
+        println("Polygon2D.dropConsecutiveDoubles: result: " + buffer)
+      }
+      return buffer
     } else {
-      new Polygon2D(vertices,ε)
+      vertices
     } 
   }
+  
+  /**
+   * compute the convex hull using the gift wrapping algorithm
+   * http://en.wikipedia.org/wiki/Gift_wrapping_algorithm
+   * 
+   * pointOnHull = leftmost point in S
+   * i = 0
+   * repeat
+   *    P[i] = pointOnHull
+   *    endpoint = S[0]         // initial endpoint for a candidate edge on the hull
+   *    for j from 1 to |S|
+   *       if (endpoint == pointOnHull) or (S[j] is on left of line from P[i] to endpoint)
+   *          endpoint = S[j]   // found greater left turn, update endpoint
+   *    i = i+1
+   *    pointOnHull = endpoint
+   *  until endpoint == P[0]      // wrapped around to first hull point
+   */
+  def toConvexHull(vertices:IndexedSeq[Vec2D], forceClockwise:Option[Boolean]=None):IndexedSeq[Vec2D] = {
+    
+    var pointOnHull = vertices.foldLeft(vertices.head)((b,a) => if (a.x < b.x) a else b)
+    var endPoint = pointOnHull
+    val rv = new collection.mutable.ArrayBuffer[Vec2D](1)
+    val size = vertices.size
+       
+    do {
+      rv.append(pointOnHull)
+      (0 until size).foreach(j=>{
+          if (endPoint==pointOnHull) endPoint=vertices(j)
+          else 
+            if (Vec2D.cross(rv.last, endPoint, vertices(j)) < 0d) endPoint = vertices(j)
+        })
+      pointOnHull = endPoint
+    } while (endPoint!=rv(0))
+      
+    if (forceClockwise.isDefined && forceClockwise.get!=Polygon2D.isClockwise(rv)) return rv.reverse
+    rv
+  }
+  
+  /**
+   * Compute the convex hull using the Andrew's monotone chain convex hull algorithm
+   * 
+   * http://en.wikibooks.org/wiki/Algorithm_Implementation/Geometry/Convex_hull/Monotone_chain
+   */
+  def toConvexHull2(vertices:IndexedSeq[Vec2D], forceClockwise:Option[Boolean]=None):IndexedSeq[Vec2D] = {
+    
+    val sortedVertices = vertices.sortWith{(a,b) => 
+      val cmpX=a.x-b.x
+      (if (cmpX==0) a.y-b.y else cmpX) > 0
+    }
+    val size = sortedVertices.size
+    
+    if (size>3) {
+      var k = 0
+      val a = new Array[Vec2D](size*2)
+    
+      // Build lower hull
+      (0 until size).foreach(i => {
+        while (k >= 2 && Vec2D.cross(a(k - 2), a(k - 1), sortedVertices(i)) <= 0)
+          k -= 1
+        
+        a(k) = sortedVertices(i)
+        k+=1
+      })
+      
+      // Build upper hull
+      val t = k+1
+      for (i<- (size-2) to 0 by -1) {
+        while (k >= t && Vec2D.cross(a(k - 2), a(k - 1), sortedVertices(i)) <= 0)
+          k-=1
+        a(k) = sortedVertices(i)
+        k+=1
+      }
+      val rv = if (k > 1) a.slice(0, k - 1) else a
+      if (forceClockwise.isDefined && forceClockwise.get!=Polygon2D.isClockwise(rv)) return rv.reverse
+      rv
+    } else 
+      return vertices
+  }
+  
+  def apply(vertices:IndexedSeq[Vec2D], ε:Double = Polygon2D.ε) = new Polygon2D(dropConsecutiveDoubles(vertices,ε))
+
 }
