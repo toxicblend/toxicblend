@@ -44,8 +44,8 @@ class WeilerAthertonClipper( private val subjectList:DoubleLinkedList[VertexInfo
       @inline def findIntersections3(s1:DoubleLinkedListElement[VertexInfo]) = {       
         //println("c=" + c1.data.v + " -> " + c2.data.v  + "   s=" + s1.data.v + " -> " + s2.data.v )
         if (c1.data.v == s1.data.v) {
-          //println("same point c: " + c)
-          //println("same point s: " + s + "\n")
+          //println("same point c: " + c1)
+          //println("same point s: " + s1 + "\n")
           //assert(c1.data.otherList.get.eq(s))
           //assert(s.data.otherList.get.eq(c1))
         }
@@ -234,10 +234,10 @@ class WeilerAthertonClipper( private val subjectList:DoubleLinkedList[VertexInfo
             (nextSIntersection,false)
           }
         } else {
-          println("wtf?")
-          println("subjectPolygon=" + subjectPolygon.vertices.mkString(","))
-          println("clipPolygon=" + clipPolygon.vertices.mkString(","))
-          println("generated a bobo, list should end here")
+          //println("wtf?")
+          //println("subjectPolygon=" + subjectPolygon.vertices.mkString(","))
+          //println("clipPolygon=" + clipPolygon.vertices.mkString(","))
+          //println("generated a bobo, list should end here")
           val nextCIntersection = findNextIntersection(prevSI.data.otherList.get, CLIP_LIST)
           (nextCIntersection.data.otherList.get,true)
         }
@@ -259,7 +259,7 @@ class WeilerAthertonClipper( private val subjectList:DoubleLinkedList[VertexInfo
   /**
    * find segments in between intersection points and determine if the segment is inside or outside the clipping polygon
    */
-  protected def filter2:IndexedSeq[IndexedSeq[Vec2D]] = {
+  protected def filter:IndexedSeq[IndexedSeq[Vec2D]] = {
     
     val usedSubjectIntersections = new collection.mutable.HashSet[DoubleLinkedListElement[VertexInfo]]
     val numberOfIntersections = countNumberOfIntersections
@@ -368,7 +368,7 @@ class WeilerAthertonClipper( private val subjectList:DoubleLinkedList[VertexInfo
       //println("3-clip:" + clipList.map(i => i.data.v.toIntString + b2s(i.data.isIntersection)).mkString(","))
         
       // step 3: filter out "in between" intersection segments that are outside the clip polygon
-      filter2
+      filter
     } else {
       // no intersections found
       if (clipPolygon.containsPoint(subjectEdges.head)) IndexedSeq[IndexedSeq[Vec2D]](subjectEdges)
