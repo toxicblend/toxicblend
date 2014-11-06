@@ -138,26 +138,15 @@ class CyclicTree(val seq:IndexedSeq[Payload], private val tree:Tree, val clockwi
 }
 
 object CyclicTree {
-  
-  /**
-   * http://en.wikipedia.org/wiki/Shoelace_formula
-   * Returns true if the polygon is clockwise
-   */
-  def shoelace(seq:IndexedSeq[Payload]):Boolean = {
     
-    var sum = (0 until seq.size-1).foldLeft(0d) ((s,i)=>s+seq(i).pos.x*(seq(i+1).pos.y-seq(i+1).pos.x*seq(i).pos.x)) +
-               seq.last.pos.x*seq.head.pos.y - seq.head.pos.x*seq.last.pos.y
-    sum < 0
-  }
-  
   /**
    * makes sure the elements of the sequence are in order. Cyclic ordering is not altered
    * @param clockwise: if the ordering is known it can be specified here, if not - use None and it will be calculated
    */
   def inOrder(seq:IndexedSeq[Payload], clockwise:Option[Boolean]=None) : (IndexedSeq[Payload],Boolean) = {
     if (seq.size > 0) {
-      val isClockwise = if (clockwise.isDefined) clockwise.get else shoelace(seq)
-      //println("clockwise=" + isClockwise )
+      val isClockwise = if (clockwise.isDefined) clockwise.get else Polygon2D.isClockwise(seq.map(p=>p.pos))
+      //println("inOrder:clockwise=" + isClockwise )
       //println("original=" + seq.map(v=> "@" + v.angle).mkString(","))
           
       if (isClockwise) {
@@ -166,18 +155,16 @@ object CyclicTree {
         if (largestAtPos == 0) {
           (seq,isClockwise)
         } else {
-          val rv = new Array[Payload](seq.size)
-          var dest = 0
-          for (i <- largestAtPos until seq.size) {
-            rv(dest) = seq(i)
-            dest+=1
+          val rv =  seq.slice(largestAtPos, seq.size) ++ seq.slice(0, largestAtPos)
+          //println("clockwise=" + isClockwise + " largestAtPos was " + largestAtPos)
+          if (false){
+            println("seq=" + seq.map(v=>"" + "@" + v.angle*180d/math.Pi).mkString(","))
+            println("rv=" + rv.map(v=>"" + "@" + v.angle*180d/math.Pi).mkString(","))
           }
-          for (i <- 0 until largestAtPos) {
-            rv(dest) = seq(i)
-            dest+=1
+          if (false) {
+            println("seq=" + seq.map(v=>"" + "@" + v.angle).mkString(","))
+            println("rv=" + rv.map(v=>"" + "@" + v.angle).mkString(","))
           }
-          println("clockwise=" + isClockwise + " largestAtPos=" + largestAtPos)
-          println("converted=" + rv.map(v=>"" + "@" + v.angle*180d/math.Pi).mkString(","))
           (0 until rv.size).reduceLeft( (a,x) => if (rv(x).angle>rv(a).angle) throw new ToxicblendException("Non-convex shape?") else x)
           (rv,isClockwise)
         }
@@ -187,18 +174,16 @@ object CyclicTree {
         if (smallestAtPos == 0) {
           (seq,isClockwise)
         } else {
-          val rv = new Array[Payload](seq.size)
-          var dest = 0
-          for (i <- smallestAtPos until seq.size) {
-            rv(dest) = seq(i)
-            dest+=1
+          val rv =  seq.slice(smallestAtPos, seq.size) ++ seq.slice(0, smallestAtPos)
+          //println("clockwise=" + isClockwise + " smallestAtPos was " + smallestAtPos)
+          if (false){
+            println("seq=" + seq.map(v=>"" + "@" + v.angle*180d/math.Pi).mkString(","))
+            println("rv=" + rv.map(v=>"" + "@" + v.angle*180d/math.Pi).mkString(","))
           }
-          for (i <- 0 until smallestAtPos) {
-            rv(dest) = seq(i)
-            dest+=1
+          if (false) {
+            println("seq=" + seq.map(v=>"" + "@" + v.angle).mkString(","))
+            println("rv=" + rv.map(v=>"" + "@" + v.angle).mkString(","))
           }
-          //println("clockwise=" + isClockwise + " smallestAtPos=" + smallestAtPos)
-          //println("converted=" + rv.map(v=>"" + "@" + v.angle).mkString(","))
           (0 until rv.size).reduceLeft( (a,x) => if (rv(x).angle<rv(a).angle) throw new ToxicblendException("Non-convex shape?") else x)
           (rv,isClockwise)
         }
@@ -207,11 +192,11 @@ object CyclicTree {
   }
   
   def apply(convexHull:Polygon2D, center:Vec2D):CyclicTree = {
+    
     val vertices = convexHull.vertices.map(p => {
       val v = p.sub(center)
       new Payload(angle=v.heading,distance=v.magnitude,p)
     })
-    //assert(convexHull.isClockwise == shoelace(vertices)) // TODO: remove
     this.apply(vertices)
   }
   
