@@ -30,7 +30,7 @@ class ToxicBlend_GenerateMesh(bpy.types.Operator):
   bl_label = "Toxicblend:GenerateMesh"
   bl_options = {'REGISTER', 'UNDO'}  # enable undo for the operator.
   subdivisionProperty = bpy.props.IntProperty(name="sub divisions", description="The number of sub divisions", default=5, min=1, max=100)
-  radiusProperty = bpy.props.FloatProperty(name="Radius [mm]", description="The radius of the curvature (in mm)", default=2.0, min=0.0, max=10000.0)
+  angleProperty = bpy.props.FloatProperty(name="arc angle [degrees]", description="The angle of the curvature (in degrees)", default=60.0, min=0.0001, max=90.0)
   useMultiThreadingProperty = bpy.props.EnumProperty(
     description="Each continous ring segment will be processed in a separate thread",
     name="Use mulithreading algorithm",
@@ -50,7 +50,7 @@ class ToxicBlend_GenerateMesh(bpy.types.Operator):
         activeObject = context.scene.objects.active
         properties = {'useMultiThreading' : self.useMultiThreadingProperty,
                       'subdivisions'      : str(self.subdivisionProperty),
-                      'radius'            : str(self.radiusProperty),
+                      'angle'             : str(self.angleProperty),
                       'unitSystem'        : str(unitSystemProperty.system), 
                       'unitScale'         : str(unitSystemProperty.scale_length) }
                      
