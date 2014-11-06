@@ -38,7 +38,7 @@ class AABB2D (val min:Vec2D, val max:Vec2D) extends ImmutableVec2D((max.x-min.x)
     if (clockwise) IndexedSeq(Vec2D(max.x, max.y), Vec2D(min.x, max.y), Vec2D(min.x, min.y),Vec2D(max.x, min.y))
     else IndexedSeq(Vec2D(max.x, max.y), Vec2D(max.x, min.y), Vec2D(min.x, min.y), Vec2D(min.x, max.y))
     
-  def toPolygon2D(clockwise:Boolean=false)=new Polygon2D(toIndexedSeq(clockwise))
+  def toPolygon2D(clockwise:Boolean=false)=Polygon2D(toIndexedSeq(clockwise))
 }
 
 object AABB2D {
