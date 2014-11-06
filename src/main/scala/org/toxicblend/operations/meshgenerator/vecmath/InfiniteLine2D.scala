@@ -2,7 +2,7 @@ package org.toxicblend.operations.meshgenerator.vecmath
 
 class InfiniteLine2D(val a:Vec2D, val b:Vec2D) {
   
-  def intersectLine(l:FiniteLine2D): Option[Vec2D] = {
+  def intersectLine(l:InfiniteLine2D): Option[Vec2D] = {
     val denom = (l.b.y - l.a.y) * (b.x - a.x) - (l.b.x - l.a.x) * (b.y - a.y)
     val na = (l.b.x - l.a.x) * (a.y - l.a.y) - (l.b.y - l.a.y) * (a.x - l.a.x)
     val nb = (b.x - a.x) * (a.y - l.a.y) - (b.y - a.y) * (a.x - l.a.x)
