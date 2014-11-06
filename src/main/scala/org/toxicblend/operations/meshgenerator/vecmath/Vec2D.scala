@@ -33,6 +33,7 @@ object Vec2D {
   def apply(x:Int, y:Int) = new ImmutableVec2D(x, y)
   def apply(x:Double, y:Double) = new ImmutableVec2D(x, y)
   def apply() = new ImmutableVec2D(0d, 0d)
+  def apply(angle:Double) = new ImmutableVec2D(angle)
   
   @inline def distanceToSquared(p1x:Double, p1y:Double, p2x:Double, p2y:Double) = {
     val dx = p1x - p2x
