@@ -96,7 +96,7 @@ object Payload {
   def apply(angle:Double, distance:Double, pos:Vec2D) = new Payload(angle, distance, pos)
 }
 
-class CyclicTree(val seq:IndexedSeq[Payload], private val tree:Tree, val clockwise:Boolean){
+class CyclicTree(val seq:IndexedSeq[Payload], private val tree:Tree, val center:Vec2D, val clockwise:Boolean){
   
   @inline protected final def isFlipside(searchAngle:Double) =
     (clockwise && (searchAngle < seq.last.angle || searchAngle >= seq.head.angle) ||
@@ -197,10 +197,10 @@ object CyclicTree {
       val v = p.sub(center)
       new Payload(angle=v.heading,distance=v.magnitude,p)
     })
-    this.apply(vertices)
+    this.apply(vertices, center=center, inputIsClockwise=Option(convexHull.isClockwise))
   }
   
-  def apply(aSeq:IndexedSeq[Payload], inputIsClockwise:Option[Boolean]=None):CyclicTree  = {
+  def apply(aSeq:IndexedSeq[Payload], center:Vec2D, inputIsClockwise:Option[Boolean]=None):CyclicTree  = {
     val (seq, clockwise) = inOrder(aSeq, inputIsClockwise)
     //println(seq.map(p=>p.angle))
     val rootNode = if (seq.size > 0) {
@@ -211,7 +211,7 @@ object CyclicTree {
     } else {
       Empty
     }
-    new CyclicTree(seq, rootNode, clockwise)
+    new CyclicTree(seq, rootNode, center=center, clockwise=clockwise)
   }
   
   private def apply(values:IndexedSeq[Payload], leftPos:Int, centerPos:Int, rightPos:Int, clockwise:Boolean) : Tree = {
