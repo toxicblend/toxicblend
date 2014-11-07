@@ -12,7 +12,7 @@ class CyclicTreeTest extends FlatSpec with Matchers {
   
   "CyclicTreeTest-1" should "work just fine" in {
     val data = Array(5d,6d,7d,8d,-1d,0d,1d,2d,3d,4d).map(p=>Payload(p))
-    val tree = CyclicTree(data, Option(false))
+    val tree = CyclicTree(data, Vec2D(), Option(false))
     for ( x <- 0 until 8 ) {
       val rv = tree.searchIntervalWithLimits(0.5+x.toDouble)
       //println("searching for " + (0.5+x.toDouble) + " gave " + rv.get._1.angle + " to " + rv.get._2.angle)
@@ -34,7 +34,7 @@ class CyclicTreeTest extends FlatSpec with Matchers {
   
   "CyclicTreeTest-2" should "work just fine" in {
     val data = Array(Payload(0d)).drop(1)
-    val tree = CyclicTree(data)
+    val tree = CyclicTree(data, Vec2D())
     
     val rv = tree.searchIntervalWithLimits(8.5)
     rv.isDefined should be (false)
@@ -76,7 +76,7 @@ class CyclicTreeTest extends FlatSpec with Matchers {
   
   "CyclicTreeTest-7" should "work just fine" in {
     val data = Array(4d,5d,6d,7d,8d,-1d, 0d,1d,2d,3d).reverse.map(p=>Payload(p))
-    val tree = CyclicTree(data, Option(true))
+    val tree = CyclicTree(data, Vec2D(), Option(true))
     for ( x <- 0 until 8 ) {
       val rv1 = tree.searchIntervalWithLimits(0.5+x)
       rv1.isDefined should be (true)
