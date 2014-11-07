@@ -63,10 +63,10 @@ class Polygon2D protected (val vertices:IndexedSeq[Vec2D], val ε:Double = Polyg
   
   
   def toConvexHull(forceClockwise:Option[Boolean]=None):Polygon2D = 
-    Polygon2D(Polygon2D.toConvexHull(vertices, forceClockwise))
+    Polygon2D(Polygon2D.toConvexHullGiftWrapping(vertices, forceClockwise))
     
   def toConvexHull2(forceClockwise:Option[Boolean]=None):Polygon2D = 
-    Polygon2D(Polygon2D.toConvexHull2(vertices, forceClockwise))
+    Polygon2D(Polygon2D.toConvexHullMonotoneChain(vertices, forceClockwise))
   
   /**
    * return the shortest distance to any edge of this polygon to the point
@@ -215,7 +215,6 @@ object Polygon2D {
         prev = current
     })
     area = area*0.5d
-    //assert(area == getArea, "area:" + area + " != " + "getArea:" + getArea)
     Vec2D(cx/(6d*area), cy/(6d*area))
   }
   
@@ -225,7 +224,6 @@ object Polygon2D {
     var prev = size-2
     var i = size-1
     (0 until size).foreach(next => {
-        //println("prev="+prev+" i="+i+" next="+next)
         val d0 = vertices(i).sub(vertices(prev))
         val d1 = vertices(next).sub(vertices(i))
         val newIsP = d0.cross(d1) > 0
@@ -256,14 +254,14 @@ object Polygon2D {
         if (! vertices(i).=~=(buffer.last, ε)) {
           buffer.append(vertices(i))
         } else {
-          println("Polygon2D.dropConsecutiveDoubles: removed one superfluous vertex:" + vertices(i))
-          println("Polygon2D.dropConsecutiveDoubles: input was: " + vertices)
+          //println("Polygon2D.dropConsecutiveDoubles: removed one superfluous vertex:" + vertices(i))
+          //println("Polygon2D.dropConsecutiveDoubles: input was: " + vertices)
         }
       })
       if (buffer.head.=~=(buffer.last, ε)) {
-        println("Polygon2D.dropConsecutiveDoubles removed one superfluous vertex from the end:" + buffer.last)
+        //println("Polygon2D.dropConsecutiveDoubles removed one superfluous vertex from the end:" + buffer.last)
         buffer.remove(buffer.size-1)
-        println("Polygon2D.dropConsecutiveDoubles: result: " + buffer)
+        //println("Polygon2D.dropConsecutiveDoubles: result: " + buffer)
       }
       return buffer
     } else {
@@ -287,7 +285,7 @@ object Polygon2D {
    *    pointOnHull = endpoint
    *  until endpoint == P[0]      // wrapped around to first hull point
    */
-  def toConvexHull(vertices:IndexedSeq[Vec2D], forceClockwise:Option[Boolean]=None):IndexedSeq[Vec2D] = {
+  def toConvexHullGiftWrapping(vertices:IndexedSeq[Vec2D], forceClockwise:Option[Boolean]=None):IndexedSeq[Vec2D] = {
     
     var pointOnHull = vertices.foldLeft(vertices.head)((b,a) => if (a.x < b.x) a else b)
     var endPoint = pointOnHull
@@ -312,8 +310,10 @@ object Polygon2D {
    * Compute the convex hull using the Andrew's monotone chain convex hull algorithm
    * 
    * http://en.wikibooks.org/wiki/Algorithm_Implementation/Geometry/Convex_hull/Monotone_chain
+   * 
+   * Code is ported from that java example
    */
-  def toConvexHull2(vertices:IndexedSeq[Vec2D], forceClockwise:Option[Boolean]=None):IndexedSeq[Vec2D] = {
+  def toConvexHullMonotoneChain(vertices:IndexedSeq[Vec2D], forceClockwise:Option[Boolean]=None):IndexedSeq[Vec2D] = {
     
     val sortedVertices = vertices.sortWith{(a,b) => 
       val cmpX=a.x-b.x
