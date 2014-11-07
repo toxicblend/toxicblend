@@ -3,6 +3,7 @@ package org.toxicblend.operations.meshgenerator
 import org.toxicblend.ToxicblendException
 import org.toxicblend.UnitSystem
 import org.toxicblend.util.Time.time
+import org.toxicblend.util.NumberUtils.{r2d,d2r,inAscendingOrder}
 import org.toxicblend.CommandProcessorTrait
 import org.toxicblend.geometry.ProjectionPlane.YZ_PLANE
 import org.toxicblend.geometry.ProjectionPlane.XZ_PLANE
@@ -37,7 +38,9 @@ import org.toxicblend.operations.meshgenerator.vecmath.CyclicTree
 import scala.collection.JavaConversions._
 
 class MeshGeneratorOperation extends CommandProcessorTrait {
-   
+  
+  private val IDEAL_SIZE = 500 // totally random number
+  
   def checkForCorruption1(i:Iterator[toxi.geom.mesh.Vertex]) :Boolean = {
     i.foreach( v=> if (v.x.isNaN || v.y.isNaN || v.z.isNaN || v.x.isInfinite || v.y.isInfinite || v.z.isInfinite ) return true)
     false
@@ -177,9 +180,6 @@ class MeshGeneratorOperation extends CommandProcessorTrait {
                 val dummy = Polygon2D(clipped.vertices)
               }
             }  
-              
-            //println("centroid:" + centroid)
-            //rvMesh.getVertices.map(v => if (v.x.isNaN || v.y.isNaN || v.z.isNaN ) println(v))
           }
         })
       }
@@ -190,77 +190,32 @@ class MeshGeneratorOperation extends CommandProcessorTrait {
     rvMesh
   }
   
-  
-  def adjustZ(mesh:TriangleMesh, clockwiseClipPolygon:Polygon2D, convexHull:Polygon2D, center:Vec2D, radianAngle:Double) = {
+  /**
+   * 
+   */
+  def adjustZ(mesh:TriangleMesh, clockwiseClipPolygon:Polygon2D, convexHull:Polygon2D, center:Vec2D, calculator:ZCalculator) = {
     
-    val hMin = math.sin(radianAngle)
-    def r2d(radian:Double) = radian*180d/math.Pi
-    
-    def calculateH(r:Double, d:Double) = math.sqrt((4d*r*r-d*d)/4d)
-    def calculateR(h:Double, d:Double) = 0.5d*math.sqrt(d*d+4d*h*h)
-    
-    // figure out linear interpolation of r:
-    // r = k1+c1*d
-    // when d=0 => h should be 1 and r should be 1  => k1=1
-    // when d=1 => h should be hMin and r should be calculateR(hMin,1) => 
-    //    c1 = (r-k1)/d == calculateR(hMin,1)-k1
-    
-    val k1 = 1d
-    val c1 = calculateR(hMin,1)-k1
-    
-    val k2 = hMin/(hMin-1d)
-    val c2 = 1d-k2 
-    
-    //println("convexHull.isClockwise=" + convexHull.isClockwise)
-    assert(convexHull.isClockwise)
-    //println("center=" + center)
     val cyclicTree = CyclicTree(convexHull, center)
-    //println("center:" + center + " convexP.centroid=" + convexHull.getCentroid)
-    
-    if (false){
-      var d = 0d
-      def r = (k1+d*c1)
- 
-      println("1/sqrt(2)=" + 1d/math.sqrt(2d))
-      println("sqrt(3/4)=" + math.sqrt(3d/4d))
-      println("d=0 => r=" + r + " h=" + calculateH(r,d))
-      d = 1d
-      println("d=1 => r=" + r + " h=" + calculateH(r,d))
-    }  
     mesh.vertices.foreach(tp=>{
       val v = MutableVec2D(tp._1.x, tp._1.y).subSelf(center)
       val heading =  v.heading
       val intersectionO = cyclicTree.getIntersectonPoint(heading,center)
       if (intersectionO.isDefined) {
-        val intersection = intersectionO.get
-        val d = v.magnitude/center.distanceTo(intersection)
-        val r = k1+d*c1
-        
-        val heading2 = intersection.sub(center).heading
-        if (r>0){
-          val h = (k2 + c2*calculateH(r,d)).toFloat
-          //println("r=" + r +" d=" + d + " heading=" + r2d(heading) + " heading2=" + r2d(heading2) + " h=" + h)
-          if (!(h.isInfinite || h.isNaN)) tp._1.z = h*100f
-          else println("should not happend: r=" + r + " d=" + d + " center=" + center + " intersection=" + intersection + " v=" + v + " tp="+ tp)
-        } else {
-          println("should not happend: r=" + r + " d=" + d + " center=" + center + " intersection=" + intersection + " v=" + v + " tp="+ tp)
-          tp._1.z = 0f
-        }
+        val d = v.magnitude/center.distanceTo(intersectionO.get)
+        tp._1.z = (calculator.calculateZ(d)*IDEAL_SIZE/2d).toFloat
       } else {
         println("No intersection found:" + heading)
       }
     })
-    //val closestToZero = mesh.getClosestVertexToPoint(new TVec3D(tCenter.x, tCenter.y, 0f))
-    //if (closestToZero!=null) closestToZero.z = 500
   }
   
-  def processData(edges:Polygon2DConverter, center:Option[ReadonlyVec3D], subdivisions:Int, angle:Float) : Mesh3DConverter = {
+  def processData(edges:Polygon2DConverter, center:Option[ReadonlyVec3D], subdivisions:Int, calculator:ZCalculator) : Mesh3DConverter = {
     
     val (polygon,scale) = {
       val tPolygon = edges.polygons(0)
       val tAabb = tPolygon.getBounds
       val maxDimension = if (tAabb.width > tAabb.height) tAabb.width else tAabb.height
-      val scale = 500d/maxDimension
+      val scale = IDEAL_SIZE/maxDimension
       val p = Polygon2D(tPolygon.toIndexedSeq.map(v => Vec2D(v.x*scale,v.y*scale)))
       if (p.isClockwise) 
         (p,scale.toFloat) 
@@ -288,8 +243,7 @@ class MeshGeneratorOperation extends CommandProcessorTrait {
     //val realInverseCenter2d = realCenter2d.scale(-1)
        
     val resultingMesh = processDataPerThread(polygon,realCenter,delta)
-    
-    adjustZ(resultingMesh, polygon, convexHullPolygon, realCenter, angle*math.Pi/180d)
+    adjustZ(resultingMesh, polygon, convexHullPolygon, realCenter, calculator)
     
     //mesh.getVertices.map(v => if (v.x.isNaN || v.y.isNaN || v.z.isNaN ) println(v))
     val rv = Mesh3DConverter(resultingMesh.scale(1f/scale), "procedural mesh")
@@ -306,8 +260,10 @@ class MeshGeneratorOperation extends CommandProcessorTrait {
     val useMultiThreading = options.getMultiThreadingProperty(traceMsg,true)
     val unitScale = options.getUnitScaleProperty(traceMsg)
     val unitIsMetric = options.getUnitSystemProperty(traceMsg)
-    val angle = options.getFloatProperty("angle", 45f, traceMsg)
-    val subdivisions = options.getIntProperty("subdivisions", 1, traceMsg)
+    val zAlgorithm = options.getStringProperty("zAlgorithm", "CIRCLEARC")
+    val (radius1Property,radius2Property) = inAscendingOrder( options.getFloatProperty("radius1Property", 0f, traceMsg),
+                                                              options.getFloatProperty("radius2Property", 1f, traceMsg) )
+    val subdivisions = options.getIntProperty("subdivisions", 2, traceMsg)
     
     // Convert model vertices to world coordinates so that the radius unit makes sense
     val edgeModels = inMessage.getModelsList.filter(m => m.getVerticesCount>1).map(inModel => {
@@ -352,7 +308,11 @@ class MeshGeneratorOperation extends CommandProcessorTrait {
                  
     time("Building resulting pBModel: ",{
       val returnMessageBuilder = Message.newBuilder
-      returnMessageBuilder.addModels(processData(edgePolygon, center, subdivisions, angle).toPBModel(None, None))
+      val calculator = zAlgorithm match {
+        case "CIRCLEINTERSECTION" => new IntersectionCalculator(radius1Property,radius2Property)
+        case "CIRCLEARC" => new ArcCalculator(radius1Property,radius2Property)
+      }
+      returnMessageBuilder.addModels(processData(edgePolygon, center, subdivisions, calculator).toPBModel(None, None))
       returnMessageBuilder
     })
   }

@@ -30,9 +30,16 @@ class ToxicBlend_GenerateMesh(bpy.types.Operator):
   bl_label = "Toxicblend:GenerateMesh"
   bl_options = {'REGISTER', 'UNDO'}  # enable undo for the operator.
   subdivisionProperty = bpy.props.IntProperty(name="sub divisions", description="The number of sub divisions", default=5, min=1, max=100)
-  angleProperty = bpy.props.FloatProperty(name="arc angle [degrees]", description="The angle of the curvature (in degrees)", default=60.0, min=0.0001, max=90.0)
+  radius1Property = bpy.props.FloatProperty(name="radius clipping low", description="r will be interpolated to fit inside relative radius", default=0.0, min=0, max=1.0)
+  radius2Property = bpy.props.FloatProperty(name="radius clipping high", description="r will be interpolated to fit inside relative radius", default=1.0, min=0, max=1.0)
+  zAlgorithmProperty = bpy.props.EnumProperty(
+    description="Z coordinate is calculated by:",
+    name="Use mulithreading algorithm",
+    items=(("CIRCLEINTERSECTION", "Circle intersection","z=sqrt((4d*r*r-d*d)/4d)"),
+           ("CIRCLEARC", "Arc of a circle","z=sqrt(1-r*r)")),
+           default="CIRCLEARC" )
   useMultiThreadingProperty = bpy.props.EnumProperty(
-    description="Each continous ring segment will be processed in a separate thread",
+    description="Sections of the computations will be processed in a separate threads",
     name="Use mulithreading algorithm",
     items=(("TRUE", "True",""),
            ("FALSE", "False","")),
@@ -49,8 +56,10 @@ class ToxicBlend_GenerateMesh(bpy.types.Operator):
         unitSystemProperty = context.scene.unit_settings
         activeObject = context.scene.objects.active
         properties = {'useMultiThreading' : self.useMultiThreadingProperty,
+                      'zAlgorithm'        : self.zAlgorithmProperty,
                       'subdivisions'      : str(self.subdivisionProperty),
-                      'angle'             : str(self.angleProperty),
+                      'radius1Property'   : str(self.radius1Property),
+                      'radius2Property'   : str(self.radius2Property),
                       'unitSystem'        : str(unitSystemProperty.system), 
                       'unitScale'         : str(unitSystemProperty.scale_length) }
                      
