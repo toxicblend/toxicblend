@@ -1,12 +1,12 @@
 package org.toxicblend.tests
 
 import org.scalatest._
-import org.toxicblend.operations.meshgenerator.vecmath.SutherlandHodgemanClipper
+import org.toxicblend.vecmath.SutherlandHodgemanClipper
 import org.toxicblend.ToxicblendException
-import org.toxicblend.operations.meshgenerator.vecmath.ImmutableVec2D
-import org.toxicblend.operations.meshgenerator.vecmath.Vec2D
-import org.toxicblend.operations.meshgenerator.vecmath.FiniteLine2D
-import org.toxicblend.operations.meshgenerator.vecmath.Polygon2D
+import org.toxicblend.vecmath.ImmutableVec2D
+import org.toxicblend.vecmath.Vec2D
+import org.toxicblend.vecmath.FiniteLine2D
+import org.toxicblend.vecmath.Polygon2D
 
 class LineIntersectionTest extends FlatSpec with Matchers {
   

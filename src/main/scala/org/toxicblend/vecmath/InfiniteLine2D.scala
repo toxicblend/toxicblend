@@ -1,4 +1,7 @@
-package org.toxicblend.operations.meshgenerator.vecmath
+package org.toxicblend.vecmath
+
+import org.toxicblend.vecmath.Vec2D
+import org.toxicblend.vecmath.Polygon2D
 
 class InfiniteLine2D(val a:Vec2D, val b:Vec2D) {
   

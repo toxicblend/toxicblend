@@ -1,12 +1,14 @@
-package org.toxicblend.operations.meshgenerator.vecmath
+package org.toxicblend.vecmath
 
 import scala.collection.mutable.ArrayBuffer
+import scala.IndexedSeq
 
 object SourceList extends Enumeration {
   type SourceList = Value
   val SUBJECT_LIST, CLIP_LIST, BOTH_LISTS = Value
 }
-import SourceList._
+
+import SourceList.{SourceList, SUBJECT_LIST, CLIP_LIST, BOTH_LISTS}
 
 class VertexInfo(val v:Vec2D, var otherList:Option[DoubleLinkedListElement[VertexInfo]]=None) {
   

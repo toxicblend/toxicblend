@@ -1,6 +1,10 @@
-package org.toxicblend.operations.meshgenerator.vecmath
+package org.toxicblend.vecmath
 
 import scala.collection.mutable.ArrayBuffer
+import org.toxicblend.vecmath.Vec2D
+import org.toxicblend.vecmath.Polygon2D
+import org.toxicblend.vecmath.FiniteLine2D
+import org.toxicblend.vecmath.ImmutableVec2D
 
 class SutherlandHodgemanClipper {
  

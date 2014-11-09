@@ -1,4 +1,8 @@
-package org.toxicblend.operations.meshgenerator.vecmath
+package org.toxicblend.vecmath
+
+import org.toxicblend.vecmath.Vec2D
+import org.toxicblend.vecmath.Vec2DBase
+import org.toxicblend.vecmath.ImmutableVec2D
 
 class MutableVec2D(var x:Double, var y:Double) extends Vec2DBase {
   

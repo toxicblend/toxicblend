@@ -1,8 +1,12 @@
-package org.toxicblend.operations.meshgenerator.vecmath
+package org.toxicblend.vecmath
 
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.Buffer
 import org.toxicblend.ToxicblendException
+import org.toxicblend.vecmath.Vec2D
+import org.toxicblend.vecmath.Polygon2D
+import org.toxicblend.vecmath.InfiniteLine2D
+import org.toxicblend.vecmath.ImmutableVec2D
 
 trait Tree {
  

@@ -1,4 +1,6 @@
-package org.toxicblend.operations.meshgenerator.vecmath
+package org.toxicblend.vecmath
+
+import org.toxicblend.vecmath.Vec2DBase
 
 class ImmutableVec2D(val x:Double, val y:Double) extends Vec2DBase {
   def this() = this(0d,0d)

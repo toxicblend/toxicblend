@@ -1,4 +1,4 @@
-package org.toxicblend.operations.meshgenerator.vecmath
+package org.toxicblend.vecmath
 
 trait Vec2D {
   def x:Double

@@ -2,16 +2,16 @@ package org.toxicblend.tests
 
 
 import org.scalatest._
-import org.toxicblend.operations.meshgenerator.vecmath.SutherlandHodgemanClipper
+import org.toxicblend.vecmath.SutherlandHodgemanClipper
 import org.toxicblend.ToxicblendException
-import org.toxicblend.operations.meshgenerator.vecmath.ImmutableVec2D
-import org.toxicblend.operations.meshgenerator.vecmath.MutableVec2D
-import org.toxicblend.operations.meshgenerator.vecmath.Vec2D
-import org.toxicblend.operations.meshgenerator.vecmath.FiniteLine2D
-import org.toxicblend.operations.meshgenerator.vecmath.Polygon2D
+import org.toxicblend.vecmath.ImmutableVec2D
+import org.toxicblend.vecmath.MutableVec2D
+import org.toxicblend.vecmath.Vec2D
+import org.toxicblend.vecmath.FiniteLine2D
+import org.toxicblend.vecmath.Polygon2D
 //import toxi.geom.{Polygon2D=>TPolygon2D}
-import org.toxicblend.operations.meshgenerator.vecmath.Payload
-import org.toxicblend.operations.meshgenerator.vecmath.CyclicTree
+import org.toxicblend.vecmath.Payload
+import org.toxicblend.vecmath.CyclicTree
 
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.JavaConversions._

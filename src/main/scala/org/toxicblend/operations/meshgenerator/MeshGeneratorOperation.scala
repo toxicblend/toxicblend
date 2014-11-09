@@ -27,13 +27,13 @@ import toxi.geom.mesh.WETriangleMesh
 import toxi.geom.mesh.TriangleMesh
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
-import org.toxicblend.operations.meshgenerator.vecmath.SutherlandHodgemanClipper
-import org.toxicblend.operations.meshgenerator.vecmath.WeilerAthertonClipper
-import org.toxicblend.operations.meshgenerator.vecmath.Vec2D
-import org.toxicblend.operations.meshgenerator.vecmath.MutableVec2D
-import org.toxicblend.operations.meshgenerator.vecmath.Polygon2D
-import org.toxicblend.operations.meshgenerator.vecmath.AABB2D
-import org.toxicblend.operations.meshgenerator.vecmath.CyclicTree
+import org.toxicblend.vecmath.SutherlandHodgemanClipper
+import org.toxicblend.vecmath.WeilerAthertonClipper
+import org.toxicblend.vecmath.Vec2D
+import org.toxicblend.vecmath.MutableVec2D
+import org.toxicblend.vecmath.Polygon2D
+import org.toxicblend.vecmath.AABB2D
+import org.toxicblend.vecmath.CyclicTree
 
 import scala.collection.JavaConversions._
 

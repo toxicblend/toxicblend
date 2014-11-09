@@ -1,4 +1,6 @@
-package org.toxicblend.operations.meshgenerator.vecmath
+package org.toxicblend.vecmath
+
+import org.toxicblend.vecmath.Vec2D
 
 //import scala.collection.immutable.IndexedSeq
 

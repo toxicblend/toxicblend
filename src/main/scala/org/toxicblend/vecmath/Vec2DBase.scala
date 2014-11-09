@@ -1,4 +1,6 @@
-package org.toxicblend.operations.meshgenerator.vecmath
+package org.toxicblend.vecmath
+
+import org.toxicblend.vecmath.Vec2D
 
 abstract class Vec2DBase extends Vec2D {
   override def toString = "("+ x + "," + y + ")"

@@ -1,11 +1,11 @@
 package org.toxicblend.tests
 
 import org.scalatest._
-import org.toxicblend.operations.meshgenerator.vecmath.ImmutableVec2D
-import org.toxicblend.operations.meshgenerator.vecmath.Payload
-import org.toxicblend.operations.meshgenerator.vecmath.Vec2D
-import org.toxicblend.operations.meshgenerator.vecmath.CyclicTree
-import org.toxicblend.operations.meshgenerator.vecmath.Polygon2D
+import org.toxicblend.vecmath.ImmutableVec2D
+import org.toxicblend.vecmath.Payload
+import org.toxicblend.vecmath.Vec2D
+import org.toxicblend.vecmath.CyclicTree
+import org.toxicblend.vecmath.Polygon2D
 import org.toxicblend.ToxicblendException
 
 class CyclicTreeTest extends FlatSpec with Matchers {

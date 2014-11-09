@@ -1,4 +1,9 @@
-package org.toxicblend.operations.meshgenerator.vecmath
+package org.toxicblend.vecmath
+
+import org.toxicblend.vecmath.ImmutableVec2D
+import org.toxicblend.vecmath.MutableVec2D
+import org.toxicblend.vecmath.Vec2D
+import scala.IndexedSeq
 
 class AABB2D (val min:Vec2D, val max:Vec2D) extends ImmutableVec2D((max.x-min.x)/2d+min.x, (max.y-min.y)/2d+min.y ) {
   //if(max.x!= )assert(max.x >= min.x)
