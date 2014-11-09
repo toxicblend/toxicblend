@@ -29,7 +29,7 @@ class ToxicBlend_GenerateMesh(bpy.types.Operator):
   bl_idname = "object.toxicblend_meshgenerator"
   bl_label = "Toxicblend:GenerateMesh"
   bl_options = {'REGISTER', 'UNDO'}  # enable undo for the operator.
-  subdivisionProperty = bpy.props.IntProperty(name="sub divisions", description="The number of sub divisions", default=5, min=1, max=100)
+  subdivisionProperty = bpy.props.IntProperty(name="sub divisions", description="The number of sub divisions", default=5, min=1, max=500)
   radius1Property = bpy.props.FloatProperty(name="radius clipping low", description="r will be interpolated to fit inside relative radius", default=0.0, min=0, max=1.0)
   radius2Property = bpy.props.FloatProperty(name="radius clipping high", description="r will be interpolated to fit inside relative radius", default=1.0, min=0, max=1.0)
   zAlgorithmProperty = bpy.props.EnumProperty(

@@ -3,6 +3,19 @@ import bpy
 import toxicblend
 import imp
 
+# How to install this plugin:
+# 
+# run this in the blender console:
+#   import site; site.getsitepackages()
+#
+# copy the content of the toxicblend/src/main/blender_addon/site-packages directory to one of the 
+# directories listed by the previous command. 
+# 
+# OSX example:
+# cp -R toxicblend/src/main/blender_addon/site-packages/* /Applications/Blender-2.72b/blender-2.72b.app/Contents/MacOS/../Resources/2.72/python/lib/python3.4/site-packages
+#
+# then restart blender and use "Run script" on this file
+
 bl_info = {
   "name": "Toxicblend - projection outline",
   'description': 'Naive, and really slow, implementation of projection outline',
