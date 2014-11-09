@@ -76,6 +76,7 @@ class ArcCalculator (val rLow:Double, val rHigh:Double) extends ZCalculator {
   }
 }
 
+/*
 object Test extends App {
   val calc = new ArcCalculator(0d, 1d)
   val (k,c) = calc.interpolateParameters(x=> x, 0.7, 0.9)
@@ -93,3 +94,4 @@ object Test extends App {
   println("calculateZ(1)=" + calc.calculateZ(1))
   for (i <- 0 to 10) println("calculateZ(" + i.toFloat/10d + ")=" + calc.calculateZ(i.toFloat/10d) ) 
 }
+*/
