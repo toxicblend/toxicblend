@@ -1,7 +1,5 @@
 package org.toxicblend.vecmath
 
-import org.toxicblend.vecmath.Vec2D
-import org.toxicblend.vecmath.Polygon2D
 import scala.IndexedSeq
 
 sealed abstract class Intersection

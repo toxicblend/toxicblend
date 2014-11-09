@@ -1,8 +1,6 @@
 package org.toxicblend.vecmath
 
 import scala.collection.mutable.HashMap
-import org.toxicblend.vecmath.Vec2D
-import org.toxicblend.vecmath.Polygon2D
 
 /**
  * a version of Polygon2D that caches the 'containsPoint' lookups
