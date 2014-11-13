@@ -5,17 +5,15 @@ import scala.collection.mutable.HashSet
 import scala.collection.IndexedSeqLike
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.Buffer
-//import org.toxicblend.typeconverters.SeqShift
-//import org.toxicblend.typeconverters.SeqOperations
 import toxi.geom.BooleanShapeBuilder
 import toxi.geom.Polygon2D
 import toxi.geom.ReadonlyVec2D
 import toxi.geom.Vec2D
-import collection.JavaConversions._
 import org.toxicblend.util.EdgeToFaceMap
 import java.awt.geom.GeneralPath
 import java.awt.geom.Path2D
 import java.awt.geom.Area
+import collection.JavaConversions._
 
 /**
  * A container for a 2D half-edge structure. 

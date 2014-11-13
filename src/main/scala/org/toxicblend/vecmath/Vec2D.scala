@@ -13,7 +13,7 @@ trait Vec2D {
    * almost equal operator
    */
   def =~=(v:Vec2D, p:Double): Boolean
-  def normalize:Vec2D
+  def normalized:Vec2D
   def magnitude:Double
   def magnitudeSquared:Double
   def distanceTo(vx:Double, vy:Double): Double
@@ -44,7 +44,7 @@ object Vec2D {
   /**
    * Dot product
    */
-  @inline def dot(v1x:Double, v1y:Double, v2x:Double, v2y:Double ) = (v1x * v2x) + (v1y * v2y)
+  @inline def dot(v1x:Double, v1y:Double, v2x:Double, v2y:Double) = (v1x * v2x) + (v1y * v2y)
   
   /**
    * returns +1 if a->b->c is a counterclockwise angle
