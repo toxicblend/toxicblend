@@ -8,7 +8,7 @@ sealed case class CoincidentIntersection(val a:Vec2D, val b:Vec2D) extends Inter
 
 class FiniteLine2D(val a:Vec2D, val b:Vec2D) {
   
-  def getDirection: Vec2D = b.sub(a).normalize
+  def getDirection: Vec2D = b.sub(a).normalized
   
   protected def overlapIntervals(ub1:Double, ub2:Double) = {
     val l = Math.min(ub1, ub2)
@@ -25,7 +25,7 @@ class FiniteLine2D(val a:Vec2D, val b:Vec2D) {
 
   // IMPORTANT: a1 and a2 cannot be the same, e.g. a1--a2 is a true segment, not a point
   // b1/b2 may be the same (b1--b2 is a point)
-  def intersectCoincidentLine(a1:Vec2D, a2:Vec2D, b1:Vec2D, b2:Vec2D) = {
+  protected def intersectCoincidentLine(a1:Vec2D, a2:Vec2D, b1:Vec2D, b2:Vec2D) = {
 
     assert(a1!=a2)
     val denomx = a2.x - a1.x
@@ -104,4 +104,31 @@ object FiniteLine2D {
     true
   }
   
+  /**
+   * returns true if the vectors a->b and b->c are collinear (ignoring direction)
+   */
+  @inline def areCollinear(a:Vec2D, b:Vec2D, c:Vec2D, ε:Double=Polygon2D.ε): Boolean = {
+    if (a.=~=(b,ε) || b.=~=(c,ε)) return true
+    val d1x = a.x-b.x
+    val d1y = a.y-b.y
+    val d2x = b.x-c.x
+    val d2y = b.y-c.y
+    val dot = Vec2D.dot(d1x,d1y,d2x,d2y)/(Vec2D.magnitude(d1x, d1y)*Vec2D.magnitude(d2x, d2y))
+    if (dot > 0.5) return (dot-1d).abs < ε
+    else if (dot < -0.5) return (dot+1d).abs < ε
+    else false
+  }
+  
+  /**
+   * returns true if the vectors a->b and b->c are collinear and point in the same direction 
+   */
+  @inline def areCollinearSameDirection(a:Vec2D, b:Vec2D, c:Vec2D, ε:Double=Polygon2D.ε): Boolean = {
+    if (a.=~=(b,ε) || b.=~=(c,ε)) return true
+    val d1x = a.x-b.x
+    val d1y = a.y-b.y
+    val d2x = b.x-c.x
+    val d2y = b.y-c.y
+    val dotm1 = Vec2D.dot(d1x,d1y,d2x,d2y)/(Vec2D.magnitude(d1x, d1y)*Vec2D.magnitude(d2x, d2y)) -1
+    dotm1 <= ε && dotm1 >= -ε
+  }
 }
