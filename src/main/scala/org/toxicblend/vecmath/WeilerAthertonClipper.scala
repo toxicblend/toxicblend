@@ -25,7 +25,7 @@ class VertexInfo(val v:Vec2D, var otherList:Option[DoubleLinkedListElement[Verte
     val intersection = if (isIntersection) "i" else ""
     v.toString + other + intersection
   }
-}
+} 
 
 class WeilerAthertonClipper( private val subjectList:DoubleLinkedList[VertexInfo], 
                              private val clipList:DoubleLinkedList[VertexInfo], 
@@ -187,7 +187,7 @@ class WeilerAthertonClipper( private val subjectList:DoubleLinkedList[VertexInfo
    * Adds vertices until the next intersection is detected. Then that element is returned as a subject list element
    * The vertex of the last intersection will not be added to the result buffer
    */
-  protected def addVerticesUntilNextIntersection(first:DoubleLinkedListElement[VertexInfo], rv:ArrayBuffer[Vec2D], sourceList:SourceList):DoubleLinkedListElement[VertexInfo] = {
+  protected def addVerticesUntilNextIntersection(first:DoubleLinkedListElement[VertexInfo], rv:DoubleLinkedList[Vec2D], sourceList:SourceList):DoubleLinkedListElement[VertexInfo] = {
     var current = first
     conditionalAppend(rv,current.data.v)
     do {
@@ -204,7 +204,7 @@ class WeilerAthertonClipper( private val subjectList:DoubleLinkedList[VertexInfo
   /**
    * prevSI: previous subject intersection
    */
-  protected def selectivelyAddVertices(prevSI:DoubleLinkedListElement[VertexInfo], rv:ArrayBuffer[Vec2D]):(DoubleLinkedListElement[VertexInfo],Boolean) = {
+  protected def selectivelyAddVertices(prevSI:DoubleLinkedListElement[VertexInfo], rv:DoubleLinkedList[Vec2D]):(DoubleLinkedListElement[VertexInfo],Boolean) = {
     //println("selectivelyAddVertices: " + prevSI.data.v )
     val nextS = next(prevSI, SUBJECT_LIST)
     if (nextS.data.isIntersection) {
@@ -263,7 +263,7 @@ class WeilerAthertonClipper( private val subjectList:DoubleLinkedList[VertexInfo
   /**
    * find segments in between intersection points and determine if the segment is inside or outside the clipping polygon
    */
-  protected def filter:IndexedSeq[IndexedSeq[Vec2D]] = {
+  protected def filter:IndexedSeq[DoubleLinkedList[Vec2D]] = {
     
     val usedSubjectIntersections = new collection.mutable.HashSet[DoubleLinkedListElement[VertexInfo]]
     val numberOfIntersections = countNumberOfIntersections
@@ -273,10 +273,10 @@ class WeilerAthertonClipper( private val subjectList:DoubleLinkedList[VertexInfo
     var loopBeginningC = loopBeginningS.data.otherList.get
     var fail = false
     var usedIntersections = 0
-    val rv = new ArrayBuffer[IndexedSeq[Vec2D]]
+    val rv = new ArrayBuffer[DoubleLinkedList[Vec2D]]
     do {
       //println("*1-loopBeginningC=" + loopBeginningC)
-      val currentBuffer = new ArrayBuffer[Vec2D]
+      val currentBuffer = new DoubleLinkedList[Vec2D]
       
       // find an unused intersection point 
       if (usedSubjectIntersections.contains(loopBeginningS)) do {
@@ -304,7 +304,7 @@ class WeilerAthertonClipper( private val subjectList:DoubleLinkedList[VertexInfo
         //println("*3-currentS=" + currentS)
       } while ((!fail) && !usedSubjectIntersections.contains(currentS))
       // remove last element if it's the same as the head (why is it added in the first place?)
-      if (currentBuffer.size>1 && currentBuffer.last == currentBuffer.head) currentBuffer.remove(currentBuffer.size-1)
+      if (currentBuffer.size>1 && currentBuffer.last == currentBuffer.head) currentBuffer.delete(currentBuffer.last)
       if (currentBuffer.size>0) rv.append(currentBuffer)
       loopBeginningC = findNextIntersection(loopBeginningC, CLIP_LIST)
       loopBeginningS = loopBeginningC.data.otherList.get
@@ -312,28 +312,28 @@ class WeilerAthertonClipper( private val subjectList:DoubleLinkedList[VertexInfo
     rv
   }
   
-  @inline protected def conditionalAppend(buffer:ArrayBuffer[Vec2D], v:Vec2D):Unit = {
+  @inline protected def conditionalAppend(buffer:DoubleLinkedList[Vec2D], v:Vec2D):Unit = {
     val size = buffer.size
     if (size==0) {
       buffer.append(v) 
       return
     }
-    if (size>=2 && FiniteLine2D.areCollinearSameDirection(buffer(size-2), buffer(size-1), v, Polygon2D.ε)) {
+    if (size>=2 && FiniteLine2D.areCollinearSameDirection(buffer.last.prev.data, buffer.last.data, v, Polygon2D.ε)) {
       //println("conditionalAppend are collinear: " + buffer(size-2) + " replacing " + buffer(size-1) + " with " + v )
-      buffer(size-1) = v // overwrite last post
+       buffer.last.data = v // overwrite last post
       return
     }
-    if (buffer.last.=~=(v, Polygon2D.ε)) {
+    if (buffer.last.data.=~=(v, Polygon2D.ε)) {
       //println("conditionalAppend are identical: replacing " + buffer(size-1) + " with " + v )
-      buffer(size-1) = v // overwrite last post
+      buffer.last.data = v // overwrite last post
     } else 
       buffer.append(v)
   }
   
   /**
    * find segments in between intersection points and determine if the segment is inside or outside the clipping polygon
-   */
-  protected def malfunctionFilter:IndexedSeq[IndexedSeq[Vec2D]] = {
+   * /
+  protected def malfunctionFilter:IndexedSeq[DoubleLinkedList[Vec2D]] = {
     
     val beginningS = subjectList.firstElement
     
@@ -364,7 +364,7 @@ class WeilerAthertonClipper( private val subjectList:DoubleLinkedList[VertexInfo
     currentBuffer.dropRight(1)
     rv.append(currentBuffer)
     rv
-  }
+  }*/
   
   protected def execute:IndexedSeq[IndexedSeq[Vec2D]] = {
    
@@ -393,7 +393,7 @@ class WeilerAthertonClipper( private val subjectList:DoubleLinkedList[VertexInfo
       //println("3-clip:" + clipList.map(i => i.data.v.toIntString + b2s(i.data.isIntersection)).mkString(","))
         
       // step 3: filter out "in between" intersection segments that are outside the clip polygon
-      val rv = filter//.filter(p=>{ p.size>=3 && !(p.size==3 && Polygon2D.areCollinear(p))})
+      val rv = filter.map(p=>p.map(ve=>ve.data).toIndexedSeq)//.filter(p=>{ p.size>=3 && !(p.size==3 && Polygon2D.areCollinear(p))})
       rv.foreach(p => {
         if (!Polygon2D.isSimple(p)) {
           println("subjectEdges:" + subjectEdges)
