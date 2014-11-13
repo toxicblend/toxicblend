@@ -2,7 +2,7 @@ package org.toxicblend.util
 
 import scala.collection.mutable.ArrayBuffer
 
-class DoubleLinkedListElement[T] (val data:T, var p:DoubleLinkedListElement[T], var n:DoubleLinkedListElement[T] ) {
+class DoubleLinkedListElement[T] (var data:T, var p:DoubleLinkedListElement[T], var n:DoubleLinkedListElement[T] ) {
   protected[util] def delete = {
       if (p!=null) p.n = n
     if (n!=null) n.p = p
