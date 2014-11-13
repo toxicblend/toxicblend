@@ -1,5 +1,7 @@
 package org.toxicblend.vecmath
 
+import org.toxicblend.util.DoubleLinkedList
+import org.toxicblend.util.DoubleLinkedListElement
 import scala.collection.mutable.ArrayBuffer
 import scala.IndexedSeq
 
