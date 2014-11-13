@@ -9,26 +9,13 @@ import org.toxicblend.vecmath.Vec2D
 import org.toxicblend.vecmath.FiniteLine2D
 import org.toxicblend.vecmath.Polygon2D
 
-import org.toxicblend.vecmath.CyclicTree
-import org.toxicblend.vecmath.Payload
+
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.JavaConversions._
 
-class WeilerAthertonTest extends FlatSpec with Matchers {
+class WeilerAthertonTest extends VecMathBaseTest {
   
   val tolerance = 0.0001d
-  def toPolygon2D(seq:Seq[(Double,Double)], scale:Double=1d, x:Double=0d, y:Double=0d):Polygon2D = {
-    Polygon2D(seq.toIndexedSeq.map(p=>Vec2D(p._1*scale+x,p._2*scale+y)))
-  }
-  
-  def indexByHeading(seq:IndexedSeq[Vec2D] ) : IndexedSeq[Vec2D] = {
-    val angleSequence = seq.map(v => new Payload(v.heading, 0, v) )
-    //println(a.map(p=>p.pos).mkString(","))
-    //println(a.map(p=>p.angle*180d/math.Pi).mkString(","))
-    val rv = CyclicTree.inOrder(angleSequence)._1.map( p => p.pos )
-    //println(rv.map(v=>"" + v + "@" + v.heading*180d/math.Pi).mkString(","))
-    rv
-  }
   
   "WeilerAthertonTest-1" should "clip just fine" in {
     
@@ -125,3 +112,27 @@ class WeilerAthertonTest extends FlatSpec with Matchers {
   }
   
 }
+
+/*
+object WeilerAthertonTestApp extends App {
+ 
+  val wat = new WeilerAthertonTest 
+  
+  val subject = wat.toPolygon2D(Seq((0,0),(0,100),(100,50)))
+  val clip = wat.toPolygon2D(Seq((50,0),(50,100),(150,50)))
+
+  //println("subject=" + subject.vertices.mkString(","))
+  //println("clip=" + clip.vertices.mkString(","))
+  
+  val clipped = {
+    val rv = WeilerAthertonClipper.clip(subject, clip)
+    //rv.size should be (1)
+    wat.indexByHeading(rv.head.vertices)
+  }
+  //println("clipped=" + clipped.mkString(","))
+  //clipped.size should be (3)
+  //clipped.get(0) should be (Vec2D(50.0,75.0))
+  //clipped.get(1) should be (Vec2D(100.0,50.0))
+  //clipped.get(2) should be (Vec2D(50.0,25.0))
+}
+*/
