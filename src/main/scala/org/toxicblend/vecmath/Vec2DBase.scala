@@ -10,8 +10,8 @@ abstract class Vec2DBase extends Vec2D {
   def sub(v:Vec2D):Vec2D = if (v.x==0.0 && v.y==0.0) this else new ImmutableVec2D(x-v.x, y-v.y)
   def =~=(v:Vec2D,ε:Double) = (this.eq(v)) || ( (this.x - v.x).abs < ε && (this.y - v.y).abs < ε)
   def heading = math.atan2(y, x)
-  def magnitude:Double = math.sqrt(magnitudeSquared)
-  def magnitudeSquared:Double = Vec2D.distanceToSquared(x,y,0d,0d)
+  def magnitude:Double = Vec2D.magnitude(x,y)
+  def magnitudeSquared:Double = Vec2D.magnitudeSquared(x,y)
   def distanceTo(vx:Double, vy:Double) = math.sqrt(Vec2D.distanceToSquared(x,y,vx,vy))
   def distanceTo(v:Vec2D) = math.sqrt(distanceToSquared(v))
   def distanceToSquared(v:Vec2D) = distanceToSquared(v.x, v.y)
@@ -19,11 +19,10 @@ abstract class Vec2DBase extends Vec2D {
   def cross(v:Vec2D) = Vec2D.cross(x,y,v.x,v.y)
   def dot(v:Vec2D) = Vec2D.dot(x,y,v.x,v.y)
   def normalized:Vec2D= {
-    val mag = x * x + y * y;
-    if (mag > 0) {
-      val mag2 = 1d / math.sqrt(mag)
-      new ImmutableVec2D(x*mag2,y*mag2)
-    } else this
+    val mag = x * x + y * y
+    assert(mag>0)
+    val mag2 = 1d / math.sqrt(mag)
+    new ImmutableVec2D(x*mag2,y*mag2)
   }
   
   override def hashCode = 41 * super.hashCode + x.hashCode + y.hashCode

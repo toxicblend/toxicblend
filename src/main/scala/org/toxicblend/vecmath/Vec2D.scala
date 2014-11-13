@@ -41,6 +41,9 @@ object Vec2D {
     dx*dx + dy*dy
   }
   
+  @inline def magnitudeSquared(x:Double, y:Double) = x*x + y*y
+  @inline def magnitude(x:Double, y:Double) = math.sqrt(magnitudeSquared(x,y))
+  
   /**
    * Dot product
    */
