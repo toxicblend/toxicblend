@@ -1,28 +1,14 @@
 package org.toxicblend.vecmath
 
 import scala.collection.mutable.ArrayBuffer
+import SutherlandHodgemanClipper.intersection
 
 class SutherlandHodgemanClipper {
  
-   def intersection(a:Vec2D, b:Vec2D, p:Vec2D, q:Vec2D) = {
-    val A1 = b.y - a.y
-    val B1 = a.x - b.x
-    val C1 = A1 * a.x + B1 * a.y
-    val A2 = q.y - p.y
-    val B2 = p.x - q.x
-    val C2 = A2 * p.x + B2 * p.y
-    val det = A1 * B2 - A2 * B1
-    new ImmutableVec2D((B2 * C1 - B1 * C2) / det, (A1 * C2 - A2 * C1) / det)
-  }
-
   def isInside(p:Vec2D, a:Vec2D, b:Vec2D) = (a.x-p.x)*(b.y-p.y)>(a.y-p.y)*(b.x-p.x)
   
   def clipPolygon(input:IndexedSeq[Vec2D], a:Vec2D, b:Vec2D, ε:Double):IndexedSeq[Vec2D] = {
     
-    /*def conditionalAppend2(buffer:ArrayBuffer[Vec2D], v:Vec2D) = {
-      buffer.append(v)
-      buffer
-    }*/
     def conditionalAppend(buffer:ArrayBuffer[Vec2D], v:Vec2D) = {
       if (buffer.size==0 || !buffer.last.=~=(v,ε) ) buffer.append(v)
       buffer
@@ -57,9 +43,22 @@ class SutherlandHodgemanClipper {
 }
 
 object SutherlandHodgemanClipper {
+  
+  def intersection(a:Vec2D, b:Vec2D, p:Vec2D, q:Vec2D) = {
+    val a1 = b.y - a.y
+    val b1 = a.x - b.x
+    val c1 = a1 * a.x + b1 * a.y
+    val a2 = q.y - p.y
+    val b2 = p.x - q.x
+    val c2 = a2 * p.x + b2 * p.y
+    val det = a1 * b2 - a2 * b1
+    Vec2D((b2 * c1 - b1 * c2) / det, (a1 * c2 - a2 * c1) / det)
+  }
+     
   lazy val singleton = new SutherlandHodgemanClipper
   def clip(subject:Polygon2D, clipPolygon:Polygon2D, ε:Double=Polygon2D.ε)=Polygon2D(singleton.clipPolygon(subject.toIndexedSeq, clipPolygon.toIndexedSeq,ε), ε)
   def clip(subject:IndexedSeq[Vec2D], clipEdges:IndexedSeq[Vec2D], ε:Double)=singleton.clipPolygon(subject, clipEdges, ε)
   def clip(subject:IndexedSeq[Vec2D], clipEdge:FiniteLine2D, ε:Double)=singleton.clipPolygon(subject, clipEdge, ε)
   def clip(subject:IndexedSeq[Vec2D], clipV1:Vec2D, clipV2:Vec2D, ε:Double)=singleton.clipPolygon(subject, clipV1, clipV2, ε)
 }
+
