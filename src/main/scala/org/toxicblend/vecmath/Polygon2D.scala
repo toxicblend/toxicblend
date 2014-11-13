@@ -1,6 +1,5 @@
 package org.toxicblend.vecmath
 
-//import scala.collection.immutable.IndexedSeq
 
 /**
  * A 2 dimensional polygon representation.
@@ -53,6 +52,8 @@ class Polygon2D protected (val vertices:IndexedSeq[Vec2D], val ε:Double = Polyg
   
   def isSelfIntersecting = Polygon2D.isSelfIntersecting(vertices)
   
+  def getBounds = bounds
+  
   /**
    * Checks if the polygon is convex.
    * Ported from toxiclibs
@@ -61,6 +62,9 @@ class Polygon2D protected (val vertices:IndexedSeq[Vec2D], val ε:Double = Polyg
    */
   def isConvex:Boolean = Polygon2D.isConvex(vertices)
   
+  def hasCollinearSameDirection = Polygon2D.areCollinearSameDirection(vertices)
+  
+  def hasCollinear = Polygon2D.areCollinear(vertices)
   
   def toConvexHull(forceClockwise:Option[Boolean]=None):Polygon2D = 
     Polygon2D(Polygon2D.toConvexHullGiftWrapping(vertices, forceClockwise))
@@ -81,7 +85,13 @@ class Polygon2D protected (val vertices:IndexedSeq[Vec2D], val ε:Double = Polyg
     })
     minDistance
   }
-      
+  
+  /**
+   * return true if the polygon is simple. i.e. the polygon is not self intersecting and 
+   * all of the vertices are unique. 
+   */
+  def isSimple:Boolean = Polygon2D.isSimple(vertices)
+  
   /**
    * returns true if any of the edges of the other polygon intersects any edge of this polygon
    * return false if 'this' or 'other' is completely contained inside the other polygon
@@ -146,6 +156,19 @@ class Polygon2D protected (val vertices:IndexedSeq[Vec2D], val ε:Double = Polyg
     else realContainsPoint(p)
   }
   
+  def toMesh( centroid2D:Vec2D, addFace:(Vec2D,Vec2D,Vec2D)=>Unit ) {
+    val size = vertices.size
+    val bounds = getBounds
+    val boundScale = Vec2D(1d / bounds.width, 1d / bounds.height)
+    var prev = size-1
+    (0 until size).foreach(i=> {
+        val a = vertices(i)
+        val b = vertices(prev)
+        addFace(centroid2D, a, b)
+        prev = i
+    })
+  }
+  
   /**
    * Returns a new Polygon2D with the vertex array shifted by one, just for testing purposes
    */
@@ -156,6 +179,34 @@ class Polygon2D protected (val vertices:IndexedSeq[Vec2D], val ε:Double = Polyg
     new Polygon2D(s)
   }
   
+  @inline def containsSameVertices(other:Polygon2D):Boolean = {
+    if (this.size != other.size) return false
+    
+    def findMatch(v:Vec2D, other:Polygon2D):Int = {
+      val size = other.size
+      val otherV = other.vertices 
+      (0 until size).foreach(i => if (otherV(i)==v) return i)
+      -1
+    }
+    
+    var otherI = findMatch(vertices(0), other)
+    if (otherI == -1) return false
+    
+    (1 until size).foreach(i=> {
+      otherI = ( otherI + 1 ) % size
+      if (this.vertices(i) != other.vertices(otherI)) return false
+    })
+    true
+  }
+  
+  override def equals(other: Any) = other match {
+    case that: Polygon2D =>
+      (that canEqual this) && this.size == that.size && containsSameVertices(that)
+    case _ =>
+      false
+  }
+ 
+  override def canEqual(other: Any) = other.isInstanceOf[Polygon2D]
 }
 
 object Polygon2D {
@@ -176,6 +227,102 @@ object Polygon2D {
   
   def isClockwise(vertices:IndexedSeq[Vec2D]) = getArea(vertices) < 0d
   
+  /**
+   * return true if the polygon is simple. i.e. the polygon is not self intersecting and 
+   * all of the vertices are unique. Consecutive edges can't be collinear.
+   *  O(n²)
+   */
+  def isSimple(vertices:IndexedSeq[Vec2D]):Boolean = {
+    val size = vertices.size
+    if (size < 3) return false
+    
+    val allC = collection.mutable.Set((for (i<-0 until size;j<-i+1 until size) yield(i,j)).toSeq:_*)
+            
+    @inline def isAlmostEqual(i1:Int, i2:Int):Boolean = {
+      //println("comparing " + i1 + " with:" + i2)
+      if (i1==i2) {
+        println("debug me")
+      }
+      val combo = if (i1<i2) (i1,i2) else (i2,i1)
+      if (!allC.contains(combo))
+        println("Combination was already removed: " + combo )
+      allC.remove(combo)
+      
+      val rv = vertices(i1).=~=(vertices(i2), Polygon2D.ε)
+      if (rv) println("combo:" + combo + " = " + vertices(combo._1) + " == " + vertices(combo._2))
+      rv
+    }
+    //println("allC=" + allC)   
+    
+    var iPrev = size-1
+    var iPrevPrev = size-2
+    var jPrev = 0
+    (0 until size).foreach( i => {
+      (i+2 until size).foreach(j => {
+        jPrev = (j + size -1) % size
+        if (j!=i && j!=iPrev && jPrev!=i && jPrev!=iPrev) {
+          //println("Looking at i=" + i + " iPrev=" + iPrev + " j=" + j + " jPrev=" + jPrev)
+          //if (isAlmostEqual(iPrev,jPrev)) return false
+          if (isAlmostEqual(i,j)) return false
+          if (FiniteLine2D.intersects(vertices(iPrev), vertices(i), vertices(jPrev), vertices(j))) {
+            println("intersection:" + vertices(iPrev) + "->" + vertices(i) + " intersects " + vertices(jPrev) + "->" + vertices(j) )
+            return false
+          }
+        } else {
+          //println("Skipping i=" + i + " iPrev=" + iPrev + " j=" + j + " jPrev=" + jPrev)
+        }
+      })
+      if (isAlmostEqual(i,iPrev)) return false
+      if (FiniteLine2D.areCollinear(vertices(iPrevPrev), vertices(iPrev), vertices(i))) {
+        //println("" + vertices(iPrevPrev) + " " + vertices(iPrev) + " " +  vertices(i) + " are collinear")
+        return false
+      }
+      iPrevPrev = iPrev
+      iPrev = i
+    })
+    
+    if (allC.size > 0) 
+      println("Remaining combinations:" + allC)
+    true
+  }
+  
+  /**
+   * return true if any of the consecutive edges are collinear.
+   *  O(n)
+   */
+  def areCollinearSameDirection(vertices:IndexedSeq[Vec2D]):Boolean = {
+    val size = vertices.size
+    if (size <3 ) return false
+    var iPrev = size-1
+    var iPrevPrev = size-2
+    (0 until size).foreach( i => {
+      if (FiniteLine2D.areCollinearSameDirection(vertices(iPrevPrev), vertices(iPrev), vertices(i))) return true
+      iPrevPrev = iPrev
+      iPrev = i
+    })
+    false
+  }
+  
+  /**
+   * return true if any of the consecutive edges are collinear ignoring direction
+   *  O(n)
+   */
+  def areCollinear(vertices:IndexedSeq[Vec2D]):Boolean = {
+    val size = vertices.size
+    if (size <3 ) return false
+    var iPrev = size-1
+    var iPrevPrev = size-2
+    (0 until size).foreach( i => {
+      if (FiniteLine2D.areCollinear(vertices(iPrevPrev), vertices(iPrev), vertices(i))) return true
+      iPrevPrev = iPrev
+      iPrev = i
+    })
+    false
+  }
+  
+  /**
+   * returns true if this polygon is self intersecting. O(n²)
+   */
   def isSelfIntersecting(vertices:IndexedSeq[Vec2D]):Boolean = {
     val size = vertices.size
     if (size < 4) return false
@@ -187,10 +334,8 @@ object Polygon2D {
         jPrev = (j + size -1) % size
         if (j!=i && j!=iPrev && jPrev!=i && jPrev!=iPrev)
           if (FiniteLine2D.intersects(vertices(iPrev), vertices(i), vertices(jPrev), vertices(j))) {
-            //println("" + iPrev + "->" + i + " intersects " + jPrev + "->" +j )
-            //println("" + FiniteLine2D(vertices(iPrev), vertices(i)) + " intersects " + FiniteLine2D(vertices(jPrev), vertices(j)))
             return true
-          } //else println("" + iPrev + "->" + i + " does not intersect " + jPrev + "->" +j )
+          }
       })
       iPrev = i
     })
@@ -350,5 +495,13 @@ object Polygon2D {
   }
   
   def apply(vertices:IndexedSeq[Vec2D], ε:Double = Polygon2D.ε) = new Polygon2D(dropConsecutiveDoubles(vertices,ε))
+  
+  def apply(vertices:IndexedSeq[(Double,Double)]) = 
+    new Polygon2D(dropConsecutiveDoubles(vertices.map(v => Vec2D(v._1, v._2)),ε))
+}
 
+object Test extends App {
+  val p = Polygon2D(IndexedSeq((0d,0d), (1d,0d), /*(1d,.5d),*/ (1d,1d), (0d,1d)))
+  println("p=" + p + " p.isSelfIntersecting=" + p.isSelfIntersecting)
+  println("isSimple = " + p.isSimple)
 }

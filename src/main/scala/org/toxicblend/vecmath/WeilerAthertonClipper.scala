@@ -310,7 +310,23 @@ class WeilerAthertonClipper( private val subjectList:DoubleLinkedList[VertexInfo
     rv
   }
   
-  @inline protected def conditionalAppend(buffer:ArrayBuffer[Vec2D], v:Vec2D) = if (buffer.size==0 || buffer.last!=v) buffer.append(v)  
+  @inline protected def conditionalAppend(buffer:ArrayBuffer[Vec2D], v:Vec2D):Unit = {
+    val size = buffer.size
+    if (size==0) {
+      buffer.append(v) 
+      return
+    }
+    if (size>=2 && FiniteLine2D.areCollinearSameDirection(buffer(size-2), buffer(size-1), v, Polygon2D.ε)) {
+      //println("conditionalAppend are collinear: " + buffer(size-2) + " replacing " + buffer(size-1) + " with " + v )
+      buffer(size-1) = v // overwrite last post
+      return
+    }
+    if (buffer.last.=~=(v, Polygon2D.ε)) {
+      //println("conditionalAppend are identical: replacing " + buffer(size-1) + " with " + v )
+      buffer(size-1) = v // overwrite last post
+    } else 
+      buffer.append(v)
+  }
   
   /**
    * find segments in between intersection points and determine if the segment is inside or outside the clipping polygon
@@ -360,7 +376,12 @@ class WeilerAthertonClipper( private val subjectList:DoubleLinkedList[VertexInfo
     //println("1-clip:" + clipList.map(i => i.data.v.toString + b2s(i.data.isIntersection)).mkString(","))
     
     // Step 2: iterate through the lists and insert intersections into both lists    
-    if (findIntersectons) {  
+    if (!findIntersectons) {
+      // no intersections found
+      if (clipPolygon.containsPoint(subjectEdges.head)) IndexedSeq[IndexedSeq[Vec2D]](subjectEdges)
+      else if (subjectPolygon.containsPoint(clipEdges.head)) IndexedSeq[IndexedSeq[Vec2D]](clipEdges)
+      else IndexedSeq[IndexedSeq[Vec2D]]()
+    } else {
       //println("2-subject:" + subjectList.map(i => i.data.v.toIntString + b2s(i.data.isIntersection)).mkString(","))
       //println("2-clip:" + clipList.map(i => i.data.v.toIntString + b2s(i.data.isIntersection)).mkString(","))
       
@@ -370,12 +391,29 @@ class WeilerAthertonClipper( private val subjectList:DoubleLinkedList[VertexInfo
       //println("3-clip:" + clipList.map(i => i.data.v.toIntString + b2s(i.data.isIntersection)).mkString(","))
         
       // step 3: filter out "in between" intersection segments that are outside the clip polygon
-      filter
-    } else {
-      // no intersections found
-      if (clipPolygon.containsPoint(subjectEdges.head)) IndexedSeq[IndexedSeq[Vec2D]](subjectEdges)
-      else if (subjectPolygon.containsPoint(clipEdges.head)) IndexedSeq[IndexedSeq[Vec2D]](clipEdges)
-      else IndexedSeq[IndexedSeq[Vec2D]]()
+      val rv = filter//.filter(p=>{ p.size>=3 && !(p.size==3 && Polygon2D.areCollinear(p))})
+      rv.foreach(p => {
+        if (!Polygon2D.isSimple(p)) {
+          println("subjectEdges:" + subjectEdges)
+          println("clipEdges:" + clipEdges)
+          println("produces a non simple solution:" + p )
+          println("p.isSelfIntersecting:" + Polygon2D.isSelfIntersecting(p))
+          println("p.areCollinear:" + Polygon2D.areCollinearSameDirection(p) + "\n")
+        }
+      })
+      if (false) {
+        // perform extra sanity check on the result
+        val fuubarVertices = new ArrayBuffer[Vec2D]
+        rv.foreach(r => r.foreach(v => {
+          if (!clipPolygon.containsPoint(v)) fuubarVertices.append(v)
+        }))
+        if (fuubarVertices.size!=0) {
+          println("subjectEdges" + subjectEdges)
+          println("clipEdges" + clipEdges)
+          println("produces wierd data:" + fuubarVertices.mkString(","))
+        }
+      }
+      rv
     }
   }
 }
