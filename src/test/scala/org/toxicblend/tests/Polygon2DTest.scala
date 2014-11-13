@@ -10,11 +10,7 @@ import org.toxicblend.vecmath.Polygon2D
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.JavaConversions._
 
-class Polygon2DTest extends FlatSpec with Matchers {
-  
-  def toPolygon2D(seq:Seq[(Double,Double)], scale:Double=1d, x:Double=0d, y:Double=0d):Polygon2D = {
-    Polygon2D(seq.toIndexedSeq.map(p=>Vec2D(p._1*scale+x,p._2*scale+y)))
-  }
+class Polygon2DTest extends VecMathBaseTest {
   
   "Polygon2DTest-1" should "detect inside just fine" in {
     val s = Array((100.0,200.0),(158.77852522924732,180.90169943749476),
@@ -111,6 +107,32 @@ class Polygon2DTest extends FlatSpec with Matchers {
       c.isClockwise should be (true)
       
       p = p.shift1
+    }) 
+  }
+  
+  "Polygon2DTest-8" should "test equals" in {
+    var p1 = toPolygon2D(Seq((0d,0d),(3d,0d),(3d,3d),(1d,1d),(0d,3d)))
+    var p2 = toPolygon2D(Seq((0d,0d),(3d,0d),(3d,3d),(1d,1d),(0d,3d)))
+    (0 until 6).foreach(i=>{
+      p1==p2 should be (true)
+      p2==p1 should be (true)
+
+      p1 = p1.shift1
+      p2 = p2.shift1
+      p2 = p2.shift1
+    }) 
+  }
+  
+  "Polygon2DTest-9" should "test hasCollinearSameDirection" in {
+    var p1 = toPolygon2D(Seq((0d,0d),(3d,0d),(3d,3d),(2d,2d),(1d,1d),(0d,3d)))
+    var p2 = toPolygon2D(Seq((0d,0d),(3d,0d),(3d,3d),(1d,1d),(0d,3d)))
+    (0 until 6).foreach(i=>{
+      p1.hasCollinearSameDirection should be (true)
+      p1.isSimple should be (false)
+      p2.hasCollinearSameDirection should be (false)
+      p2.isSimple should be (true)
+      p1 = p1.shift1
+      p2 = p2.shift1
     }) 
   }
 }
