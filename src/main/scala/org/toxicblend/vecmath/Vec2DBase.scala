@@ -8,7 +8,7 @@ abstract class Vec2DBase extends Vec2D {
   def add(v:Vec2D):Vec2D = if (v.x==0.0 && v.y==0.0) this else new ImmutableVec2D(x+v.x, y+v.y)
   def sub(xp:Double, yp:Double):Vec2D = if (xp==0.0 && yp==0.0) this else new ImmutableVec2D(x-xp, y-yp)
   def sub(v:Vec2D):Vec2D = if (v.x==0.0 && v.y==0.0) this else new ImmutableVec2D(x-v.x, y-v.y)
-  def =~=(v:Vec2D,ε:Double) = (this.eq(v)) || ( (this.x - v.x).abs < ε && (this.y - v.y).abs < ε)
+  def =~=(v:Vec2D,ε:Double) = Vec2D.almostEqual(this, v, ε)
   def heading = math.atan2(y, x)
   def magnitude:Double = Vec2D.magnitude(x,y)
   def magnitudeSquared:Double = Vec2D.magnitudeSquared(x,y)

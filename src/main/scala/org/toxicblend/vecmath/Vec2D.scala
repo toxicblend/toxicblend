@@ -12,7 +12,7 @@ trait Vec2D {
   /**
    * almost equal operator
    */
-  def =~=(v:Vec2D, p:Double): Boolean
+  def =~=(v:Vec2D, ε:Double): Boolean
   def normalized:Vec2D
   def magnitude:Double
   def magnitudeSquared:Double
@@ -34,6 +34,8 @@ object Vec2D {
   def apply(x:Double, y:Double) = new ImmutableVec2D(x, y)
   def apply() = new ImmutableVec2D(0d, 0d)
   def apply(angle:Double) = new ImmutableVec2D(angle)
+  
+  @inline def almostEqual(v1:Vec2D, v2:Vec2D, ε:Double) = (v1.eq(v2)) || ( (v1.x - v2.x).abs < ε && (v1.y - v2.y).abs < ε)
   
   @inline def distanceToSquared(p1x:Double, p1y:Double, p2x:Double, p2y:Double) = {
     val dx = p1x - p2x
