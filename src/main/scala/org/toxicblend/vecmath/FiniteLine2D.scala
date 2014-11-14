@@ -74,13 +74,16 @@ class FiniteLine2D(val a:Vec2D, val b:Vec2D) {
   def intersects(that:FiniteLine2D): Boolean = FiniteLine2D.intersects(a, b, that.a, that.b)
   def sqrDistanceToPoint(p:Vec2D) = FiniteLine2D.sqrDistanceToPoint(p,a,b)
   def distanceToPoint(p:Vec2D) = math.sqrt(FiniteLine2D.sqrDistanceToPoint(p,a,b))
-  
+  def add(v:Vec2D) = FiniteLine2D(a.add(v), b.add(v))
+  def sub(v:Vec2D) = FiniteLine2D(a.sub(v), b.sub(v))
   override def toString = a.toString + "->" + b.toString
 }
 
 object FiniteLine2D {
   
   def apply(s1:Vec2D, s2:Vec2D) = new FiniteLine2D(s1, s2)
+  
+  def apply(x1:Double, y1:Double,x2:Double, y2:Double ) = new FiniteLine2D(Vec2D(x1,y1), Vec2D(x2,y2))
   
   @inline def sqrDistanceToPoint(p:Vec2D, s1:Vec2D, s2:Vec2D, ε:Double=Polygon2D.ε): Double = {
     if (s1.=~=(s2, Polygon2D.ε)) s1.distanceToSquared(p)
