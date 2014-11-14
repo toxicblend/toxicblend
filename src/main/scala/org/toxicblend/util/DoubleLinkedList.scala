@@ -19,6 +19,8 @@ class DoubleLinkedListElement[T] (var data:T, var p:DoubleLinkedListElement[T], 
   }
   
   def hasNext = n != null
+  def hasPrev = p != null
+ 
   def next = n
   def prev = p
   
@@ -49,7 +51,19 @@ class DoubleLinkedList[T] (var firstElement:DoubleLinkedListElement[T]=null, var
   
   override def head = firstElement
   override def last = lastElement
-  var listSize = 0
+  var listSize = if (firstElement!=null) {
+    var newListSize = 0
+    var i = firstElement
+    if (i!=null) {
+      newListSize = 1
+      while (i.hasNext) {
+        newListSize+=1
+        i=i.next
+      }
+      assert(i.eq(lastElement))
+    }
+    newListSize
+  } else 0
   
   def delete(element:DoubleLinkedListElement[T]) = {
     if (firstElement eq element) {
@@ -95,8 +109,36 @@ class DoubleLinkedList[T] (var firstElement:DoubleLinkedListElement[T]=null, var
   }
   
   def apply(item:Int) = {
+    if (item>0){ 
+      if(item >= listSize) throw new java.lang.ArrayIndexOutOfBoundsException 
+    } else {
+      if(item < -listSize) throw new java.lang.ArrayIndexOutOfBoundsException
+    }
     if (item >= 0) (0 until item).foldLeft(firstElement) ((x,i) => x.n)
     else (1 until -item).foldLeft(lastElement) ((x,i) => x.p)
+  }
+  
+  /**
+   * cuts out the element from firstElement to lastElement from the list and creates a new list with the content
+   */
+  def cutSlice(e1:DoubleLinkedListElement[T], e2:DoubleLinkedListElement[T]):DoubleLinkedList[T] = {
+    if (e1.eq(firstElement)) {
+      firstElement = e2.n
+    } else {
+      e1.p.n = e2.n
+    }
+    if (e2.eq(lastElement)) {
+      lastElement = e1.p
+    } else {
+      e2.n.p = e1.p
+    }
+    
+    e1.p = null
+    e2.n = null
+      
+    val rv = new DoubleLinkedList[T](e1, e2)
+    listSize -= rv.size
+    rv
   }
   
   override def iterator = new DoubleLinkedListElementIterator(firstElement)
