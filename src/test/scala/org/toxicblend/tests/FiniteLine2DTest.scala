@@ -32,4 +32,69 @@ class FiniteLine2DTest extends VecMathBaseTest {
       p = p.shift1
     }) 
   }
+  
+  "FiniteLine2DTest-2" should "test intersects and intersectLine" in {
+    val l1b = FiniteLine2D(0,0,1,0)
+    val l2b = FiniteLine2D(2,-1,2,1)
+    val l3b = FiniteLine2D(.5,-1,.5,1)
+    
+    (0 until 10).foreach(i=> {
+      val l1 = l1b.add(Vec2D(0.1*i, -0.1*i))
+      val l2 = l2b.add(Vec2D(0.1*i, -0.1*i))
+      val l3 = l3b.add(Vec2D(0.1*i, -0.1*i))
+      
+      println("l1=" + l1)
+      println("l2=" + l2)
+      println("l3=" + l3)
+      
+      l1.intersectLine(l2).isDefined should be (false)
+      l2.intersectLine(l1).isDefined should be (false)
+      l1.intersects(l2) should be (false)
+      l2.intersects(l1) should be (false)
+      
+      
+      l1.intersectLine(l3).isDefined should be (true)
+      l3.intersectLine(l1).isDefined should be (true)
+      l1.intersects(l3) should be (true)
+      l3.intersects(l1) should be (true)
+    })
+  }
 }
+
+/*
+object FiniteLine2DTestApp extends App {
+  val l1b = FiniteLine2D(0,0,1,0)
+  val l2b = FiniteLine2D(2,-1,2,1)
+  val l3b = FiniteLine2D(.5,-1,.5,1)
+  
+  (0 until 10).foreach(i=> {
+    val l1 = l1b.add(Vec2D(0.1*i, 0.1*i))
+    val l2 = l2b.add(Vec2D(0.1*i, 0.1*i))
+    val l3 = l3b.add(Vec2D(0.1*i, 0.1*i))
+    
+    println("l1=" + l1)
+    println("l2=" + l2)
+    println("l3=" + l3)
+    
+    if (l1.intersectLine(l2).isDefined != false)
+      println("bug")
+    if (l2.intersectLine(l1).isDefined != false)
+      println("bug")
+    if (l1.intersects(l2) != false)
+      println("bug")
+    if (l2.intersects(l1) != false)
+      println("bug")
+    
+    
+    if (l1.intersectLine(l3).isDefined != true)
+      println("bug")
+    if (l3.intersectLine(l1).isDefined != true)
+      println("bug")
+    if (l1.intersects(l3) != true)
+      println("bug")
+    if (l3.intersects(l1) != true)
+      println("bug")
+  })
+ 
+}
+*/
