@@ -64,6 +64,7 @@ class MeshGeneratorOperation extends CommandProcessorTrait {
         p.reverse
       }
     }
+    //assert(reducedClipPolygon.isClockwise)
     val reducedAABB = reducedClipPolygon.bounds
     
     if (false) {
@@ -77,12 +78,14 @@ class MeshGeneratorOperation extends CommandProcessorTrait {
     }
     
     val rvMesh = new TriangleMesh
-    val subdivisionsX = (0.5d+(aabb.width/delta)).toInt
-    val subdivisionsY = (0.5d+(aabb.height/delta)).toInt
+    val subdivisionsX = math.round((0.5d+(aabb.width/delta)).toFloat)
+    val subdivisionsY = math.round((0.5d+(aabb.height/delta)).toFloat)
     if (true){
       println("subdivisionsX=" + subdivisionsX)
       println("subdivisionsY=" + subdivisionsY)
       println("delta=" + delta)
+      if (delta*subdivisionsX < aabb.width) println("delta*subdivisionsX is too small")
+      if (delta*subdivisionsY < aabb.height) println("delta*subdivisionsY is too small")
     }
     if (false){  
       println("reducedAABB=" + reducedAABB)
@@ -117,7 +120,19 @@ class MeshGeneratorOperation extends CommandProcessorTrait {
       }
       
       val p = Polygon2D(IndexedSeq(p3, p2, p1, p0))
-      val intersects = p.intersects(reducedClipPolygon)
+      assert(p.isClockwise)
+      val intersects = p.intersects(reducedClipPolygon) 
+      if (false){
+        val i1 = p.intersects(reducedClipPolygon)
+        val i2 = p.intersections(reducedClipPolygon)
+        println("intersects claims:" + i1)
+        if (i1 != (i2.size>0)) {
+          
+          println("intersections claims:" + i2)
+        }
+        assert(i1 == (i2.size>0))
+        i1
+      }
       
       if (cp0 && cp1 && cp2 && cp3 && !intersects) {
         
@@ -126,8 +141,15 @@ class MeshGeneratorOperation extends CommandProcessorTrait {
         val p13d = toTVec3D(p1)
         val p23d = toTVec3D(p2)
         val p33d = toTVec3D(p3)
-        rvMesh.addFace(p23d, p03d, p13d)
-        rvMesh.addFace(p03d, p23d, p33d)
+        // try to make the triangulation parallel with the circumference
+        if ({ val direction = p1.sub(center); direction.x*direction.y<0}) {  
+          rvMesh.addFace(p23d, p03d, p13d)
+          rvMesh.addFace(p03d, p23d, p33d)
+        } else {
+          rvMesh.addFace(p33d, p13d, p23d)
+          rvMesh.addFace(p33d, p03d, p13d)
+        }
+        
         //val p = new Polygon2D(Array(p0, p1, p2, p3))
         //println("new Polygon p0, p1, p3, p2 is clockwise: " + p.isClockwise)
         //println("new Polygon p0, p1, p3, p2 is isSelfIntersecting: " + p.isSelfIntersecting)
