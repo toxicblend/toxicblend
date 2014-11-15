@@ -8,6 +8,7 @@ import org.toxicblend.vecmath.MutableVec2D
 import org.toxicblend.vecmath.Vec2D
 import org.toxicblend.vecmath.FiniteLine2D
 import org.toxicblend.vecmath.Polygon2D
+import org.toxicblend.util.NumberUtils
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.JavaConversions._
 
@@ -48,9 +49,9 @@ class FiniteLine2DTest extends VecMathBaseTest {
       val l2 = l2b.add(addition)
       val l3 = l3b.add(addition)
       
-      println("l1=" + l1)
-      println("l2=" + l2)
-      println("l3=" + l3)
+      //println("l1=" + l1)
+      //println("l2=" + l2)
+      //println("l3=" + l3)
       
       l1.intersectLine(l2).isDefined should be (false)
       l2.intersectLine(l1).isDefined should be (false)
@@ -83,6 +84,19 @@ class FiniteLine2DTest extends VecMathBaseTest {
       l1.intersects(l3) should be (true)
       l3.intersects(l1) should be (true)
     })
+  }
+  
+  "FiniteLine2DTest-3" should "test middlePoint" in {
+    import org.toxicblend.util.NumberUtils.d2r
+    import math.{sin,cos,Pi}
+    val c = Vec2D(46,23)
+    for (a <- 0 to 360) {
+      val angle = d2r(a)
+      val l = FiniteLine2D(c.x+10d*cos(angle),c.y+10d*sin(angle),c.x+10d*cos(angle+Pi ),c.y+10d*sin(angle+Pi))
+      val mp = l.middlePoint
+      mp.x should be (c.x plusOrMinus doubleTolerance)
+      mp.y should be (c.y plusOrMinus doubleTolerance)
+    }
   }
 }
 
