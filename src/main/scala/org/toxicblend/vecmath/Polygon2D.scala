@@ -50,6 +50,11 @@ class Polygon2D protected (val vertices:IndexedSeq[Vec2D], val ε:Double = Polyg
    */
   def isClockwise = Polygon2D.isClockwise(vertices)
   
+  def toClockwise(clockwise:Boolean=true):Polygon2D = {
+    if (clockwise==isClockwise) return this
+    else new Polygon2D(vertices.reverse)
+  }
+  
   def isSelfIntersecting = Polygon2D.isSelfIntersecting(vertices)
   
   def getBounds = bounds
@@ -68,6 +73,7 @@ class Polygon2D protected (val vertices:IndexedSeq[Vec2D], val ε:Double = Polyg
   
   def toConvexHull(forceClockwise:Option[Boolean]=None):Polygon2D = 
     Polygon2D(Polygon2D.toConvexHullGiftWrapping(vertices, forceClockwise))
+  
     
   def toConvexHull2(forceClockwise:Option[Boolean]=None):Polygon2D = 
     Polygon2D(Polygon2D.toConvexHullMonotoneChain(vertices, forceClockwise))
@@ -116,6 +122,33 @@ class Polygon2D protected (val vertices:IndexedSeq[Vec2D], val ε:Double = Polyg
       iPrev = i
     })
     false
+  }
+  
+  /**
+   * returns all of the intersections between this and the other polygon 
+   */
+  def intersections(other:Polygon2D):IndexedSeq[Intersection] = {
+    val rv = new collection.mutable.ArrayBuffer[Intersection]
+    if (!bounds.intersects(other.bounds)) return rv
+    val sizeThis = vertices.size
+    val sizeOther = other.vertices.size
+    val tV = this.vertices
+    val oV = other.vertices
+    var iPrev = sizeThis-1
+    var jPrev = sizeOther-1
+    (0 until sizeThis).foreach( i => {
+      val iV1 = tV(iPrev)
+      val iV2 = tV(i)
+      (0 until sizeOther).foreach( j => {
+        val jV1 = oV(jPrev)
+        val jV2 = oV(j)
+        val i = new FiniteLine2D(iV1, iV2).intersectLine(new FiniteLine2D(jV1, jV2))
+        if (i.isDefined) rv.append(i.get)
+        jPrev = j
+      })
+      iPrev = i
+    })
+    rv
   }
   
   /*
