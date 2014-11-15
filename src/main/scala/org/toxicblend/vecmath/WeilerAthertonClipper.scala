@@ -205,46 +205,54 @@ class WeilerAthertonClipper( private val subjectList:DoubleLinkedList[VertexInfo
    * prevSI: previous subject intersection
    */
   protected def selectivelyAddVertices(prevSI:DoubleLinkedListElement[VertexInfo], rv:DoubleLinkedList[Vec2D]):(DoubleLinkedListElement[VertexInfo],Boolean) = {
+    def followClipList = {
+      val samplePointC = next(prevSI.data.otherList.get, CLIP_LIST)
+      if ( subjectPolygon.containsPoint(samplePointC.data.v)) {
+        //println("samplepointS:" +nextS.data.v + " was not inside clip polygon. Getting samples from the clip list")
+        //println("samplePointC:" +samplePointC.data.v + b2s(samplePointC.data.isIntersection) )
+        val nextSIntersection = addVerticesUntilNextIntersection(prevSI.data.otherList.get, rv, CLIP_LIST)
+        //println("nextSIntersection:" +nextSIntersection.data.v + b2s(nextSIntersection.data.isIntersection) )
+        //println("rv:" + rv)
+
+        if (nextSIntersection.data.v == rv.head.data) {
+          //println("nextSIntersection.data.v == rv.head -> fail")
+          (findNextIntersection(prevSI,SUBJECT_LIST),true)
+        } else {
+          (nextSIntersection,false)
+        }
+      } else {
+        //println("wtf?")
+        //println("subjectPolygon=" + subjectPolygon.vertices.mkString(","))
+        //println("clipPolygon=" + clipPolygon.vertices.mkString(","))
+        //println("generated a bobo, list should end here")
+        val nextCIntersection = findNextIntersection(prevSI.data.otherList.get, CLIP_LIST)
+        (nextCIntersection.data.otherList.get,true)
+      }
+    }
+    
     //println("selectivelyAddVertices: " + prevSI.data.v )
     val nextS = next(prevSI, SUBJECT_LIST)
     if (nextS.data.isIntersection) {
-      // no non-intersection in between
-      conditionalAppend(rv,prevSI.data.v)
-      conditionalAppend(rv,nextS.data.v)
-      //println("2selectivelyAddVertices added" + nextS.data.v )
-      (nextS,false)
+      if (clipPolygon.containsPoint(FiniteLine2D.middlePoint(prevSI.data.v, nextS.data.v))) {
+        // no non-intersection in between
+        conditionalAppend(rv,prevSI.data.v)
+        conditionalAppend(rv,nextS.data.v)
+        //println("2selectivelyAddVertices added" + nextS.data.v )
+        (nextS,false)
+      } else {
+        followClipList
+      }
     } else {
       if ( clipPolygon.containsPoint(nextS.data.v)) {
         //println("samplepoint:" +samplePointS.data.v + " was inside clip. Getting samples from the subject list") 
         val nextSIntersection = addVerticesUntilNextIntersection(prevSI, rv, SUBJECT_LIST)
-        if (nextSIntersection.data.v == rv.head) {
+        if (nextSIntersection.data.v == rv.head.data ) {
           //println("nextSIntersection.data.v == rv.head -> fail")
           (nextSIntersection,true)
         }
         else (nextSIntersection,false)
       } else {
-        val samplePointC = next(prevSI.data.otherList.get, CLIP_LIST)
-        if ( subjectPolygon.containsPoint(samplePointC.data.v)) {
-          //println("samplepointS:" +nextS.data.v + " was not inside clip polygon. Getting samples from the clip list")
-          //println("samplePointC:" +samplePointC.data.v + b2s(samplePointC.data.isIntersection) )
-          val nextSIntersection = addVerticesUntilNextIntersection(prevSI.data.otherList.get, rv, CLIP_LIST)
-          //println("nextSIntersection:" +nextSIntersection.data.v + b2s(nextSIntersection.data.isIntersection) )
-          //println("rv:" + rv)
-
-          if (nextSIntersection.data.v == rv.head) {
-            //println("nextSIntersection.data.v == rv.head -> fail")
-            (findNextIntersection(prevSI,SUBJECT_LIST),true)
-          } else {
-            (nextSIntersection,false)
-          }
-        } else {
-          //println("wtf?")
-          //println("subjectPolygon=" + subjectPolygon.vertices.mkString(","))
-          //println("clipPolygon=" + clipPolygon.vertices.mkString(","))
-          //println("generated a bobo, list should end here")
-          val nextCIntersection = findNextIntersection(prevSI.data.otherList.get, CLIP_LIST)
-          (nextCIntersection.data.otherList.get,true)
-        }
+        followClipList
       }
     }
   }
@@ -263,7 +271,7 @@ class WeilerAthertonClipper( private val subjectList:DoubleLinkedList[VertexInfo
   /**
    * find segments in between intersection points and determine if the segment is inside or outside the clipping polygon
    */
-  protected def filter:IndexedSeq[DoubleLinkedList[Vec2D]] = {
+  protected def filter:ArrayBuffer[DoubleLinkedList[Vec2D]] = {
     
     val usedSubjectIntersections = new collection.mutable.HashSet[DoubleLinkedListElement[VertexInfo]]
     val numberOfIntersections = countNumberOfIntersections
@@ -304,7 +312,7 @@ class WeilerAthertonClipper( private val subjectList:DoubleLinkedList[VertexInfo
         //println("*3-currentS=" + currentS)
       } while ((!fail) && !usedSubjectIntersections.contains(currentS))
       // remove last element if it's the same as the head (why is it added in the first place?)
-      if (currentBuffer.size>1 && currentBuffer.last == currentBuffer.head) currentBuffer.delete(currentBuffer.last)
+      if (currentBuffer.size>1 && currentBuffer.last.data.=~=(currentBuffer.head.data, Polygon2D.ε )) currentBuffer.delete(currentBuffer.last)
       if (currentBuffer.size>0) rv.append(currentBuffer)
       loopBeginningC = findNextIntersection(loopBeginningC, CLIP_LIST)
       loopBeginningS = loopBeginningC.data.otherList.get
@@ -366,6 +374,94 @@ class WeilerAthertonClipper( private val subjectList:DoubleLinkedList[VertexInfo
     rv
   }*/
   
+  protected def makeSimple(index:Int, buffer:ArrayBuffer[DoubleLinkedList[Vec2D]]):Boolean = {
+    
+    def checkForDuplications(polygon:DoubleLinkedList[Vec2D]):Boolean = {
+      //println("*************checkForDuplications**************")
+      //println("checkForDuplications: " + polygon.map(p => p.data).mkString(","))
+      polygon.foreach(i => {
+        var j = i.next
+        while (j!=null) {
+          if (i.data.=~=(j.data, Polygon2D.ε)) {
+            println("checkForDuplications: Found duplication " + i.data + " " + j.data)
+            if (i.eq(polygon.firstElement) && j.eq(polygon.lastElement)) {
+              polygon.delete(polygon.lastElement)
+              //checkForDuplications(polygon)
+              return true
+            }
+            val slice = polygon.cutSlice(i.next,j)
+            if (slice.size>2) {
+              buffer.append(slice)
+              //makeSimple(buffer.size-1, buffer)
+              return true
+            }
+          } // else println("checkForDuplications: no duplication " + i.data + " " + j.data)
+          j = j.next 
+        }
+      })
+      false
+    }
+    
+    def checkForIntersections(polygon:DoubleLinkedList[Vec2D]):Boolean = {
+      //println("*************checkForIntersections**************")
+      if (polygon.size<=4) return false
+      polygon.foreach(i => {
+        val iPrev = if (i.hasPrev) i.p else polygon.last
+        var j = i.next 
+        while (j!=null && j.hasNext && j.next.hasNext) {
+          val jNext = j.next  
+          if (FiniteLine2D.intersects(iPrev.data, i.data, j.data, jNext.data)) {
+            println("checkForIntersections: Found intersection " + iPrev.data + "->" + i.data + " " + j.data + "->" + jNext.data)
+            val slice = polygon.cutSlice(i,j)
+            if (slice.size >2) {
+              buffer.append(slice)
+            } else {
+              println("checkForIntersections: ignoring slice " + slice.toIndexedSeq.map(v=>v.data).mkString(","))
+            }
+            //makeSimple(buffer.size-1, buffer)
+            return true
+          } //else println("checkForIntersections: no intersection " + iPrev.data + "->" + i.data + " " + j.data + "->" + jNext.data)
+          j = j.next 
+        }
+      })
+      false
+    }
+    
+    def checkForCollinear(polygon:DoubleLinkedList[Vec2D]):Boolean = {
+      //println("*************checkForCollinear**************")
+      if (polygon.size<3) return false
+      polygon.foreach(i => {
+        val iN = if (i.hasNext) i.n else polygon.head
+        val iNN = if (iN.hasNext) iN.n else polygon.head
+        if (FiniteLine2D.areCollinear(i.data, iN.data, iNN.data)) {
+          println("checkForCollinear: Found collinear " + i.data + "->" + iN.data + "->" + iNN.data)
+          //println("checkForCollinear: " + polygon.map(p => p.data).mkString(","))
+          polygon.delete(iN)
+          //checkForCollinear(polygon)
+          return true
+        } //else println("checkForCollinear: no intersection " + iPrev.data + "->" + i.data + " " + j.data + "->" + jNext.data)
+      })
+      false
+    }
+    
+    (checkForDuplications(buffer(index)), checkForIntersections(buffer(index)), checkForCollinear(buffer(index))) match {
+      case i:(Boolean,Boolean,Boolean) => i._1 || i._2 || i._3
+    }
+  }
+  
+  protected def makeSimple(indata:ArrayBuffer[DoubleLinkedList[Vec2D]]):IndexedSeq[DoubleLinkedList[Vec2D]] = {
+    def checkAll:Boolean = {
+      val size = indata.size
+      // must use 'loop over index' because we are modifying the tail of the list as we go
+      //println("indata.size before = " + indata.size)
+      (0 until size).foreach(i => if (makeSimple(i,indata)) return true )
+      //println("indata.size after = " + indata.size)
+      false
+    }
+    while (checkAll) {};
+    indata.filter( dll => dll.size > 2)
+  }
+  
   protected def execute:IndexedSeq[IndexedSeq[Vec2D]] = {
    
     val subjectEdges = subjectPolygon.vertices
@@ -393,7 +489,8 @@ class WeilerAthertonClipper( private val subjectList:DoubleLinkedList[VertexInfo
       //println("3-clip:" + clipList.map(i => i.data.v.toIntString + b2s(i.data.isIntersection)).mkString(","))
         
       // step 3: filter out "in between" intersection segments that are outside the clip polygon
-      val rv = filter.map(p=>p.map(ve=>ve.data).toIndexedSeq)//.filter(p=>{ p.size>=3 && !(p.size==3 && Polygon2D.areCollinear(p))})
+      val rv = makeSimple(filter).map(p=>p.map(ve=>ve.data).toIndexedSeq)
+      //val rv = filter.map(p=>p.map(ve=>ve.data).toIndexedSeq)//.filter(p=>{ p.size>=3 && !(p.size==3 && Polygon2D.areCollinear(p))})
       rv.foreach(p => {
         if (!Polygon2D.isSimple(p)) {
           println("subjectEdges:" + subjectEdges)
