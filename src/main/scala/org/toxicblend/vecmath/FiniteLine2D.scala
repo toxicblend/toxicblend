@@ -71,6 +71,7 @@ class FiniteLine2D(val a:Vec2D, val b:Vec2D) {
     } else None
   }
   
+  def middlePoint = FiniteLine2D.middlePoint(a,b) 
   def intersects(that:FiniteLine2D): Boolean = FiniteLine2D.intersects(a, b, that.a, that.b)
   def sqrDistanceToPoint(p:Vec2D) = FiniteLine2D.sqrDistanceToPoint(p,a,b)
   def distanceToPoint(p:Vec2D) = math.sqrt(FiniteLine2D.sqrDistanceToPoint(p,a,b))
@@ -108,7 +109,7 @@ object FiniteLine2D {
   }
   
   /**
-   * returns true if the vectors a->b and b->c are collinear (ignoring direction)
+   * @return true if the vectors a->b and b->c are collinear (ignoring direction)
    */
   @inline def areCollinear(a:Vec2D, b:Vec2D, c:Vec2D, ε:Double=Polygon2D.ε): Boolean = {
     if (a.=~=(b,ε) || b.=~=(c,ε)) return true
@@ -123,7 +124,7 @@ object FiniteLine2D {
   }
   
   /**
-   * returns true if the vectors a->b and b->c are collinear and point in the same direction 
+   * @return true if the vectors a->b and b->c are collinear and point in the same direction 
    */
   @inline def areCollinearSameDirection(a:Vec2D, b:Vec2D, c:Vec2D, ε:Double=Polygon2D.ε): Boolean = {
     if (a.=~=(b,ε) || b.=~=(c,ε)) return true
@@ -134,4 +135,9 @@ object FiniteLine2D {
     val dotm1 = Vec2D.dot(d1x,d1y,d2x,d2y)/(Vec2D.magnitude(d1x, d1y)*Vec2D.magnitude(d2x, d2y)) -1
     dotm1 <= ε && dotm1 >= -ε
   }
+  
+  /**
+   * @return the point in the middle of a and b
+   */
+  @inline def middlePoint(a:Vec2D, b:Vec2D):Vec2D = Vec2D(a.x+0.5*(b.x-a.x),a.y+0.5*(b.y-a.y))
 }
