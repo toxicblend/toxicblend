@@ -5,6 +5,7 @@ import org.toxicblend.vecmath.SutherlandHodgemanClipper
 import org.toxicblend.ToxicblendException
 import org.toxicblend.vecmath.MutableVec2D
 import org.toxicblend.vecmath.Vec2D
+import org.toxicblend.vecmath.AABB2D
 import org.toxicblend.vecmath.FiniteLine2D
 import org.toxicblend.vecmath.Polygon2D
 import scala.collection.mutable.ArrayBuffer
@@ -135,4 +136,23 @@ class Polygon2DTest extends VecMathBaseTest {
       p2 = p2.shift1
     }) 
   }
+  
+  "Polygon2DTest-10" should "test intersect" in {
+    var p1 = AABB2D(100,100,200,200).toPolygon2D(true)
+    var p2 = toPolygon2D(Seq((110d,0d),(110d,310d),(190d,0d)))
+    
+    (0 until 4).foreach(i=>{
+      //println("p1:" + p1)
+      //println("p2:" + p2)
+      (0 until 3).foreach(j=>{
+        p1.isSimple should be (true)
+        p1.intersects(p2) should be (true)
+        p2.intersects(p1) should be (true)
+        p2.isSimple should be (true)
+        p2 = p2.shift1
+      })
+      p1 = p1.shift1
+    }) 
+  }
+  
 }
