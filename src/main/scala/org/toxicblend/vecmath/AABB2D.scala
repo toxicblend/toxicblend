@@ -25,6 +25,9 @@ class AABB2D protected (val min:Vec2D, val max:Vec2D) extends ImmutableVec2D((ma
     new AABB2D(minx, miny, maxx, maxy)
   }
   
+  /**
+   * returns true if any part of @this is inside @other or the other way around
+   */
   def intersects(other:AABB2D):Boolean = {
     if (max.x < other.min.x) return false
     if (min.x > other.max.x) return false
