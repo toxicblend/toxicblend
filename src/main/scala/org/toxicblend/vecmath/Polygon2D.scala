@@ -258,7 +258,19 @@ object Polygon2D {
     area*0.5d
   }
   
+  /**
+   * @return true if the polygon is clockwise
+   */
   def isClockwise(vertices:IndexedSeq[Vec2D]) = getArea(vertices) < 0d
+  
+  /**
+   * Same as:
+   * 
+   * b.sub(a).cross(c.sub(b)) < 0d
+   * 
+   * @return true if the triangle a->b->c is clockwise
+   */
+  def isClockwise(a:Vec2D, b:Vec2D, c:Vec2D):Boolean = Vec2D.cross(b,a,c) > 0d
   
   /**
    * return true if the polygon is simple. i.e. the polygon is not self intersecting and 
