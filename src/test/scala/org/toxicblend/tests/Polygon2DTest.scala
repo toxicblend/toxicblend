@@ -155,4 +155,10 @@ class Polygon2DTest extends VecMathBaseTest {
     }) 
   }
   
+  "Polygon2DTest-11" should "test isSelfIntersecting" in {
+    var p = toPolygon2D(Seq((200.0,120.0), (210.0,150.0), (200.0,175.0), (200.0,200.0), (290.0,200.0), (290.0,110.0), (200.0,110.0)))
+    p.isSelfIntersecting should be (false)
+    p.isSimple should be (true)
+  }
+  
 }

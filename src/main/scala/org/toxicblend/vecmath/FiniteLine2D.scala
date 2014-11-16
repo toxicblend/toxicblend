@@ -102,11 +102,31 @@ object FiniteLine2D {
     }
   }
   
-  @inline def intersects(aa:Vec2D, ab:Vec2D, ba:Vec2D, bb:Vec2D): Boolean = {
-    if (Vec2D.ccw(aa, ab, ba) * Vec2D.ccw(aa, ab, bb) > 0) return false
-    if (Vec2D.ccw(ba, bb, aa) * Vec2D.ccw(ba, bb, ab) > 0) return false
-    true
+  
+  
+  /**
+   * From http://stackoverflow.com/questions/7069420/check-if-two-line-segments-are-colliding-only-check-if-they-are-intersecting-n
+   * 
+   * To see whether two points, P and Q, are on different sides of a line segment [EF], compute two cross products, one for P and one for Q:
+   *   (Fx - Ex)(Py - Fy) - (Fy - Ey)(Px - Fx)
+   *   (Fx - Ex)(Qy - Fy) - (Fy - Ey)(Qx - Fx)
+   * If the results have the same sign (both positive or both negative) then forget it, 
+   * the points are on the same side, If one is positive and the other negative, then the points are on opposite sides
+   */
+  @inline def differentSide(p:Vec2D, q:Vec2D, e:Vec2D, f:Vec2D): Boolean = {
+    ((f.x - e.x)*(p.y - f.y) - (f.y - e.y)*(p.x - f.x)) * ((f.x - e.x)*(q.y - f.y) - (f.y - e.y)*(q.x - f.x)) < 0d
   }
+  
+  /**
+   * From http://stackoverflow.com/questions/7069420/check-if-two-line-segments-are-colliding-only-check-if-they-are-intersecting-n
+   * 
+   * suppose you're looking at two line segments, [AB] and [CD]. 
+   * The segments intersect if and only if ((A and B are of different sides of [CD]) and (C and D are on different sides of [AB])).
+   * the segments do not intersect. 
+   */
+  @inline def intersects(aa:Vec2D, ab:Vec2D, ba:Vec2D, bb:Vec2D): Boolean = differentSide(aa,ab,ba,bb) && differentSide(ba,bb,aa,ab)
+  
+  def intersectLine(aa:Vec2D, ab:Vec2D, ba:Vec2D, bb:Vec2D): Option[Intersection] = FiniteLine2D(aa,ab).intersectLine(FiniteLine2D(ba,bb))
   
   /**
    * @return true if the vectors a->b and b->c are collinear (ignoring direction)
