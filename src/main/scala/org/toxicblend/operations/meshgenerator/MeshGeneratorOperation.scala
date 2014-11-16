@@ -171,35 +171,37 @@ class MeshGeneratorOperation extends CommandProcessorTrait {
           rvMesh.addFace(p03d, p23d, p33d)
         } else clippings.filter(c => c.size>=3).foreach(clipped=>{ 
           
-          if (!clipped.isConvex) {
-            //println("triangulator.triangulatePolygon(clipped)")
+          if (clipped.size == 4 ) {
+            val v = clipped.vertices
+            val p03d = toTVec3D(clipped.vertices(0))
+            val p13d = toTVec3D(clipped.vertices(1))
+            val p23d = toTVec3D(clipped.vertices(2))
+            val p33d = toTVec3D(clipped.vertices(3))
+            
+            if (!Polygon2D.isClockwise(v(0), v(1), v(2))){ // flip this if you want to render triangulated faces backwards (for debugging) 
+              rvMesh.addFace(p03d, p13d, p23d)
+            } else {
+              rvMesh.addFace(p03d, p23d, p13d)
+            }
+            
+            if (!Polygon2D.isClockwise(v(0), v(2), v(3))){ // flip this if you want to render triangulated faces backwards (for debugging) 
+              rvMesh.addFace(p03d, p23d, p33d)
+            } else {
+              rvMesh.addFace(p03d, p33d, p23d)
+            }
+            
+          } else {
             val triangles = triangulator.triangulatePolygon(clipped)
             triangles.foreach(t =>{
               val p03d = toTVec3D(t(0))
               val p13d = toTVec3D(t(1))
               val p23d = toTVec3D(t(2))
-              rvMesh.addFace(p03d, p13d, p23d)
-            })
-          } else {
-            if (clipped.size == 4 ) {
-          
-              val p03d = toTVec3D(clipped.vertices(0))
-              val p13d = toTVec3D(clipped.vertices(1))
-              val p23d = toTVec3D(clipped.vertices(2))
-              val p33d = toTVec3D(clipped.vertices(3))
-              //rvMesh.addFace(p23d, p03d, p13d)
-              //rvMesh.addFace(p03d, p23d, p33d)
-              rvMesh.addFace(p03d, p23d, p13d)
-              rvMesh.addFace(p23d, p03d, p33d)
-            } else {
-              val triangles = triangulator.triangulatePolygon(clipped)
-              triangles.foreach(t =>{
-                val p03d = toTVec3D(t(0))
-                val p13d = toTVec3D(t(1))
-                val p23d = toTVec3D(t(2))
+              if (!Polygon2D.isClockwise(t(0), t(1), t(2))){ // flip this if you want to render triangulated faces backwards (for debugging) 
                 rvMesh.addFace(p03d, p13d, p23d)
-              })
-            }
+              } else {
+                rvMesh.addFace(p03d, p23d, p13d)
+              }
+            })
           }
         })
       } /* else {  // cleanly outside the reduced clip polygon
