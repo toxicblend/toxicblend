@@ -489,7 +489,9 @@ class WeilerAthertonClipper( private val subjectList:DoubleLinkedList[VertexInfo
       //println("3-clip:" + clipList.map(i => i.data.v.toIntString + b2s(i.data.isIntersection)).mkString(","))
         
       // step 3: filter out "in between" intersection segments that are outside the clip polygon
-      val rv = makeSimple(filter).map(p=>p.map(ve=>ve.data).toIndexedSeq)
+//      val rv = makeSimple(filter).map(p=>p.map(ve=>ve.data).toIndexedSeq)
+      val rv = filter.map(p=>p.map(ve=>ve.data).toIndexedSeq)
+
       //val rv = filter.map(p=>p.map(ve=>ve.data).toIndexedSeq)//.filter(p=>{ p.size>=3 && !(p.size==3 && Polygon2D.areCollinear(p))})
       rv.foreach(p => {
         if (!Polygon2D.isSimple(p)) {
