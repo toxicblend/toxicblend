@@ -490,15 +490,25 @@ class WeilerAthertonClipper( private val subjectList:DoubleLinkedList[VertexInfo
         
       // step 3: filter out "in between" intersection segments that are outside the clip polygon
 //      val rv = makeSimple(filter).map(p=>p.map(ve=>ve.data).toIndexedSeq)
-      val rv = filter.map(p=>p.map(ve=>ve.data).toIndexedSeq)
+      val rv = filter.filter(p=>p.size>2).map(p=>p.map(ve=>ve.data).toIndexedSeq)
 
       //val rv = filter.map(p=>p.map(ve=>ve.data).toIndexedSeq)//.filter(p=>{ p.size>=3 && !(p.size==3 && Polygon2D.areCollinear(p))})
       rv.foreach(p => {
         if (!Polygon2D.isSimple(p)) {
-          println("subjectEdges:" + subjectEdges)
-          println("clipEdges:" + clipEdges)
+          println("subjectPolygon:" + subjectEdges.mkString(","))
+          println("subjectPolygon.isClockwise:" + subjectPolygon.isClockwise)
+          println("subjectPolygon.isSimple:" + subjectPolygon.isSimple)
+          println("subjectPolygon.isSelfIntersecting:" + subjectPolygon.isSelfIntersecting)
+          
+          println("clipPolygon:" + clipPolygon.vertices.mkString(","))
+          println("clipPolygon.isClockwise:" + clipPolygon.isClockwise)
+          println("clipPolygon.isSimple:" + clipPolygon.isSimple)
+          println("clipPolygon.isSelfIntersecting:" + clipPolygon.isSelfIntersecting)
+          
           println("produces a non simple solution:" + p )
           println("p.isSelfIntersecting:" + Polygon2D.isSelfIntersecting(p))
+          println("p.isSimple:" + Polygon2D.isSimple(p))
+          println("p.isClockwise:" + Polygon2D.isClockwise(p))
           println("p.areCollinear:" + Polygon2D.areCollinearSameDirection(p) + "\n")
         }
       })

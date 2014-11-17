@@ -52,10 +52,7 @@ class MeshGeneratorOperation extends CommandProcessorTrait {
     @inline def toTVec3D(v:Vec2D):TVec3D = new TVec3D(v.x.toFloat, v.y.toFloat, 0f)
     
     val triangulator = new EarClipper
-    
-    //println("clockwiseClipPolygon.isSelfIntersecting=" + clockwiseClipPolygon.isSelfIntersecting)
-    //println("clockwiseClipPolygon.isClockwise=" + clockwiseClipPolygon.isClockwise)
-    println("processDataPerThread: aabb.width/delta=" + aabb.width/delta  + " aabb.height/delta=" +  aabb.height/delta) 
+    //println("processDataPerThread: aabb.width/delta=" + aabb.width/delta  + " aabb.height/delta=" +  aabb.height/delta) 
     val reducedClipPolygon = {
       val p = SutherlandHodgemanClipper.clip(clockwiseClipPolygon, aabb.toPolygon2D(true), Polygon2D.ε)
       if (p.isClockwise) p
@@ -64,19 +61,7 @@ class MeshGeneratorOperation extends CommandProcessorTrait {
         p.reverse
       }
     }
-    //assert(reducedClipPolygon.isClockwise)
-    val reducedAABB = reducedClipPolygon.bounds
-    
-    if (false) {
-      println("aabb=" + aabb)
-      println("aabb.width=" + aabb.width)
-      println("aabb.height=" + aabb.height)
-      println("delta=" + delta)
-      println("reducedAABB=" + reducedAABB)
-      println("reducedAABB.width=" + reducedAABB.width)
-      println("reducedAABB.height=" + reducedAABB.height)
-    }
-    
+    val reducedAABB = reducedClipPolygon.bounds 
     val rvMesh = new TriangleMesh
     val subdivisionsX = math.round((0.5d+(aabb.width/delta)).toFloat)
     val subdivisionsY = math.round((0.5d+(aabb.height/delta)).toFloat)
@@ -86,19 +71,6 @@ class MeshGeneratorOperation extends CommandProcessorTrait {
       println("delta=" + delta)
       if (delta*subdivisionsX < aabb.width) println("delta*subdivisionsX is too small")
       if (delta*subdivisionsY < aabb.height) println("delta*subdivisionsY is too small")
-    }
-    if (false){  
-      println("reducedAABB=" + reducedAABB)
-      //println("reducedClipPolygon=" + reducedClipPolygon.vertices.mkString(","))
-      println("reducedClipPolygon.isClockwise=" + reducedClipPolygon.isClockwise)
-      println("reducedClipPolygon.isSelfIntersecting=" + reducedClipPolygon.isSelfIntersecting)
-      println("reducedAABB.center=" + reducedAABB.x + " " + reducedAABB.y)
-      println("reducedClipPolygon.minCenterDistanceSquared=" + reducedClipPolygon.minCenterDistanceSquared)
-  
-      println("reducedAABB=" + reducedAABB)
-      println("reducedAABB.width=" + reducedAABB.width)
-      println("reducedAABB.height=" + reducedAABB.height)
-    
     }
     
     for (xp <- 0 until subdivisionsX; yp <-0 until subdivisionsY) yield {
@@ -112,27 +84,8 @@ class MeshGeneratorOperation extends CommandProcessorTrait {
       val cp2 = reducedClipPolygon.containsPoint(p2)
       val cp3 = reducedClipPolygon.containsPoint(p3)
       
-      if (false) if (cp0 || cp1 || cp2 || cp3) {
-        println("p0=" + p0 + " is " + (if (cp0) "inside" else "outside"))
-        println("p1=" + p1 + " is " + (if (cp1) "inside" else "outside"))
-        println("p2=" + p2 + " is " + (if (cp2) "inside" else "outside"))
-        println("p3=" + p3 + " is " + (if (cp3) "inside" else "outside"))
-      }
-      
       val p = Polygon2D(IndexedSeq(p3, p2, p1, p0))
-      assert(p.isClockwise)
       val intersects = p.intersects(reducedClipPolygon) 
-      if (false){
-        val i1 = p.intersects(reducedClipPolygon)
-        val i2 = p.intersections(reducedClipPolygon)
-        println("intersects claims:" + i1)
-        if (i1 != (i2.size>0)) {
-          
-          println("intersections claims:" + i2)
-        }
-        assert(i1 == (i2.size>0))
-        i1
-      }
       
       if (cp0 && cp1 && cp2 && cp3 && !intersects) {
         
@@ -149,17 +102,7 @@ class MeshGeneratorOperation extends CommandProcessorTrait {
           rvMesh.addFace(p33d, p13d, p23d)
           rvMesh.addFace(p33d, p03d, p13d)
         }
-        
-        //val p = new Polygon2D(Array(p0, p1, p2, p3))
-        //println("new Polygon p0, p1, p3, p2 is clockwise: " + p.isClockwise)
-        //println("new Polygon p0, p1, p3, p2 is isSelfIntersecting: " + p.isSelfIntersecting)
-        //println("new Polygon2D is clockwise: " + new Polygon2D(Array(p1, p3, p2).iterator).isClockwise()) 
       } else if (intersects) { 
-        
-        //println("p is clockwise: " + p.isClockwise)
-        //println("p is selfintersecting: " + p.isSelfIntersecting)
-            
-        //println("new Polygon2D is clockwise: " + new Polygon2D(p.iterator).isClockwise())
         val clippings = WeilerAthertonClipper.clip(p, reducedClipPolygon, Polygon2D.ε )
         if (clippings.size == 1 && clippings(0) == p) {
           // every vertex survived clipping intact
@@ -177,59 +120,16 @@ class MeshGeneratorOperation extends CommandProcessorTrait {
             val p13d = toTVec3D(clipped.vertices(1))
             val p23d = toTVec3D(clipped.vertices(2))
             val p33d = toTVec3D(clipped.vertices(3))
-            
-            if (!Polygon2D.isClockwise(v(0), v(1), v(2))){ // flip this if you want to render triangulated faces backwards (for debugging) 
-              rvMesh.addFace(p03d, p13d, p23d)
-            } else {
-              rvMesh.addFace(p03d, p23d, p13d)
-            }
-            
-            if (!Polygon2D.isClockwise(v(0), v(2), v(3))){ // flip this if you want to render triangulated faces backwards (for debugging) 
-              rvMesh.addFace(p03d, p23d, p33d)
-            } else {
-              rvMesh.addFace(p03d, p33d, p23d)
-            }
-            
+
+            rvMesh.addFace(p03d, p23d, p13d)
+            rvMesh.addFace(p03d, p33d, p23d)            
           } else {
-            val triangles = triangulator.triangulatePolygon(clipped)
-            triangles.foreach(t =>{
-              val p03d = toTVec3D(t(0))
-              val p13d = toTVec3D(t(1))
-              val p23d = toTVec3D(t(2))
-              if (!Polygon2D.isClockwise(t(0), t(1), t(2))){ // flip this if you want to render triangulated faces backwards (for debugging) 
-                rvMesh.addFace(p03d, p13d, p23d)
-              } else {
-                rvMesh.addFace(p03d, p23d, p13d)
-              }
-            })
+            triangulator.triangulatePolygon(clipped).foreach(t => 
+              rvMesh.addFace(toTVec3D(t(0)), toTVec3D(t(2)), toTVec3D(t(1))) )
           }
         })
-      } /* else {  // cleanly outside the reduced clip polygon
-        println("p=" + p)
-        println("reducedClipPolygon=" + reducedClipPolygon)
-        p.toMesh(p.getCentroid,(a:Vec2D,b:Vec2D,c:Vec2D) => {
-                rvMesh.addFace(new TVec3D(a.x.toFloat, a.y.toFloat, 0f),
-                               new TVec3D(b.x.toFloat, b.y.toFloat, 0f),
-                               new TVec3D(c.x.toFloat, c.y.toFloat, 0f))
-              })
-              
-        //assert(false)
-      }*/
-    }
-    if (false) {
-        // perform extra sanity check on the result
-        val fuubarVertices = new ArrayBuffer[Vec2D]
-        rvMesh.vertices.foreach(v => {
-          val v2 = Vec2D(v._1.x, v._1.y)
-          if (!clockwiseClipPolygon.containsPoint(v2)) fuubarVertices.append(v2)
-        })
-        if (fuubarVertices.size!=0) {
-          //println("subjectEdges" + subjectEdges)
-          println("reducedClipPolygon" + reducedClipPolygon)
-          println("produces wierd data:" + fuubarVertices.mkString(","))
-        }
-      }
-     
+      } 
+    }     
     rvMesh
   }
   
@@ -301,9 +201,6 @@ class MeshGeneratorOperation extends CommandProcessorTrait {
     } else {
       convexHullPolygon.getCentroid
     }
-    //println("realCenter=" + realCenter)
-    //val realCenter2d = new Vec2D(realCenter3d.x, realCenter3d.y)
-    //val realInverseCenter2d = realCenter2d.scale(-1)
     
     val resultingMesh = if (useMultiThreading && subdivisions>0) {
       val trueSqrtThreads = (0.5 + aabbmax / distancePerThread).toInt
@@ -314,7 +211,16 @@ class MeshGeneratorOperation extends CommandProcessorTrait {
       println("subjobs:\n" + job.mkString("\n") + "\n")
       job.par.map(j=>processDataPerThread(polygon,j,realCenter,delta)).seq.foldLeft(new TriangleMesh)((rv,part)=>rv.addMesh(part))
     } else {
-      processDataPerThread(polygon,aabb,realCenter,delta)
+      
+      if (true)  // flip to false to debug multithreaded operation (but with just one thread)
+        processDataPerThread(polygon,aabb,realCenter,delta)
+      else {
+        val trueSqrtThreads = (0.5 + aabbmax / distancePerThread).toInt
+        val job = for (i <- 0 until trueSqrtThreads; j <- 0 until trueSqrtThreads ) yield {
+          AABB2D(aabb.min.x+distancePerThread*i, aabb.min.y+distancePerThread*j, aabb.min.x+distancePerThread*(i+1), aabb.min.y+distancePerThread*(j+1))
+        }
+        job.map(j=>processDataPerThread(polygon,j,realCenter,delta)).foldLeft(new TriangleMesh)((rv,part)=>rv.addMesh(part))
+      }
     }
     
     adjustZ(resultingMesh, polygon, convexHullPolygon, realCenter, calculator)
