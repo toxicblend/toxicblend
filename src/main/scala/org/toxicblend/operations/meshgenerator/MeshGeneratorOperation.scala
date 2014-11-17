@@ -28,7 +28,7 @@ import org.toxicblend.vecmath.Vec2D
 import org.toxicblend.vecmath.MutableVec2D
 import org.toxicblend.vecmath.Polygon2D
 import org.toxicblend.vecmath.AABB2D
-import org.toxicblend.vecmath.CyclicTree
+import org.toxicblend.util.CyclicTree
 import org.toxicblend.vecmath.EarClipper
 
 import scala.collection.JavaConversions._

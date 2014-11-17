@@ -2,8 +2,8 @@ package org.toxicblend.tests
 
 import org.toxicblend.vecmath.Polygon2D
 import org.toxicblend.vecmath.Vec2D
-import org.toxicblend.vecmath.CyclicTree
-import org.toxicblend.vecmath.Payload
+import org.toxicblend.util.CyclicTree
+import org.toxicblend.util.Payload
 import org.scalatest._
 
 abstract class VecMathBaseTest extends FlatSpec with Matchers { 

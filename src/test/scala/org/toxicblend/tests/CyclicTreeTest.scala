@@ -2,9 +2,9 @@ package org.toxicblend.tests
 
 import org.scalatest._
 import org.toxicblend.vecmath.ImmutableVec2D
-import org.toxicblend.vecmath.Payload
+import org.toxicblend.util.Payload
 import org.toxicblend.vecmath.Vec2D
-import org.toxicblend.vecmath.CyclicTree
+import org.toxicblend.util.CyclicTree
 import org.toxicblend.vecmath.Polygon2D
 import org.toxicblend.ToxicblendException
 

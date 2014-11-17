@@ -1,8 +1,12 @@
-package org.toxicblend.vecmath
+package org.toxicblend.util
 
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.Buffer
 import org.toxicblend.ToxicblendException
+import org.toxicblend.vecmath.ImmutableVec2D
+import org.toxicblend.vecmath.InfiniteLine2D
+import org.toxicblend.vecmath.Polygon2D
+import org.toxicblend.vecmath.Vec2D
 
 trait Tree {
  
@@ -51,7 +55,7 @@ trait Tree {
   }
   
 
-  protected[vecmath] def 
+  protected[util] def 
   searchWithLimits(seq:IndexedSeq[Payload], searchAngle:Double, lowerLimit:Int, upperLimit:Int) : Option[(Int,Int)] = {
     if (searchAngle < seq(value.get).angle) {
       val l1 = left

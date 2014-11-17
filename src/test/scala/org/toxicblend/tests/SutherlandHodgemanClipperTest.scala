@@ -10,8 +10,8 @@ import org.toxicblend.vecmath.Vec2D
 import org.toxicblend.vecmath.FiniteLine2D
 import org.toxicblend.vecmath.Polygon2D
 //import toxi.geom.{Polygon2D=>TPolygon2D}
-import org.toxicblend.vecmath.Payload
-import org.toxicblend.vecmath.CyclicTree
+import org.toxicblend.util.Payload
+import org.toxicblend.util.CyclicTree
 
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.JavaConversions._
