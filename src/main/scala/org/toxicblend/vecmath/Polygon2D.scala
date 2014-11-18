@@ -113,6 +113,7 @@ class Polygon2D protected (val vertices:IndexedSeq[Vec2D], val ε:Double = Polyg
     (0 until sizeThis).foreach( i => {
       val iV1 = tV(iPrev)
       val iV2 = tV(i)
+      jPrev = sizeOther-1
       (0 until sizeOther).foreach( j => {
         val jV1 = oV(jPrev)
         val jV2 = oV(j)
@@ -375,13 +376,13 @@ object Polygon2D {
     var iPrev = size-1
     var jPrev = 0
     (0 until size).foreach( i => {
-      (i+2 until size).foreach(j => {
-        
-        jPrev = (j + size -1) % size
+      jPrev = i+1
+      (i+2 until size).foreach(j => { 
         if (j!=i && j!=iPrev && jPrev!=i && jPrev!=iPrev)
           if (FiniteLine2D.intersects(vertices(iPrev), vertices(i), vertices(jPrev), vertices(j))) {
             return true
           }
+        jPrev = j
       })
       iPrev = i
     })
