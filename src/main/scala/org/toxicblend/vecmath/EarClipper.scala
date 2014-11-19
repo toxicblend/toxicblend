@@ -2,6 +2,9 @@ package org.toxicblend.vecmath
 
 import com.badlogic.gdx.math.EarClippingTriangulator
 
+/**
+ * until a clipper in scala is available this will have to suffice
+ */
 class EarClipper{
   protected val ect = new EarClippingTriangulator
   
