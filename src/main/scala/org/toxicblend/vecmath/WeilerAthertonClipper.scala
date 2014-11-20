@@ -37,7 +37,7 @@ class WeilerAthertonClipper( private val subjectList:DoubleLinkedList[VertexInfo
     this(new DoubleLinkedList[VertexInfo], new DoubleLinkedList[VertexInfo], subject, clip, precision)  
   }
   
-  protected def b2s(b:Boolean) = if (b) "i" else ""
+  protected def b2s(b:Boolean, trueVal:String="i", falseVal:String="") = if (b) trueVal else falseVal
    
   protected def findIntersectons : Boolean = {
     var c2 = clipList.head
@@ -485,9 +485,11 @@ class WeilerAthertonClipper( private val subjectList:DoubleLinkedList[VertexInfo
       
       // shift the polygons so that they start with the same intersection
       shiftToFirstIntersection(subjectList, clipList)
-      //println("3-subject:" + subjectList.map(i => i.data.v.toIntString + b2s(i.data.isIntersection)).mkString(","))
-      //println("3-clip:" + clipList.map(i => i.data.v.toIntString + b2s(i.data.isIntersection)).mkString(","))
-        
+      //println("3-subject:" + subjectList.map(i => i.data.v.toIntString + b2s(i.data.isIntersection) + b2s(clipPolygon.containsPoint(i.data.v), "+", "-")).mkString(","))
+      //println("3-subject.bounds:" +  subjectPolygon.bounds)
+      //println("3-clip:" + clipList.map(i => i.data.v.toIntString + b2s(i.data.isIntersection) + b2s(subjectPolygon.containsPoint(i.data.v), "+", "-")).mkString(","))
+      //println("3-clipPolygon.bounds:" +  clipPolygon.bounds)
+      
       // step 3: filter out "in between" intersection segments that are outside the clip polygon
 //      val rv = makeSimple(filter).map(p=>p.map(ve=>ve.data).toIndexedSeq)
       val rv = filter.filter(p=>p.size>2).map(p=>p.map(ve=>ve.data).toIndexedSeq)
@@ -495,16 +497,19 @@ class WeilerAthertonClipper( private val subjectList:DoubleLinkedList[VertexInfo
       //val rv = filter.map(p=>p.map(ve=>ve.data).toIndexedSeq)//.filter(p=>{ p.size>=3 && !(p.size==3 && Polygon2D.areCollinear(p))})
       rv.foreach(p => {
         if (!Polygon2D.isSimple(p)) {
+          println
           println("subjectPolygon:" + subjectEdges.mkString(","))
           println("subjectPolygon.isClockwise:" + subjectPolygon.isClockwise)
           println("subjectPolygon.isSimple:" + subjectPolygon.isSimple)
           println("subjectPolygon.isSelfIntersecting:" + subjectPolygon.isSelfIntersecting)
-          
+          println("subjectPolygon.areCollinear:" + subjectPolygon.hasCollinearSameDirection )
+          println
           println("clipPolygon:" + clipPolygon.vertices.mkString(","))
           println("clipPolygon.isClockwise:" + clipPolygon.isClockwise)
           println("clipPolygon.isSimple:" + clipPolygon.isSimple)
           println("clipPolygon.isSelfIntersecting:" + clipPolygon.isSelfIntersecting)
-          
+          println("clipPolygon.areCollinear:" + clipPolygon.hasCollinearSameDirection )
+          println
           println("produces a non simple solution:" + p )
           println("p.isSelfIntersecting:" + Polygon2D.isSelfIntersecting(p))
           println("p.isSimple:" + Polygon2D.isSimple(p))
