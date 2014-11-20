@@ -312,7 +312,7 @@ object Polygon2D {
           if (isAlmostEqual(i,j)) return false
           if (FiniteLine2D.intersects(vertices(iPrev), vertices(i), vertices(jPrev), vertices(j))) {
             val intersection = FiniteLine2D.intersectLine(vertices(iPrev), vertices(i), vertices(jPrev), vertices(j))
-            println("intersection:" + vertices(iPrev) + "->" + vertices(i) + " intersects " + vertices(jPrev) + "->" + vertices(j) + " at " + intersection)
+            println("intersection:" + vertices(iPrev) + "->" + vertices(i) + " intersects " + vertices(jPrev) + "->" + vertices(j) + " at " + intersection.get)
             return false
           }
         } else {
