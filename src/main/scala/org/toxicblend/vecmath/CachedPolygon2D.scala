@@ -9,11 +9,11 @@ import scala.collection.mutable.HashMap
 class CachedPolygon2D(vertices:IndexedSeq[Vec2D]) extends Polygon2D(vertices) {
   val hashmap = new HashMap[Vec2D, Boolean]
   
-  override def containsPoint(p:Vec2D):Boolean = {
+  override def containsPoint(p:Vec2D,ε:Double=Polygon2D.ε):Boolean = {
     val cache = hashmap.get(p)
     if (cache.isDefined) cache.get
     else {
-      val sample = super.containsPoint(p)
+      val sample = super.containsPoint(p, ε)
       hashmap.put(p,sample)
       sample
     }

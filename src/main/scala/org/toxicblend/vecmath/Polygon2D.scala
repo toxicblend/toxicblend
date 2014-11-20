@@ -184,10 +184,17 @@ class Polygon2D protected (val vertices:IndexedSeq[Vec2D], val ε:Double = Polyg
    */
   def reverse:Polygon2D = new Polygon2D(vertices.reverse) 
   
-  def containsPoint(p:Vec2D):Boolean = {
-    if ( ! bounds.containsPoint(p) ) return false
-    if ( p.distanceToSquared(bounds) <= minCenterDistanceSquared) return centerIsInside
-    else realContainsPoint(p)
+  /**
+   * @return true if the point is inside the polygon (inclusive a small distance ε)
+   */
+  def containsPoint(p:Vec2D,ε:Double=Polygon2D.ε):Boolean = {
+    if ( ! bounds.containsPoint(p,ε) ) return false
+    if ( centerIsInside )
+      if ( p.distanceToSquared(bounds) <= minCenterDistanceSquared + ε) return centerIsInside
+    else
+      if ( p.distanceToSquared(bounds) <= minCenterDistanceSquared - ε) return centerIsInside
+    
+    return realContainsPoint(p)
   }
   
   def toMesh( centroid2D:Vec2D, addFace:(Vec2D,Vec2D,Vec2D)=>Unit ) {
