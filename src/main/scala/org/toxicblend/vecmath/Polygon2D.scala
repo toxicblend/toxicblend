@@ -244,7 +244,7 @@ class Polygon2D protected (val vertices:IndexedSeq[Vec2D], val ε:Double = Polyg
 }
 
 object Polygon2D {
-  val ε = 0.00000001
+  val ε = 0.0000001
   
   def getArea(vertices:IndexedSeq[Vec2D]):Double = {
     val size = vertices.size
