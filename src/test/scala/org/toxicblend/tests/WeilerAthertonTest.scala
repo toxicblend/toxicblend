@@ -110,29 +110,24 @@ class WeilerAthertonTest extends VecMathBaseTest {
     clipped.get(4) should be (Vec2D(110.0,110.0))
     clipped.get(5) should be (Vec2D(186.0,110.0))        
   }
-  
-}
 
-/*
-object WeilerAthertonTestApp extends App {
+  "WeilerAthertonTest-6" should "clip just fine" in {
+   
+    val subject = toPolygon2D(Seq((409.5291834214155,347.944198069853),(321.29389361213236,347.944198069853),(321.29389361213236,436.1794878791361),(409.5291834214155,436.1794878791361)),scale=1,x=0d,y=0d)
+    val clip=toPolygon2D(Seq((497.7644732306985,436.179487879136),(399.98081054687503,331.55681762695315),(388.41041259765626,351.9091003417969),(370.09583740234376,374.49849243164067),(349.5401611328125,390.1649047851563),(327.0698974609375,400.14534301757817),(303.01148681640626,405.6768310546875),(96.04687414419277,436.179487879136)),scale=1d,x=0d,y=0d)
  
-  val wat = new WeilerAthertonTest 
-  
-  val subject = wat.toPolygon2D(Seq((0,0),(0,100),(100,50)))
-  val clip = wat.toPolygon2D(Seq((50,0),(50,100),(150,50)))
-
-  //println("subject=" + subject.vertices.mkString(","))
-  //println("clip=" + clip.vertices.mkString(","))
-  
-  val clipped = {
-    val rv = WeilerAthertonClipper.clip(subject, clip)
-    //rv.size should be (1)
-    wat.indexByHeading(rv.head.vertices)
+    //println("subject=" + subject.vertices.mkString(","))
+    //println("clip=" + clip.vertices.mkString(","))
+    
+    val clipped = {
+      val rv = WeilerAthertonClipper.clip(subject, clip)
+      rv.size should be (1)
+      rv.head
+    }
+    //println("clipped=" + clipped.mkString(","))
+    clipped.size should be (9)
+    clipped.isClockwise should be (true)
+    clipped.isSelfIntersecting should be (false)
+    clipped.isSimple should be (true)      
   }
-  //println("clipped=" + clipped.mkString(","))
-  //clipped.size should be (3)
-  //clipped.get(0) should be (Vec2D(50.0,75.0))
-  //clipped.get(1) should be (Vec2D(100.0,50.0))
-  //clipped.get(2) should be (Vec2D(50.0,25.0))
 }
-*/
