@@ -51,10 +51,16 @@ class MeshGeneratorOperation extends CommandProcessorTrait {
     
     @inline def toTVec3D(v:Vec2D):TVec3D = new TVec3D(v.x.toFloat, v.y.toFloat, 0f)
     
+    
     val triangulator = new EarClipper
     //println("processDataPerThread: aabb.width/delta=" + aabb.width/delta  + " aabb.height/delta=" +  aabb.height/delta) 
     val reducedClipPolygon = {
-      val p = SutherlandHodgemanClipper.clip(clockwiseClipPolygon, aabb.toPolygon2D(true), Polygon2D.ε)
+      val clipAABB = {
+        val deltaV = Vec2D(delta*1.5,delta*1.5)
+        aabb.growToContainPoint(aabb.min.sub(deltaV)).growToContainPoint(aabb.max.add(deltaV))
+      }
+      
+      val p = SutherlandHodgemanClipper.clip(clockwiseClipPolygon, clipAABB.toPolygon2D(true), Polygon2D.ε)
       if (p.isClockwise) p
       else {
         println("********** reducedClipPolygon was anti-clockwise. was forced to reverse it")
