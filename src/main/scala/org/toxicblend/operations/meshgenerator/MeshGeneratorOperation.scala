@@ -51,12 +51,11 @@ class MeshGeneratorOperation extends CommandProcessorTrait {
     
     @inline def toTVec3D(v:Vec2D):TVec3D = new TVec3D(v.x.toFloat, v.y.toFloat, 0f)
     
-    
     val triangulator = new EarClipper
     //println("processDataPerThread: aabb.width/delta=" + aabb.width/delta  + " aabb.height/delta=" +  aabb.height/delta) 
     val reducedClipPolygon = {
       val clipAABB = {
-        val deltaV = Vec2D(delta*1.5,delta*1.5)
+        val deltaV = Vec2D(delta*0.25,delta*0.25)
         aabb.growToContainPoint(aabb.min.sub(deltaV)).growToContainPoint(aabb.max.add(deltaV))
       }
       
@@ -79,7 +78,7 @@ class MeshGeneratorOperation extends CommandProcessorTrait {
       if (delta*subdivisionsY < aabb.height) println("delta*subdivisionsY is too small")
     }
     
-    for (xp <- 0 until subdivisionsX; yp <-0 until subdivisionsY) yield {
+    for (xp <- 0 until subdivisionsX-1; yp <-0 until subdivisionsY-1) yield {
       val p2 = Vec2D(aabb.min.x + xp*delta, aabb.min.y + yp*delta)
       val p3 = Vec2D(p2.x+delta, p2.y)
       val p1 = Vec2D(p2.x, p2.y+delta)
