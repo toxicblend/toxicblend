@@ -133,13 +133,22 @@ class MeshGeneratorOperation extends CommandProcessorTrait {
               rvMesh.addFace(toTVec3D(t(0)), toTVec3D(t(2)), toTVec3D(t(1))) )
           }
         })
-      } 
+      } else if (true) {
+        // These are the squares that fell completely outside the clip polygon.
+        // They are added anti-clockwise for debugging purposes 
+        val p03d = toTVec3D(p0)
+        val p13d = toTVec3D(p1)
+        val p23d = toTVec3D(p2)
+        val p33d = toTVec3D(p3)
+        rvMesh.addFace(p03d, p23d, p13d)
+        rvMesh.addFace(p03d, p33d, p23d)
+      }
     }     
     rvMesh
   }
   
   /**
-   * 
+   * calculate the value of Z
    */
   def adjustZ(mesh:TriangleMesh, clockwiseClipPolygon:Polygon2D, convexHull:Polygon2D, center:Vec2D, calculator:ZCalculator) = {
     
@@ -180,25 +189,24 @@ class MeshGeneratorOperation extends CommandProcessorTrait {
       case _ => (4,(8+subdivisions)/4) // gives 4*4 running threads.
     }
     
-    val convexHullPolygon = polygon.toConvexHull2 (Option(true))
-    
+    val convexHullPolygon = polygon.toConvexHull2(Option(true))
     val aabb = convexHullPolygon.bounds
     val aabbmax = if (aabb.width > aabb.height) aabb.width else aabb.height
     val delta = aabbmax / (1d + subdivisions)  
     val distancePerThread = delta*deltasPerThread
     
-    if (distancePerThread*sqrtThreads*(1d+subdivisions) == aabb.width || distancePerThread*sqrtThreads*(1d+subdivisions) == aabb.height)
+    if (distancePerThread*sqrtThreads*(1d+subdivisions) != aabb.width || distancePerThread*sqrtThreads*(1d+subdivisions) != aabb.height) {
       println("something does now add up\n" + 
               "sqrtThreads=" + sqrtThreads + "\n" + 
+              "deltasPerThread=" + deltasPerThread + "\n" +
               "distancePerThread=" + distancePerThread + "\n" + 
               "distancePerThread*sqrtThreads*(1+subdivisions)=" + distancePerThread*(1d+subdivisions) + " aabb.width=" + aabb.width + "\n" + 
-              "distancePerThread*sqrtThreads*(1+subdivisions)=" + distancePerThread*(1d+subdivisions) + " aabb.height=" + aabb.height)
+              "distancePerThread*sqrtThreads*(1+subdivisions)=" + distancePerThread*(1d+subdivisions) + " aabb.height=" + aabb.height + "\n")
     
-    println("aabb=" + aabb)
-    println("aabb.width/delta=" + aabb.width/delta  + " aabb.height/delta=" +  aabb.height/delta)
-    println("distancePerThread=" + distancePerThread)
-    println("deltasPerThread=" + deltasPerThread)
-    println("delta=" + delta)
+      println("aabb=" + aabb)
+      println("aabb.width/delta=" + aabb.width/delta  + " aabb.height/delta=" +  aabb.height/delta)
+      println("delta=" + delta+ "\n")
+    }
     
     val realCenter = if (center.isDefined) {
       val c = center.get
@@ -209,14 +217,18 @@ class MeshGeneratorOperation extends CommandProcessorTrait {
     
     val resultingMesh = if (useMultiThreading && subdivisions>0) {
       val trueSqrtThreads = (0.5 + aabbmax / distancePerThread).toInt
+      val trueDistancePerThread = aabbmax/trueSqrtThreads
+      val trueDelta = trueDistancePerThread/subdivisions
       val job = for (i <- 0 until trueSqrtThreads; j <- 0 until trueSqrtThreads ) yield {
-        AABB2D(aabb.min.x+distancePerThread*i, aabb.min.y+distancePerThread*j, aabb.min.x+distancePerThread*(i+1), aabb.min.y+distancePerThread*(j+1))
+        AABB2D(aabb.min.x+trueDistancePerThread*i, aabb.min.y+trueDistancePerThread*j, aabb.min.x+trueDistancePerThread*(i+1), aabb.min.y+trueDistancePerThread*(j+1))
       }
       //println("distancePerThread=" + subdivisions*delta/(threads/2d))
       println("subjobs:\n" + job.mkString("\n") + "\n")
-      job.par.map(j=>processDataPerThread(polygon,j,realCenter,delta)).seq.foldLeft(new TriangleMesh)((rv,part)=>rv.addMesh(part))
-    } else {
-      
+      println("trueSqrtThreads=" + trueSqrtThreads ) 
+      println("trueDistancePerThread=" + trueDistancePerThread)
+      println("trueDelta=" + trueDelta )
+      job.par.map(j=>processDataPerThread(polygon,j,realCenter,trueDelta)).seq.foldLeft(new TriangleMesh)((rv,part)=>rv.addMesh(part))
+    } else { 
       if (true)  // flip to false to debug multithreaded operation (but with just one thread)
         processDataPerThread(polygon,aabb,realCenter,delta)
       else {
