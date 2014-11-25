@@ -195,13 +195,13 @@ class MeshGeneratorOperation extends CommandProcessorTrait {
     val delta = aabbmax / (1d + subdivisions)  
     val distancePerThread = delta*deltasPerThread
     
-    if (distancePerThread*sqrtThreads*(1d+subdivisions) != aabb.width || distancePerThread*sqrtThreads*(1d+subdivisions) != aabb.height) {
+    if (distancePerThread*sqrtThreads == aabb.width || distancePerThread*sqrtThreads == aabb.height) {
       println("something does now add up\n" + 
               "sqrtThreads=" + sqrtThreads + "\n" + 
               "deltasPerThread=" + deltasPerThread + "\n" +
               "distancePerThread=" + distancePerThread + "\n" + 
-              "distancePerThread*sqrtThreads*(1+subdivisions)=" + distancePerThread*(1d+subdivisions) + " aabb.width=" + aabb.width + "\n" + 
-              "distancePerThread*sqrtThreads*(1+subdivisions)=" + distancePerThread*(1d+subdivisions) + " aabb.height=" + aabb.height + "\n")
+              "distancePerThread*sqrtThreads=" + distancePerThread*sqrtThreads+ " aabb.width=" + aabb.width + "\n" + 
+              "distancePerThread*sqrtThreads=" + distancePerThread*sqrtThreads + " aabb.height=" + aabb.height + "\n")
     
       println("aabb=" + aabb)
       println("aabb.width/delta=" + aabb.width/delta  + " aabb.height/delta=" +  aabb.height/delta)
@@ -219,7 +219,9 @@ class MeshGeneratorOperation extends CommandProcessorTrait {
       val trueSqrtThreads = (0.5 + aabbmax / distancePerThread).toInt
       val trueDistancePerThread = aabbmax/trueSqrtThreads
       val trueDelta = trueDistancePerThread/subdivisions
-      val job = for (i <- 0 until trueSqrtThreads; j <- 0 until trueSqrtThreads ) yield {
+      val job = for (i <- 0 until trueSqrtThreads; j <- 0 until trueSqrtThreads 
+                     if (aabb.min.x+trueDistancePerThread*i < aabb.max.x)
+                     if (aabb.min.y+trueDistancePerThread*j < aabb.max.y) ) yield {
         AABB2D(aabb.min.x+trueDistancePerThread*i, aabb.min.y+trueDistancePerThread*j, aabb.min.x+trueDistancePerThread*(i+1), aabb.min.y+trueDistancePerThread*(j+1))
       }
       //println("distancePerThread=" + subdivisions*delta/(threads/2d))
