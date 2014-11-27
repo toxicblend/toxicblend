@@ -4,9 +4,9 @@ import math.{abs,Pi}
 
 object NumberUtils {
   
-  @inline def isAlmostEqual(a:Int, b:Int, ε:Int) = abs(a-b) < ε
-  @inline def isAlmostEqual(a:Double, b:Double, ε:Double) = abs(a-b) < ε
-  @inline def isAlmostEqual(a:Float, b:Float, ε:Float) = abs(a-b) < ε
+  @inline def isAlmostEqual(a:Int, b:Int, ε:Int) = IntNumberUtils.isAlmostEqual(a,b,ε)
+  @inline def isAlmostEqual(a:Double, b:Double, ε:Double) = abs(a-b) <= ε
+  @inline def isAlmostEqual(a:Float, b:Float, ε:Float) = abs(a-b) <= ε
    
   /**
    * radians to degrees
