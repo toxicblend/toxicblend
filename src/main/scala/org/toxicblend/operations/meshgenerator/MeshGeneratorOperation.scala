@@ -28,6 +28,7 @@ import org.toxicblend.vecmath.Vec2D
 import org.toxicblend.vecmath.MutableVec2D
 import org.toxicblend.vecmath.Polygon2D
 import org.toxicblend.vecmath.AABB2D
+import org.toxicblend.util.IntNumberUtils.{max,min,abs,sqrt}
 import org.toxicblend.util.CyclicTree
 import org.toxicblend.vecmath.EarClipper
 
@@ -37,7 +38,7 @@ class MeshGeneratorOperation extends CommandProcessorTrait {
   
   private val IDEAL_SIZE = 5000 // totally random number
   
-  def checkForCorruption1(i:Iterator[toxi.geom.mesh.Vertex]) :Boolean = {
+  /*def checkForCorruption1(i:Iterator[toxi.geom.mesh.Vertex]) :Boolean = {
     i.foreach( v=> if (v.x.isNaN || v.y.isNaN || v.z.isNaN || v.x.isInfinite || v.y.isInfinite || v.z.isInfinite ) return true)
     false
   }
@@ -46,8 +47,8 @@ class MeshGeneratorOperation extends CommandProcessorTrait {
     i.foreach(v=> if (v.x.isNaN || v.y.isNaN || v.x.isInfinite || v.y.isInfinite ) return true)
     false
   }
-  
-  def processDataPerThread(clockwiseClipPolygon:Polygon2D, aabb:AABB2D, center:Vec2D, delta:Double):TriangleMesh = {
+  */
+  def processDataPerThread(clockwiseClipPolygon:Polygon2D, aabb:AABB2D, center:Vec2D, parts:Int, delta:Double):TriangleMesh = {
     
     @inline def toTVec3D(v:Vec2D):TVec3D = new TVec3D(v.x.toFloat, v.y.toFloat, 0f)
     
@@ -55,7 +56,8 @@ class MeshGeneratorOperation extends CommandProcessorTrait {
     //println("processDataPerThread: aabb.width/delta=" + aabb.width/delta  + " aabb.height/delta=" +  aabb.height/delta) 
     val reducedClipPolygon = {
       val clipAABB = {
-        val deltaV = Vec2D(delta*0.25,delta*0.25)
+        // make the clip polygon a little bit bigger
+        val deltaV = Vec2D(delta*0.1d, delta*0.1)
         aabb.growToContainPoint(aabb.min.sub(deltaV)).growToContainPoint(aabb.max.add(deltaV))
       }
       
@@ -68,17 +70,8 @@ class MeshGeneratorOperation extends CommandProcessorTrait {
     }
     val reducedAABB = reducedClipPolygon.bounds 
     val rvMesh = new TriangleMesh
-    val subdivisionsX = math.round((0.5d+(aabb.width/delta)).toFloat)
-    val subdivisionsY = math.round((0.5d+(aabb.height/delta)).toFloat)
-    if (true){
-      println("subdivisionsX=" + subdivisionsX)
-      println("subdivisionsY=" + subdivisionsY)
-      println("delta=" + delta)
-      if (delta*subdivisionsX < aabb.width) println("delta*subdivisionsX is too small")
-      if (delta*subdivisionsY < aabb.height) println("delta*subdivisionsY is too small")
-    }
     
-    for (xp <- 0 until subdivisionsX-1; yp <-0 until subdivisionsY-1) yield {
+    for (xp <- 0 until parts; yp <-0 until parts) yield {
       val p2 = Vec2D(aabb.min.x + xp*delta, aabb.min.y + yp*delta)
       val p3 = Vec2D(p2.x+delta, p2.y)
       val p1 = Vec2D(p2.x, p2.y+delta)
@@ -133,7 +126,7 @@ class MeshGeneratorOperation extends CommandProcessorTrait {
               rvMesh.addFace(toTVec3D(t(0)), toTVec3D(t(2)), toTVec3D(t(1))) )
           }
         })
-      } else if (true) {
+      } else if (false) {
         // These are the squares that fell completely outside the clip polygon.
         // They are added anti-clockwise for debugging purposes 
         val p03d = toTVec3D(p0)
@@ -143,7 +136,17 @@ class MeshGeneratorOperation extends CommandProcessorTrait {
         rvMesh.addFace(p03d, p23d, p13d)
         rvMesh.addFace(p03d, p33d, p23d)
       }
-    }     
+    }
+    if (false) {
+      // Display the working area of the thread with anti-clockwise triangles 
+      val boundV = aabb.toIndexedSeq(true)
+      val p03d = toTVec3D(boundV(0))
+      val p13d = toTVec3D(boundV(1))
+      val p23d = toTVec3D(boundV(2))
+      val p33d = toTVec3D(boundV(3))
+      rvMesh.addFace(p03d, p23d, p13d)
+      rvMesh.addFace(p03d, p33d, p23d)
+    }
     rvMesh
   }
   
@@ -166,7 +169,7 @@ class MeshGeneratorOperation extends CommandProcessorTrait {
     })
   }
   
-  def processData(edges:Polygon2DConverter, center:Option[ReadonlyVec3D], subdivisions:Int, calculator:ZCalculator, useMultiThreading:Boolean) : Mesh3DConverter = {
+  def processData(edges:Polygon2DConverter, center:Option[ReadonlyVec3D], parts:Int, calculator:ZCalculator, useMultiThreading:Boolean) : Mesh3DConverter = {
     
     val (polygon,scale) = {
       val tPolygon = edges.polygons(0)
@@ -181,33 +184,16 @@ class MeshGeneratorOperation extends CommandProcessorTrait {
         (p.reverse,scale.toFloat)  
       }
     }
-    
-    val (sqrtThreads,deltasPerThread) = subdivisions match {
-      case 0 => (1,1) // should really never happen
-      case 1 => (2,1) // gives 2*2 running threads
-      case 2 => (2,2) // gives 2*2 running threads 
-      case _ => (4,(8+subdivisions)/4) // gives 4*4 running threads.
-    }
-    
     val convexHullPolygon = polygon.toConvexHull2(Option(true))
-    val aabb = convexHullPolygon.bounds
-    val aabbmax = if (aabb.width > aabb.height) aabb.width else aabb.height
-    val delta = aabbmax / (1d + subdivisions)  
-    val distancePerThread = delta*deltasPerThread
-    
-    if (distancePerThread*sqrtThreads == aabb.width || distancePerThread*sqrtThreads == aabb.height) {
-      println("something does now add up\n" + 
-              "sqrtThreads=" + sqrtThreads + "\n" + 
-              "deltasPerThread=" + deltasPerThread + "\n" +
-              "distancePerThread=" + distancePerThread + "\n" + 
-              "distancePerThread*sqrtThreads=" + distancePerThread*sqrtThreads+ " aabb.width=" + aabb.width + "\n" + 
-              "distancePerThread*sqrtThreads=" + distancePerThread*sqrtThreads + " aabb.height=" + aabb.height + "\n")
-    
-      println("aabb=" + aabb)
-      println("aabb.width/delta=" + aabb.width/delta  + " aabb.height/delta=" +  aabb.height/delta)
-      println("delta=" + delta+ "\n")
+    val convexHullAABB = {
+       convexHullPolygon.bounds
     }
     
+    val delta = math.max(convexHullAABB.width,convexHullAABB.height).toDouble / parts.toDouble
+    val numberOfCores = Runtime.getRuntime().availableProcessors()
+    val mtParts = parts/sqrt(numberOfCores,.5d)
+    //println("number of cores=" + numberOfCores + " parts = " + parts + " mtParts = " + mtParts)
+
     val realCenter = if (center.isDefined) {
       val c = center.get
       Vec2D(c.x*scale, c.y*scale)
@@ -215,31 +201,26 @@ class MeshGeneratorOperation extends CommandProcessorTrait {
       convexHullPolygon.getCentroid
     }
     
-    val resultingMesh = if (useMultiThreading && subdivisions>0) {
-      val trueSqrtThreads = (0.5 + aabbmax / distancePerThread).toInt
-      val trueDistancePerThread = aabbmax/trueSqrtThreads
-      val trueDelta = trueDistancePerThread/subdivisions
-      val job = for (i <- 0 until trueSqrtThreads; j <- 0 until trueSqrtThreads 
-                     if (aabb.min.x+trueDistancePerThread*i < aabb.max.x)
-                     if (aabb.min.y+trueDistancePerThread*j < aabb.max.y) ) yield {
-        AABB2D(aabb.min.x+trueDistancePerThread*i, aabb.min.y+trueDistancePerThread*j, aabb.min.x+trueDistancePerThread*(i+1), aabb.min.y+trueDistancePerThread*(j+1))
+    val resultingMesh = if (useMultiThreading && mtParts >= 2 ) {
+
+      val job = for (xp <- 0 until parts by mtParts;
+                     yp <- 0 until parts by mtParts 
+                     if (xp * delta < convexHullAABB.width)
+                     if (yp * delta < convexHullAABB.height)) yield {
+        val x0 = convexHullAABB.min.x+xp*delta
+        val y0 = convexHullAABB.min.y+yp*delta
+        AABB2D(x0, y0, x0 + mtParts*delta, y0 + mtParts*delta)
       }
-      //println("distancePerThread=" + subdivisions*delta/(threads/2d))
-      println("subjobs:\n" + job.mkString("\n") + "\n")
-      println("trueSqrtThreads=" + trueSqrtThreads ) 
-      println("trueDistancePerThread=" + trueDistancePerThread)
-      println("trueDelta=" + trueDelta )
-      job.par.map(j=>processDataPerThread(polygon,j,realCenter,trueDelta)).seq.foldLeft(new TriangleMesh)((rv,part)=>rv.addMesh(part))
+      
+      //println("subjobs:\n" + job.mkString("\n") + "\nsize=" + job.size + "\n")
+      job.par.map(j=>processDataPerThread(polygon,j,realCenter,parts=mtParts,delta=delta)).seq.foldLeft(new TriangleMesh)((rv,part)=>rv.addMesh(part))
     } else { 
-      if (true)  // flip to false to debug multithreaded operation (but with just one thread)
-        processDataPerThread(polygon,aabb,realCenter,delta)
-      else {
-        val trueSqrtThreads = (0.5 + aabbmax / distancePerThread).toInt
-        val job = for (i <- 0 until trueSqrtThreads; j <- 0 until trueSqrtThreads ) yield {
-          AABB2D(aabb.min.x+distancePerThread*i, aabb.min.y+distancePerThread*j, aabb.min.x+distancePerThread*(i+1), aabb.min.y+distancePerThread*(j+1))
-        }
-        job.map(j=>processDataPerThread(polygon,j,realCenter,delta)).foldLeft(new TriangleMesh)((rv,part)=>rv.addMesh(part))
-      }
+      //val aabb = {
+        // make the aabb a little bit bigger to include every pixel
+      //  val deltaV = Vec2D(delta*0.1d, delta*0.1)
+      //  convexHullAABB.growToContainPoint(convexHullAABB.min.sub(deltaV)).growToContainPoint(convexHullAABB.max.add(deltaV))
+      //}
+      processDataPerThread(polygon,convexHullAABB,realCenter,parts=parts,delta=delta)
     }
     
     adjustZ(resultingMesh, polygon, convexHullPolygon, realCenter, calculator)
@@ -315,7 +296,8 @@ class MeshGeneratorOperation extends CommandProcessorTrait {
         case "CIRCLEINTERSECTION" => new IntersectionCalculator(radius1Property,radius2Property)
         case "CIRCLEARC" => new ArcCalculator(radius1Property,radius2Property)
       }
-      returnMessageBuilder.addModels(processData(edgePolygon, center, subdivisions, calculator, useMultiThreading).toPBModel(None, None))
+      val parts = subdivisions+1
+      returnMessageBuilder.addModels(processData(edgePolygon, center, parts, calculator, useMultiThreading).toPBModel(None, None))
       returnMessageBuilder
     })
   }
