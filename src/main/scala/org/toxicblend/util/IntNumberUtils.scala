@@ -5,7 +5,7 @@ object IntNumberUtils {
   @inline def isAlmostEqual(a:Int, b:Int, ε:Int) = abs(a-b) <= ε
   @inline def max(a:Int, b:Int) = if (a > b) a else b
   @inline def min(a:Int, b:Int) = if (a < b) a else b
-  @inline def sqrt(a:Int) = math.sqrt(a).toInt
+  @inline def sqrt(a:Int,add:Double=0d) = (add+math.sqrt(a)).toInt
   /**
    * return a tuple containing (math.min(a,b),math.max(a,b)
    */
