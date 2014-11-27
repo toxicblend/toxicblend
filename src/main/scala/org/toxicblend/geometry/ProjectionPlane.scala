@@ -21,8 +21,8 @@ object ProjectionPlane extends Enumeration {
     @inline
     def convert(projectionPlane:ProjectionPlane, vertex:ReadonlyVec3D ) = {
       projectionPlane match {
-	      case ProjectionPlane.YZ_PLANE => new Vec2D(vertex.x, vertex.y)
-	      case ProjectionPlane.XZ_PLANE => new Vec2D(vertex.x, vertex.y)
+	      case ProjectionPlane.YZ_PLANE => new Vec2D(vertex.y, vertex.z)
+	      case ProjectionPlane.XZ_PLANE => new Vec2D(vertex.x, vertex.z)
 	      case ProjectionPlane.XY_PLANE => new Vec2D(vertex.x, vertex.y)
 	    }
     }
