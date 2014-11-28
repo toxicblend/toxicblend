@@ -9,7 +9,7 @@ class SutherlandHodgemanClipper {
   
   def clipPolygon(input:IndexedSeq[Vec2D], a:Vec2D, b:Vec2D, ε:Double):IndexedSeq[Vec2D] = {
     
-    def conditionalAppend(buffer:ArrayBuffer[Vec2D], v:Vec2D) = {
+    @inline def conditionalAppend(buffer:ArrayBuffer[Vec2D], v:Vec2D) = {
       if (buffer.size==0 || !buffer.last.=~=(v,ε) ) buffer.append(v)
       buffer
     } 
@@ -56,7 +56,7 @@ object SutherlandHodgemanClipper {
   }
      
   lazy val singleton = new SutherlandHodgemanClipper
-  def clip(subject:Polygon2D, clipPolygon:Polygon2D, ε:Double=Polygon2D.ε)=Polygon2D(singleton.clipPolygon(subject.toIndexedSeq, clipPolygon.toIndexedSeq,ε), ε)
+  def clip(subject:Polygon2D, clipPolygon:Polygon2D, enforceDirection:Option[Boolean]=None, ε:Double=Polygon2D.ε)=Polygon2D(singleton.clipPolygon(subject.toIndexedSeq, clipPolygon.toIndexedSeq,ε), enforceDirection, ε)
   def clip(subject:IndexedSeq[Vec2D], clipEdges:IndexedSeq[Vec2D], ε:Double)=singleton.clipPolygon(subject, clipEdges, ε)
   def clip(subject:IndexedSeq[Vec2D], clipEdge:FiniteLine2D, ε:Double)=singleton.clipPolygon(subject, clipEdge, ε)
   def clip(subject:IndexedSeq[Vec2D], clipV1:Vec2D, clipV2:Vec2D, ε:Double)=singleton.clipPolygon(subject, clipV1, clipV2, ε)

@@ -61,7 +61,7 @@ class MeshGeneratorOperation extends CommandProcessorTrait {
         aabb.growToContainPoint(aabb.min.sub(deltaV)).growToContainPoint(aabb.max.add(deltaV))
       }
       
-      val p = SutherlandHodgemanClipper.clip(clockwiseClipPolygon, clipAABB.toPolygon2D(true), Polygon2D.ε)
+      val p = SutherlandHodgemanClipper.clip(clockwiseClipPolygon, clipAABB.toPolygon2D(true), Option(true), Polygon2D.ε)
       if (p.isClockwise) p
       else {
         println("********** reducedClipPolygon was anti-clockwise. was forced to reverse it")
