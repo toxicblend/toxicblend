@@ -6,7 +6,7 @@ import com.badlogic.gdx.math.EarClippingTriangulator
  * until a clipper in scala is available this will have to suffice
  * This class is not thread safe
  */
-class EarClipper{
+class ToxicLibsEarClipper{
   protected val ect = new EarClippingTriangulator
   
   def triangulatePolygon(p:Polygon2D):IndexedSeq[IndexedSeq[Vec2D]] = {
