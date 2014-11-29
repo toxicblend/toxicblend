@@ -1,13 +1,13 @@
 package org.toxicblend.vecmath
 
-import com.badlogic.gdx.math.EarClippingTriangulator
+import com.badlogic.gdx.math.{EarClippingTriangulator=>GDXEarClippingTriangulator}
 
 /**
  * until a clipper in scala is available this will have to suffice
  * This class is not thread safe
  */
-class EarClipper{
-  protected val ect = new EarClippingTriangulator
+class GdxEarClippingTriangulator{
+  protected val ect = new GDXEarClippingTriangulator
   
   def triangulatePolygon(p:Polygon2D):IndexedSeq[IndexedSeq[Vec2D]] = {
     val vertices = new Array[Float](p.size*2)
