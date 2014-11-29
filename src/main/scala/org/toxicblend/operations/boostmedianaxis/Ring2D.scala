@@ -6,18 +6,19 @@ import scala.math.abs
 import scala.collection.mutable.ArrayBuffer
 import toxi.geom.ReadonlyVec2D
 import toxi.geom.Rect
+import org.toxicblend.vecmath.Vec2D
+import org.toxicblend.vecmath.AABB2D
 
 /**
  * @param __inVerts is named this way because of the way scala handles constructor input parameters (non-var or val). 
  *     If the variable is, by accident, referenced anywhere in this object it will be retained as a 'private final' in bytecode
  */
-class Ring2D( val ma:MedianAxisJni, val name:String, __inVerts:IndexedSeq[ReadonlyVec2D], var subRings:Array[Ring2D], val simplifyLimit:Float) {
+class Ring2D( val ma:MedianAxisJni, val name:String, __inVerts:IndexedSeq[Vec2D], var subRings:Array[Ring2D], val simplifyLimit:Float) {
   
   val ringId = ma.addRing(__inVerts, simplifyLimit)
   val verts = ma.getRing(ringId)
   assert(verts.size>1)
-  val bb = new Rect(verts(0),verts(1))
-  verts.foreach(p => bb.growToContainPoint(p))
+  val bb = AABB2D(verts)
   
   override def toString:String = {
     bb.toString + "\n" + 
@@ -39,17 +40,17 @@ class Ring2D( val ma:MedianAxisJni, val name:String, __inVerts:IndexedSeq[Readon
    */
   def completelyWithinBB(that: Ring2D) : Boolean = {
     assert(this.ma.eq(that.ma), "Can't compare rings created in different MedianAxisJni instances")
-    bb.containsPoint(that.bb.getBottomLeft()) &&
-    bb.containsPoint(that.bb.getBottomRight()) &&
-    bb.containsPoint(that.bb.getTopLeft()) &&
-    bb.containsPoint(that.bb.getTopRight())
+    bb.containsPoint(that.bb.getBottomLeft) &&
+    bb.containsPoint(that.bb.getBottomRight) &&
+    bb.containsPoint(that.bb.getTopLeft) &&
+    bb.containsPoint(that.bb.getTopRight)
   }
   
   /**
    * returns true if the vertices of 'that' ring are inside 'this' ring
    * calls completelyWithinBB first 
    */
-  def complatelyContains(that: Ring2D):Boolean = {
+  def complatelyContains(that:Ring2D):Boolean = {
     assert(this.ma.eq(that.ma), "Can't compare rings created in different MedianAxisJni instances")
     if (completelyWithinBB(that)) {
       ma.ringContainsAllPoints(this.ringId, that.verts) 
@@ -61,7 +62,7 @@ class Ring2D( val ma:MedianAxisJni, val name:String, __inVerts:IndexedSeq[Readon
     }
   }
   
-  def ringContainsAllPoints(points: IndexedSeq[ReadonlyVec2D]):Boolean = {
+  def ringContainsAllPoints(points:IndexedSeq[Vec2D]):Boolean = {
     val testPoints = points.sliding(1,points.length/2).flatten.toArray
     println("ringContainsPoints: points.length = %d, by = %d".format(points.length, 2+2*(points.length/8)) )
     println("ringContainsPoints: " + testPoints.mkString(","))

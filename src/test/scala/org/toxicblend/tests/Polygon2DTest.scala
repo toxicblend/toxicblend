@@ -13,6 +13,8 @@ import scala.collection.JavaConversions._
 
 class Polygon2DTest extends VecMathBaseTest {
   
+  val tolerance = 0.000001d
+  
   "Polygon2DTest-1" should "detect inside just fine" in {
     val s = Array((100.0,200.0),(158.77852522924732,180.90169943749476),
                   (195.10565162951536,130.90169943749476),(195.10565162951536,100.0),
@@ -159,6 +161,19 @@ class Polygon2DTest extends VecMathBaseTest {
     var p = toPolygon2D(Seq((200.0,120.0), (210.0,150.0), (200.0,175.0), (200.0,200.0), (290.0,200.0), (290.0,110.0), (200.0,110.0)))
     p.isSelfIntersecting should be (false)
     p.isSimple should be (true)
+  }
+  
+  "Polygon2DTest-11" should "test area of a triangle" in {
+   val p1 = Vec2D(1,2)  
+   val p2 = Vec2D(2,1) 
+   val p3 = Vec2D(1,1)
+   val p = Polygon2D(Array(p1,p2,p3))
+   
+   p.isClockwise should be (true)
+   Polygon2D.isClockwise(p1,p2,p3) should be (true)
+   p.getArea should be (-0.5d plusOrMinus tolerance)
+   Polygon2D.getArea(p2, p1, p3) should be (-0.5d plusOrMinus tolerance)
+   Polygon2D.getArea(p.vertices ) should be (-0.5d plusOrMinus tolerance)
   }
   
 }

@@ -3,13 +3,12 @@ package org.toxicblend.typeconverters
 import org.toxicblend.protobuf.ToxicBlendProtos.Model
 import org.toxicblend.protobuf.ToxicBlendProtos.Face
 import toxi.geom.Vec3D
-import toxi.geom.ReadonlyVec2D
-import toxi.geom.Vec2D
 import toxi.geom.Matrix4x4
 import org.toxicblend.geometry.ProjectionPlane
 import org.toxicblend.geometry.Mesh2D
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.Buffer
+import org.toxicblend.vecmath.Vec2D
 import scala.collection.JavaConversions._
 import scala.collection.JavaConverters._
 
@@ -28,13 +27,13 @@ class Mesh2DConverter private (val mesh2d:Mesh2D, val projectionPlane:Projection
         None
     protected var vertexIndex = 0
     
-    def addVertex(vertex:ReadonlyVec2D) = {
+    def addVertex(vertex:Vec2D) = {
       val pbvertex = org.toxicblend.protobuf.ToxicBlendProtos.Vertex.newBuilder()
       pbvertex.setId(vertexIndex)
       val vertex3d = projectionPlane match {
-        case ProjectionPlane.YZ_PLANE => new Vec3D(0f,vertex.x, vertex.y)
-        case ProjectionPlane.XZ_PLANE => new Vec3D(vertex.x, 0f, vertex.y)
-        case ProjectionPlane.XY_PLANE => new Vec3D(vertex.x, vertex.y, 0f)
+        case ProjectionPlane.YZ_PLANE => new Vec3D(0f,vertex.x.toFloat, vertex.y.toFloat)
+        case ProjectionPlane.XZ_PLANE => new Vec3D(vertex.x.toFloat, 0f, vertex.y.toFloat)
+        case ProjectionPlane.XY_PLANE => new Vec3D(vertex.x.toFloat, vertex.y.toFloat, 0f)
       }
       if (inverseFinalTransformation.isDefined) {
         inverseFinalTransformation.get.applyToSelf(vertex3d)
@@ -47,7 +46,7 @@ class Mesh2DConverter private (val mesh2d:Mesh2D, val projectionPlane:Projection
       vertexIndex
     }
     
-    def addVertexAndEdgeToPrevious(vertex:ReadonlyVec2D) = {
+    def addVertexAndEdgeToPrevious(vertex:Vec2D) = {
       if (addVertex(vertex) > 1) {
         val face = Face.newBuilder()
         face.addVertices(vertexIndex-2) // vertexIndex -1 = this vertex
@@ -117,7 +116,7 @@ object Mesh2DConverter {
    */
   def apply(pbModel:Model, projectionPlane:ProjectionPlane.ProjectionPlane, applyWorldTransform:Boolean=false):Mesh2DConverter = {
     val vertexList = pbModel.getVerticesList()
-    val points2D = new Array[ReadonlyVec2D](vertexList.size).to[ArrayBuffer]
+    val points2D = new Array[Vec2D](vertexList.size).to[ArrayBuffer]
     val matrixConverter =  Matrix4x4Converter(pbModel)
     
     //println("received " + verticesList.size()  + " vertices")
@@ -126,9 +125,9 @@ object Mesh2DConverter {
       if (applyWorldTransform) matrixConverter.matrix.applyToSelf(new3dVertex)
          
       points2D(pbVertex.getId()) = projectionPlane match {
-        case ProjectionPlane.YZ_PLANE => new Vec2D(new3dVertex.y, new3dVertex.z)
-        case ProjectionPlane.XZ_PLANE => new Vec2D(new3dVertex.x, new3dVertex.z)
-        case ProjectionPlane.XY_PLANE => new Vec2D(new3dVertex.x, new3dVertex.y)
+        case ProjectionPlane.YZ_PLANE => Vec2D(new3dVertex.y, new3dVertex.z)
+        case ProjectionPlane.XZ_PLANE => Vec2D(new3dVertex.x, new3dVertex.z)
+        case ProjectionPlane.XY_PLANE => Vec2D(new3dVertex.x, new3dVertex.y)
       }
     })
     
@@ -141,7 +140,7 @@ object Mesh2DConverter {
   /** 
    * Constructs from one Buffer[Vec2D]
    */
-  def apply(points:ArrayBuffer[ReadonlyVec2D], faces:ArrayBuffer[ArrayBuffer[Int]], projectionPlane:ProjectionPlane.ProjectionPlane, name:String, useEdgeMerge:Boolean):Mesh2DConverter = {
+  def apply(points:ArrayBuffer[Vec2D], faces:ArrayBuffer[ArrayBuffer[Int]], projectionPlane:ProjectionPlane.ProjectionPlane, name:String, useEdgeMerge:Boolean):Mesh2DConverter = {
     new Mesh2DConverter(Mesh2D(points,faces), projectionPlane, name)
   } 
 }

@@ -1,14 +1,13 @@
 package org.toxicblend.typeconverters
 
+import org.toxicblend.vecmath.Vec2D
 import org.toxicblend.protobuf.ToxicBlendProtos.Model
 import org.toxicblend.protobuf.ToxicBlendProtos.Face
 import toxi.geom.Vec3D
-import toxi.geom.ReadonlyVec2D
 import toxi.geom.ReadonlyVec3D
-import toxi.geom.Polygon2D
+import org.toxicblend.vecmath.Polygon2D
 import toxi.geom.Plane
 import toxi.geom.AABB
-import toxi.geom.Vec2D
 import toxi.geom.Matrix4x4
 import toxi.geom.Matrix3d
 import toxi.geom.Rect
@@ -42,10 +41,10 @@ class Polygon2DConverter (val polygons:Seq[Polygon2D],
     val helper = new Vertex3DHelper(modelBuilder, finalTransformation)
     polygons.zip(transforms).foreach( pt => {
       val firstIndex = {
-        val firstVertex = pt._2.applyToSelf(ProjectionPlane.convert(ProjectionPlane.XY_PLANE,pt._1.vertices.get(0)))
+        val firstVertex = pt._2.applyToSelf(ProjectionPlane.convert(ProjectionPlane.XY_PLANE,pt._1.vertices.head))
         helper.addVertex(firstVertex)
       }
-      pt._1.vertices.asScala.tail.foreach(v2d => {
+      pt._1.vertices.tail.foreach(v2d => {
         val v3d = pt._2.applyToSelf(ProjectionPlane.convert(ProjectionPlane.XY_PLANE,v2d))
         helper.addVertexAndEdgeToPrevious(v3d)
       })
@@ -72,7 +71,11 @@ object Polygon2DConverter {
   def apply(rings2d:Rings2D, projectionPlane:ProjectionPlane.ProjectionPlane, name:String):Polygon2DConverter = {
     val polygons = new ListBuffer[Polygon2D]
     rings2d.rings.foreach( ring => {
-      val p = new Polygon2D(ring.map(i => rings2d.vertices(i)).iterator.asJava)
+      val p = Polygon2D( ring.map(i => {
+        val v = rings2d.vertices(i)
+        Vec2D(v.x, v.y)
+      }))
+      
       polygons.append(p) 
     })
     new Polygon2DConverter(polygons, new Array[Matrix4x4](0), /*Option(projectionPlane),*/ name)
@@ -260,22 +263,13 @@ object Polygon2DConverter {
           s//s.iterator.asJava
         }
         //println("mapped3DPoints: " + mapped3DPoints.mkString(","))
-        val mapped2DPoints =  {
-          val m2d:IndexedSeq[ReadonlyVec2D] = mapped3DPoints.map(v => ProjectionPlane.convert(ProjectionPlane.XY_PLANE,v))
-          m2d
-        }
+        val mapped2DPoints:IndexedSeq[Vec2D] = mapped3DPoints.map(v => ProjectionPlane.convert(ProjectionPlane.XY_PLANE,v))
+         
         if ( mapped2DPoints.size > 2 ) {
-	        val polygon = new Polygon2D(mapped2DPoints.iterator.asJava)
-	        
-	        //println("polygon: " + polygon)
-	        if (!polygon.isClockwise) {
-	          polygon.flipVertexOrder
-	        }
-	        assert(polygon!=null)
-          val inverted= matrix.invert
+	        val polygon = Polygon2D(mapped2DPoints, Option(true))
+          val inverted = matrix.invert
 	        assert(inverted!=null)
 	        Option(polygon,inverted)
-	
         } else {
           System.err.println("debug me! Could not find any 2d points out of : " + mapped3DPoints)
           None

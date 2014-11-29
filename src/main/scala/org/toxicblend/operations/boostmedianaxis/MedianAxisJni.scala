@@ -1,13 +1,14 @@
 package org.toxicblend.operations.boostmedianaxis
 
 import org.toxicblend.util.SharedLibraryLoader
-import toxi.geom.Vec2D
+import toxi.geom.{Vec2D=>TVec2D}
 import toxi.geom.Vec3D
 import toxi.geom.ReadonlyVec2D
 import toxi.geom.ReadonlyVec3D
 import scala.collection.mutable.ArrayBuffer
 import org.toxicblend.geometry.Rings2D
 import org.toxicblend.typeconverters.Mesh3DConverter
+import org.toxicblend.vecmath.Vec2D
 
 class MedianAxisJni private {
   
@@ -39,7 +40,7 @@ class MedianAxisJni private {
     foundRings
   }
   
-  def getRing(ringId:Int):ArrayBuffer[ReadonlyVec2D] = {
+  def getRing(ringId:Int):ArrayBuffer[Vec2D] = {
     val rv = MedianAxisJni.fromJni2dArray(getRingJni_(instanceId, ringId))
     if ( rv.size > 1) {
       System.err.println("Debug me, getRingJni_ returned multiple segments")
@@ -47,17 +48,17 @@ class MedianAxisJni private {
     rv(0)
   }
   
-  def setRing(ringId:Int, inVerts:Seq[ReadonlyVec2D], simplifyLimit:Float):Unit = {
+  def setRing(ringId:Int, inVerts:Seq[Vec2D], simplifyLimit:Float):Unit = {
     val verts = MedianAxisJni.toJni2dArray(inVerts)
     setRingJni_(instanceId, ringId, verts.toArray, simplifyLimit);
   }
   
-  def addRing(inVerts:Seq[ReadonlyVec2D], simplifyLimit:Float):Int = {
+  def addRing(inVerts:Seq[Vec2D], simplifyLimit:Float):Int = {
     val verts = MedianAxisJni.toJni2dArray(inVerts)
     return addRingJni_(instanceId, verts.toArray, simplifyLimit)
   }
     
-  def ringContainsAllPoints(ringId:Int, inPoints:Seq[ReadonlyVec2D]) : Boolean = {
+  def ringContainsAllPoints(ringId:Int, inPoints:Seq[Vec2D]) : Boolean = {
     val points = MedianAxisJni.toJni2dArray(inPoints)
     return ringContainsAllPointsJni_(instanceId, points.toArray, ringId);
   }
@@ -106,10 +107,10 @@ object MedianAxisJni {
     container += Float.NaN
   }
   
-  @inline protected def addToJni2dArray(data:Seq[ReadonlyVec2D], container:ArrayBuffer[Float]):ArrayBuffer[Float]= {
+  @inline protected def addToJni2dArray(data:Seq[Vec2D], container:ArrayBuffer[Float]):ArrayBuffer[Float]= {
     data.foreach (p => {
-      container += p.x
-      container += p.y
+      container += p.x.toFloat
+      container += p.y.toFloat
     })
     container += Float.NaN
   }
@@ -125,42 +126,41 @@ object MedianAxisJni {
     outBuffer
   }
   
-  @inline protected def toJni2dArray(data:Seq[ReadonlyVec2D]):ArrayBuffer[Float]= {
+  @inline protected def toJni2dArray(data:Seq[Vec2D]):ArrayBuffer[Float]= {
     val outBuffer = new ArrayBuffer[Float](data.size/2 + 1)
     data.foreach (p => {
-      outBuffer += p.x
-      outBuffer += p.y
+      outBuffer += p.x.toFloat
+      outBuffer += p.y.toFloat
     })
     outBuffer // += Float.NaN
   }
   
-  @inline protected def fromJni2dArray(data:Seq[Float]):ArrayBuffer[ArrayBuffer[ReadonlyVec2D]]= {
-    val outBuffer = new ArrayBuffer[ArrayBuffer[ReadonlyVec2D]]
-    var segmentBuffer = new ArrayBuffer[ReadonlyVec2D]
-    var i = 0
-    do {
-      if (data(i).isNaN())  {
-            // New segment found, store and restart the segmentBuffer
-            if (segmentBuffer.size > 0) {
-              outBuffer += segmentBuffer
-              segmentBuffer = new ArrayBuffer[ReadonlyVec2D]
-            }
-            i += 1
+  @inline protected def fromJni2dArray(data:Seq[Float]):ArrayBuffer[ArrayBuffer[Vec2D]]= {
+    val outBuffer = new ArrayBuffer[ArrayBuffer[Vec2D]]
+    var segmentBuffer = new ArrayBuffer[Vec2D]
+      var i = 0
+      do {
+        if (data(i).isNaN())  {
+          // New segment found, store and restart the segmentBuffer
+          if (segmentBuffer.size > 0) {
+            outBuffer += segmentBuffer
+            segmentBuffer = new ArrayBuffer[Vec2D]
+          }
+          i += 1
+        } else {
+          // Still collecting the same segment, append to segmentBuffer
+          if (i+1 < data.size && !data(i+1).isNaN() ) {
+            segmentBuffer += Vec2D(data(i), data(i+1))
+            i+= 2
           } else {
-        // Still collecting the same segment, append to segmentBuffer
-        if (i+1 < data.size && !data(i+1).isNaN() ) {
-              segmentBuffer += new Vec2D(data(i), data(i+1))
-              i+= 2
-            } else {
-          System.err.println("MedianAxisJni.fromJni2dArray: debug me plz")
-          // WTF???
+            System.err.println("MedianAxisJni.fromJni2dArray: debug me plz")
+          }
         }
-      }
-    } while (i < data.size)
-    if (segmentBuffer.size > 0) {
-      outBuffer += segmentBuffer
-    }
-    outBuffer
+      } while (i < data.size)
+        if (segmentBuffer.size > 0) {
+          outBuffer += segmentBuffer
+        }
+     outBuffer
   }
   
   @inline protected def fromJni3dArray(data:Seq[Float]):ArrayBuffer[ArrayBuffer[ReadonlyVec3D]]= {
@@ -247,34 +247,19 @@ object MedianAxisJni {
       System.err.println("simplify3D::last differs, debug me")
       outData += inData.last
     }
-    
-    //println("input:" + inData.mkString(",") + "\npoints = " + inData.size)
-    //println("output:" + outData.mkString(",") + "\npoints = " + outData.size)
-    //println("simplify3D input:" + inData.size + " output:" + outData.size)
-    
     outData
   }
   
-  def simplify2D(data:Seq[Seq[ReadonlyVec2D]], limit:Float):IndexedSeq[IndexedSeq[ReadonlyVec2D]] = {
+  def simplify2D(data:Seq[Seq[Vec2D]], limit:Float):IndexedSeq[IndexedSeq[Vec2D]] = {
     val outBuffer = new ArrayBuffer[Float]
     var i = 0
     data.foreach( d => addToJni2dArray(d, outBuffer))
     fromJni2dArray(mal.simplify2D_(outBuffer.toArray, limit))
   } 
   
-  def simplify2DSingle(data:Seq[ReadonlyVec2D], limit:Float):IndexedSeq[ReadonlyVec2D] = {
+  def simplify2DSingle(data:Seq[Vec2D], limit:Float):IndexedSeq[Vec2D] = {
     val outBuffer = new ArrayBuffer[Float]
     addToJni2dArray(data, outBuffer)
     fromJni2dArray(mal.simplify2D_(outBuffer.toArray, limit))(0)
-  } 
-  /*
-  def loadObjDeprecated(ma:MedianAxisJni, rings2D: Rings2D, simplifyLimit:Float, objectName:String):Array[Ring2D] = {
-    
-    val foundSegments = new Array[Ring2D]( rings2D.rings.size)
-    (0 until rings2D.rings.size) foreach( i => {
-      val flattenedVerts = rings2D.rings(i).map(x=>Array(rings2D.vertices(x))).toArray.flatten
-      foundSegments(i) = new Ring2D(ma, objectName, flattenedVerts, new Array[Ring2D](0), simplifyLimit)
-    })    
-    foundSegments.toArray
-  }*/
+  }
 }

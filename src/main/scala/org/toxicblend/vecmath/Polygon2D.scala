@@ -1,5 +1,6 @@
 package org.toxicblend.vecmath
 
+import scala.collection.JavaConversions._
 
 /**
  * A 2 dimensional polygon representation.
@@ -180,6 +181,18 @@ class Polygon2D protected (val vertices:IndexedSeq[Vec2D], val ε:Double = Polyg
   }
   
   /**
+   * temporarily using toxi.geom.Polygon2D.offsetShape
+   */
+  def offsetShape(distance:Double, toOutline:Boolean=false):Polygon2D = {
+    // if we use any other Polygon2D constructors the vertices will be copied 
+    var toxiPolygon = new toxi.geom.Polygon2D()
+    vertices.foreach(v => toxiPolygon.vertices.add(new toxi.geom.Vec2D(v.x.toFloat, v.y.toFloat)))
+    toxiPolygon = toxiPolygon.offsetShape(distance.toFloat)
+    if (toOutline) toxiPolygon.toOutline()
+    Polygon2D(toxiPolygon.vertices.map(v => Vec2D(v.x, v.y)).toIndexedSeq) 
+  }
+   
+  /**
    * returns a new polygon with reversed vertex order
    */
   def reverse:Polygon2D = new Polygon2D(vertices.reverse) 
@@ -252,6 +265,11 @@ class Polygon2D protected (val vertices:IndexedSeq[Vec2D], val ε:Double = Polyg
 
 object Polygon2D {
   val ε = 0.0000001
+  
+  /**
+   * return the area of a triangle defined by the vectors o->a and o->b
+   */
+  def getArea(o:Vec2D, a:Vec2D, b:Vec2D):Double = 0.5d*Vec2D.cross(o,a,b)
   
   def getArea(vertices:IndexedSeq[Vec2D]):Double = {
     val size = vertices.size
@@ -548,7 +566,17 @@ object Polygon2D {
       return vertices
   }
   
-  def apply(vertices:IndexedSeq[Vec2D], ε:Double = Polygon2D.ε) = new Polygon2D(dropConsecutiveDoubles(vertices,ε))
+  /**
+   * if enforceDirection is set to None the direction of the vertices will be kept as is.
+   * if it is defined and true -> polygon will be clockwise
+   * else -> polygon will be anti-clockwise 
+   */
+  def apply(vertices:IndexedSeq[Vec2D], enforceDirection:Option[Boolean]=None, ε:Double = Polygon2D.ε) = {
+    if (enforceDirection.isDefined){
+      if (isClockwise(vertices) == enforceDirection.get) new Polygon2D(dropConsecutiveDoubles(vertices,ε))
+      else new Polygon2D(dropConsecutiveDoubles(vertices.reverse,ε))
+    } else new Polygon2D(dropConsecutiveDoubles(vertices,ε))
+  }
   
   def apply(vertices:IndexedSeq[(Double,Double)]) = 
     new Polygon2D(dropConsecutiveDoubles(vertices.map(v => Vec2D(v._1, v._2)),ε))

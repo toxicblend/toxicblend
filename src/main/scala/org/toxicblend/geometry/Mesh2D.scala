@@ -6,9 +6,10 @@ import scala.collection.IndexedSeqLike
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.Buffer
 import toxi.geom.BooleanShapeBuilder
-import toxi.geom.Polygon2D
-import toxi.geom.ReadonlyVec2D
-import toxi.geom.Vec2D
+import toxi.geom.{Vec2D=>TVec2D}
+import toxi.geom.{Polygon2D=>TPolygon2D}
+import org.toxicblend.vecmath.Vec2D
+import org.toxicblend.vecmath.Polygon2D
 import org.toxicblend.util.EdgeToFaceMap
 import java.awt.geom.GeneralPath
 import java.awt.geom.Path2D
@@ -22,9 +23,9 @@ import collection.JavaConversions._
  *  Faces indexed by Int, containing lists of vertex indexes
  * The faces are implicitly closed, e.g. the face loop [0,1,2,0] is represented as [0,1,2]
  */
-class Mesh2D protected ( val vertices:ArrayBuffer[ReadonlyVec2D], val faces:ArrayBuffer[ArrayBuffer[Int]]){
+class Mesh2D protected ( val vertices:ArrayBuffer[Vec2D], val faces:ArrayBuffer[ArrayBuffer[Int]]){
   
-  def this( f:(ArrayBuffer[ReadonlyVec2D],ArrayBuffer[ArrayBuffer[Int]]) ) = {
+  def this( f:(ArrayBuffer[Vec2D],ArrayBuffer[ArrayBuffer[Int]]) ) = {
     this(f._1,f._2)
   }
   
@@ -44,7 +45,7 @@ class Mesh2D protected ( val vertices:ArrayBuffer[ReadonlyVec2D], val faces:Arra
    * Removes duplicated vertices and recalculates the faces
    */
   protected def removeDoubles:Mesh2D = {
-    val uniquePoints = new HashMap[ReadonlyVec2D, Int]
+    val uniquePoints = new HashMap[Vec2D, Int]
     // translationTable(oldIndex) == newIndex (or -1 if unassigned)
     val translationTable = (0 until vertices.size).map( _ => -1).toArray 
     var pNewIndex=0
@@ -59,7 +60,7 @@ class Mesh2D protected ( val vertices:ArrayBuffer[ReadonlyVec2D], val faces:Arra
       }
       translationTable(pOldIndex) = pNewIndex
     })
-    val newVertices = new Array[ReadonlyVec2D](uniquePoints.size).to[ArrayBuffer]
+    val newVertices = new Array[Vec2D](uniquePoints.size).to[ArrayBuffer]
     (0 until vertices.size).foreach(pOldIndex => {
       newVertices(translationTable(pOldIndex)) = vertices(pOldIndex)
     })
@@ -78,7 +79,7 @@ class Mesh2D protected ( val vertices:ArrayBuffer[ReadonlyVec2D], val faces:Arra
   /**
    * override the internal state with new vertices and faces
    */
-  protected def setState(vs:ArrayBuffer[ReadonlyVec2D],fs:ArrayBuffer[ArrayBuffer[Int]]) {
+  protected def setState(vs:ArrayBuffer[Vec2D],fs:ArrayBuffer[ArrayBuffer[Int]]) {
     vertices.clear
     vs.foreach( v => vertices += v)
     faces.clear
@@ -92,18 +93,18 @@ class Mesh2D protected ( val vertices:ArrayBuffer[ReadonlyVec2D], val faces:Arra
     
     val builder = new BooleanShapeBuilder(BooleanShapeBuilder.Type.UNION)
     faces.foreach(facePoints => {
-      val path=new Polygon2D() //Path2D.Float(PathIterator.WIND_NON_ZERO, facePoints.size)
+      val path=new TPolygon2D() //Path2D.Float(PathIterator.WIND_NON_ZERO, facePoints.size)
       facePoints.foreach(pointIndex => {
         val point = vertices(pointIndex)
-        path.add(point.x, point.y)
+        path.add(point.x.toFloat, point.y.toFloat)
       })
       builder.addShape(path)
     })
     buildFromPolygons(builder.computeShapes())
   }
   
-  protected def buildFromPolygons(unionPolygons:java.util.List[Polygon2D]):Mesh2D = { 
-    val rvVertices = new ArrayBuffer[ReadonlyVec2D]()
+  protected def buildFromPolygons(unionPolygons:java.util.List[TPolygon2D]):Mesh2D = { 
+    val rvVertices = new ArrayBuffer[TVec2D]()
     val rvFaces = new ArrayBuffer[ArrayBuffer[Int]]()
     unionPolygons.foreach(polygon => {
       if (polygon.size>1) {
@@ -118,7 +119,7 @@ class Mesh2D protected ( val vertices:ArrayBuffer[ReadonlyVec2D], val faces:Arra
       }
     })
     
-    setState(rvVertices, rvFaces)
+    setState(rvVertices.map(v=>Vec2D(v.x,v.y)), rvFaces)
     this
   }
   
@@ -162,7 +163,7 @@ class Mesh2D protected ( val vertices:ArrayBuffer[ReadonlyVec2D], val faces:Arra
 }
 
 object Mesh2D {
-  def apply( vertices:ArrayBuffer[ReadonlyVec2D], faces:ArrayBuffer[ArrayBuffer[Int]]) = {
+  def apply( vertices:ArrayBuffer[Vec2D], faces:ArrayBuffer[ArrayBuffer[Int]]) = {
     new Mesh2D(vertices, faces)
   } 
 }

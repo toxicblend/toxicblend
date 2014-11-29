@@ -3,7 +3,7 @@ package org.toxicblend.typeconverters
 import toxi.geom.Vec3D
 //import toxi.geom.ReadonlyVec2D
 import toxi.geom.ReadonlyVec3D
-//import toxi.geom.Vec2D
+import org.toxicblend.vecmath.Vec2D
 import toxi.geom.Matrix4x4
 import org.toxicblend.protobuf.ToxicBlendProtos.Model
 import org.toxicblend.protobuf.ToxicBlendProtos.Face

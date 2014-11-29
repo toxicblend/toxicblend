@@ -5,12 +5,13 @@ import scala.collection.mutable.HashMap
 import scala.collection.mutable.HashSet
 import toxi.geom.ReadonlyVec2D
 import scala.annotation.tailrec
+import org.toxicblend.vecmath.Vec2D
 
 /**
- * A container of 2D vertices that only has two neighbours
+ * A container of 2D vertices that only has two neighbors
  * The rings are implicitly closed (the closing edge is assumed)
  */
-class Rings2D(vertices:ArrayBuffer[ReadonlyVec2D], edges:ArrayBuffer[ArrayBuffer[Int]]) extends Mesh2D(vertices,edges) {
+class Rings2D(vertices:ArrayBuffer[Vec2D], edges:ArrayBuffer[ArrayBuffer[Int]]) extends Mesh2D(vertices,edges) { 
   
   val rings:ArrayBuffer[ArrayBuffer[Int]] = {
     val vertNeighbours = new HashMap[Int,Array[Int]];
@@ -22,7 +23,7 @@ class Rings2D(vertices:ArrayBuffer[ReadonlyVec2D], edges:ArrayBuffer[ArrayBuffer
           if (! vertNeighbours(v1).contains(v2) ) {
             val v = vertNeighbours(v1)
             if (vertNeighbours(v1).contains(v2))
-              assert(false, "A vertex in a ring can only have two neighbours. Tried to add " + v2 + " to the list: " + v.mkString("{",",","}"))
+              assert(false, "A vertex in a ring can only have two neighbors. Tried to add " + v2 + " to the list: " + v.mkString("{",",","}"))
           }
         } else {
           val newArray =  new Array[Int](2)
@@ -86,7 +87,7 @@ class Rings2D(vertices:ArrayBuffer[ReadonlyVec2D], edges:ArrayBuffer[ArrayBuffer
 
 object Rings2D {
   
-  def apply( vertices:ArrayBuffer[ReadonlyVec2D], faces:ArrayBuffer[ArrayBuffer[Int]]) = {
+  def apply( vertices:ArrayBuffer[Vec2D], faces:ArrayBuffer[ArrayBuffer[Int]]) = {
     new Rings2D(vertices, faces)
   } 
 }

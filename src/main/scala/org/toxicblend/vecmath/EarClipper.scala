@@ -4,6 +4,7 @@ import com.badlogic.gdx.math.EarClippingTriangulator
 
 /**
  * until a clipper in scala is available this will have to suffice
+ * This class is not thread safe
  */
 class EarClipper{
   protected val ect = new EarClippingTriangulator
@@ -24,13 +25,3 @@ class EarClipper{
   }
 } 
 
-object EarClipTest extends App {
-  def toPolygon2D(seq:Seq[(Double,Double)], scale:Double=1d, x:Double=0d, y:Double=0d):Polygon2D = {
-    Polygon2D(seq.toIndexedSeq.map(p=>Vec2D(p._1*scale+x,p._2*scale+y)))
-  }
-  val ect = new EarClipper
-
-  val p = toPolygon2D(Seq((0,0),(2,0),(2,2),(1,1),(0,2)))
-  val rv = ect.triangulatePolygon(p)
-  println("result:" + rv.mkString("\n"))
-}

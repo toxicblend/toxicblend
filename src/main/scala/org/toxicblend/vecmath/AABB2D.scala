@@ -13,6 +13,10 @@ class AABB2D protected (val min:Vec2D, val max:Vec2D) extends ImmutableVec2D((ma
   def width = max.x-min.x
   def height = max.y-min.y
   override def toString = "AABB(" + min + "->" + max + ")"
+  lazy val getTopLeft = Vec2D(min.x,max.y)
+  def getTopRight = max
+  def getBottomLeft = min
+  lazy val getBottomRight = Vec2D(max.x,min.y)
   
   /**
    * returns a new instance that contains the sample point

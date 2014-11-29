@@ -48,29 +48,19 @@ class Offset2dShapeOperation extends CommandProcessorTrait {
         if (segments.size ==0) System.err.println(traceMsg + ": No edge sequence found in input model.")  
 	      val pt = Polygon2DConverter.toPolygon2D(segments)
 	      val name = model._1.name+ " offset " + options.getStringProperty("offset", "0.1") + "mm"
-	      new Polygon2DConverter(pt.map(p => p._1), pt.map(t => t._2), name)
+	      if (useToOutline) new Polygon2DConverter(pt.map(p => p._1.offsetShape(offset,toOutline=true)), pt.map(t => t._2), name)
+	      else new Polygon2DConverter(pt.map(p => p._1.offsetShape(offset)), pt.map(t => t._2), name)
       }
       if (useMultiThreading) {
-        models.par.map(model => findSequenceOfPolygons(model))
+        models.par.map(model => findSequenceOfPolygons(model)).toSeq
       } else {
         models.map(model => findSequenceOfPolygons(model))
       }
     })
-           
-    time("Executing offsetShape : ", returnPolygons.foreach(pc => pc.polygons.foreach(p=>p.offsetShape(offset))))
-    
-    if (useToOutline) {
-	    time("Executing toOutline : ", returnPolygons.foreach(pc => pc.polygons.foreach(p=>p.toOutline)))
-    }
         
     time("Building resulting pBModel: ",{
       val returnMessageBuilder = Message.newBuilder
-      if (useMultiThreading){
-        // convert the .par sequence back to a normal sequence
-        returnPolygons.toSeq.foreach(pc => returnMessageBuilder.addModels(pc.toPBModel(None)))
-      } else {
-        returnPolygons.foreach(pc => returnMessageBuilder.addModels(pc.toPBModel(None)))
-      }
+      returnPolygons.foreach(pc => returnMessageBuilder.addModels(pc.toPBModel(None)))
       returnMessageBuilder
     })
   }

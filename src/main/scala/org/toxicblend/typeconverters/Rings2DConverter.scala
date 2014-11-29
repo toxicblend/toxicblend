@@ -4,11 +4,12 @@ import org.toxicblend.protobuf.ToxicBlendProtos.Model
 import org.toxicblend.protobuf.ToxicBlendProtos.Face
 import toxi.geom.Vec3D
 import toxi.geom.ReadonlyVec2D
-import toxi.geom.Vec2D
+//import toxi.geom.Vec2D
 import toxi.geom.Matrix4x4
 import toxi.geom.Rect
 import org.toxicblend.geometry.ProjectionPlane
 import org.toxicblend.geometry.Rings2D
+import org.toxicblend.vecmath.Vec2D
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.Buffer
 import scala.collection.JavaConversions._
@@ -30,7 +31,7 @@ class Rings2DConverter private (val mesh2d:Rings2D, val projectionPlane:Projecti
     val modelBuilder = org.toxicblend.protobuf.ToxicBlendProtos.Model.newBuilder()
     modelBuilder.setName(name)
     val helper = new Vertex3DHelper(modelBuilder, finalTransformation)
-    mesh2d.vertices.foreach(v => helper.addVertex(ProjectionPlane.convert(projectionPlane,v))) 
+    mesh2d.vertices.foreach(v => helper.addVertex(ProjectionPlane.convert(projectionPlane,Vec2D(v.x, v.y)))) 
     if (noFaceOnlyEdges)
       mesh2d.faces.foreach(f => {
         f.sliding(2).foreach(e => 
@@ -57,21 +58,21 @@ object Rings2DConverter {
   def apply(pbModel:Model, projectionPlane:ProjectionPlane.ProjectionPlane, applyWorldTransform:Boolean=false) = {
     
     val vertexList = pbModel.getVerticesList()
-    val points2D = new Array[ReadonlyVec2D](vertexList.size).to[ArrayBuffer] // buffer initiated and filled
+    val points2D = new Array[Vec2D](vertexList.size).to[ArrayBuffer] // buffer initiated and filled
     val matrixConverter =  Matrix4x4Converter(pbModel)
     
     //println("Rings2DConverter received " + vertexList.size()  + " vertices")
-    var aabb:Option[Rect] = None
+    //var aabb:Option[Rect] = None
     vertexList.foreach (pbVertex => {
       val new3dVertex = new Vec3D(pbVertex.getX, pbVertex.getY, pbVertex.getZ)
       if (applyWorldTransform) {
         matrixConverter.matrix.applyToSelf(new3dVertex)
       }
       val new2dVertex = ProjectionPlane.convert(projectionPlane,new3dVertex)
-      if (aabb.isEmpty) {
-        aabb = Option(new Rect(new2dVertex,new2dVertex))
-      }
-      aabb.get.growToContainPoint(new2dVertex)
+      //if (aabb.isEmpty) {
+      //  aabb = Option(new Rect(new2dVertex,new2dVertex))
+      //}
+      //aabb.get.growToContainPoint(new2dVertex)
       points2D(pbVertex.getId()) = new2dVertex
     })
     
@@ -87,7 +88,7 @@ object Rings2DConverter {
   /** 
    * Constructs from one Buffer[Vec2D]
    */
-  def Rings2DConverter(points:ArrayBuffer[ReadonlyVec2D], faces:ArrayBuffer[ArrayBuffer[Int]], projectionPlane:ProjectionPlane.ProjectionPlane, name:String, useEdgeMerge:Boolean) = {
+  def Rings2DConverter(points:ArrayBuffer[Vec2D], faces:ArrayBuffer[ArrayBuffer[Int]], projectionPlane:ProjectionPlane.ProjectionPlane, name:String, useEdgeMerge:Boolean) = {
     new Rings2DConverter( Rings2D(points,faces), projectionPlane, name)
   } 
 }
