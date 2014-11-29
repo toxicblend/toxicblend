@@ -30,7 +30,7 @@ import org.toxicblend.vecmath.Polygon2D
 import org.toxicblend.vecmath.AABB2D
 import org.toxicblend.util.IntNumberUtils.{max,min,abs,sqrt}
 import org.toxicblend.util.CyclicTree
-import org.toxicblend.vecmath.ToxicLibsEarClipper
+import org.toxicblend.vecmath.EarClipper
 
 import scala.collection.JavaConversions._
 
@@ -52,7 +52,7 @@ class MeshGeneratorOperation extends CommandProcessorTrait {
     
     @inline def toTVec3D(v:Vec2D):TVec3D = new TVec3D(v.x.toFloat, v.y.toFloat, 0f)
     
-    val triangulator = new ToxicLibsEarClipper
+    val triangulator = new EarClipper
     //println("processDataPerThread: aabb.width/delta=" + aabb.width/delta  + " aabb.height/delta=" +  aabb.height/delta) 
     val reducedClipPolygon = {
       val clipAABB = {
