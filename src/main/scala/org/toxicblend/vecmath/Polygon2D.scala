@@ -266,6 +266,22 @@ class Polygon2D protected (val vertices:IndexedSeq[Vec2D], val ε:Double = Polyg
 object Polygon2D {
   val ε = 0.0000001
   
+  
+  def pointInTriangle(p:Vec2D, t0:Vec2D, t1:Vec2D, t2:Vec2D):Boolean = {
+    var s = t0.y * t2.x - t0.x * t2.y + (t2.y - t0.y) * p.x + (t0.x - t2.x) * p.y
+    var t = t0.x * t1.y - t0.y * t1.x + (t0.y - t1.y) * p.x + (t1.x - t0.x) * p.y
+
+    if ((s < 0) != (t < 0)) return false
+
+    var a = -t1.y * t2.x + t0.y * (t2.x - t1.x) + t0.x * (t1.y - t2.y) + t1.x * t2.y
+    if (a < 0d){
+      s = -s
+      t = -t
+      a = -a
+    }
+    s > 0 && t > 0 && (s + t) < a
+  }
+  
   /**
    * return the area of a triangle defined by the vectors o->a and o->b
    */
