@@ -8,35 +8,26 @@ class LinearDoubleLinkedArray private (var indices:Array[DoubleLinkedElement] ) 
   }
   
   // an index to a vertex that has not been removed yet 
-  var someplace = 0
+  private var theHead = 0
   
   @inline def next(i:Int):Int = indices(i).next
   @inline def prev(i:Int):Int = indices(i).prev
   
-  def head():Int = {
-   var i = someplace
-   if (i<0) return -1
-   while (prev(i) >= 0){
-     i = prev(i)
-   } 
-   i
-  }
+  def head:Int = theHead
   
   /**
+   * Don't call this method unless you keep track of 'theHead'
    */
-  @inline def connect(i:Int, j:Int, disableRemoved:Boolean=true):Unit = {
+  @inline private def connect(i:Int, j:Int):Unit = {
     if ( i < 0 && j < 0 ) {
-      someplace = -1
       return
     }
       
-    //println("connecting " + i + " with " + j)
     if (i != -1){
       val eI = indices(i)
       eI.next = j
       if (eI.prev != -1)
         indices(eI.prev).next = i
-      someplace = i
     }
     
     if (j != -1){    
@@ -44,7 +35,6 @@ class LinearDoubleLinkedArray private (var indices:Array[DoubleLinkedElement] ) 
       if (eJ.next != -1)
         indices(eJ.next).prev = j
       eJ.prev = i
-      someplace = j
     }
   }
   
@@ -53,11 +43,11 @@ class LinearDoubleLinkedArray private (var indices:Array[DoubleLinkedElement] ) 
   def contains(element:Int): Boolean = {
     if (isEmpty) return false
     val e = indices(element)
-    if (e.next < 0 && e.prev < 0 && someplace==element) return true
+    if (e.next < 0 && e.prev < 0 && theHead==element) return true
     e.next >= 0 || e.prev >= 0
   }
   
-  @inline def isEmpty = someplace == -1
+  @inline def isEmpty = theHead == -1
   
   /**
    * you must be sure that the element you drop is actually part of the list
@@ -65,7 +55,12 @@ class LinearDoubleLinkedArray private (var indices:Array[DoubleLinkedElement] ) 
   @inline def drop(i:Int) {
     assert(i>=0)
     val ie = indices(i)
-    connect(ie.prev, ie.next, false)
+    if (theHead == i) {
+      assert(ie.prev == -1)
+      theHead = ie.next
+    }
+    connect(ie.prev, ie.next)
+    
     ie.next = -1
     ie.prev = -1
   }
@@ -75,27 +70,26 @@ class LinearDoubleLinkedArray private (var indices:Array[DoubleLinkedElement] ) 
       drop(i)
     }
   }
-  
-  def getOne = someplace
-  
+    
   /**
-   * inserts a previous dropped element just ahead of 'someplace'
+   * inserts a previous dropped element just ahead of 'theHead'
    */
   @inline def add(i:Int) {
     assert(i>=0)
-    if (someplace<0){
-      someplace = i
+    if (theHead<0){
+      theHead = i
     } else {
       val ie = indices(i)
-      val se = indices(someplace)
+      val se = indices(theHead)
       if (se.prev >= 0) {
         val spe= indices(se.prev)
         spe.next = i
       } 
       ie.prev = se.prev
       se.prev = i
-      ie.next = someplace
+      ie.next = theHead
     }
+    theHead = i
   }
   
   @inline def safeAdd(i:Int) {
@@ -105,19 +99,12 @@ class LinearDoubleLinkedArray private (var indices:Array[DoubleLinkedElement] ) 
   }
   
   def toIndexedSeq:IndexedSeq[Int] = {
-    if (someplace != -1){
+    if (theHead != -1){
       var rv = new collection.mutable.ArrayBuffer[Int]
-      var i = someplace
-      i = prev(i)
-      while (i != -1){
-        rv.append(i)
-        i = prev(i)
-      }
-      rv = rv.reverse
-      
-      i = someplace
-      rv.append(someplace)
-      i = next(someplace)
+
+      var i = theHead
+      rv.append(theHead)
+      i = next(theHead)
       while (i != -1){
         rv.append(i)
         i = next(i)
@@ -159,9 +146,9 @@ class LinearDoubleLinkedArray private (var indices:Array[DoubleLinkedElement] ) 
     if (!empty){
       indices(0).prev = -1
       indices(inputSize-1).next = -1
-      someplace = 0
+      theHead = 0
     } else {
-      someplace = -1
+      theHead = -1
     }
   }
   @inline def apply(i:Int) = indices(i)

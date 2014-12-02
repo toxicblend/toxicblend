@@ -14,9 +14,9 @@ class EarClippingTriangulator {
   val reflexVertices = new LinearDoubleLinkedArray
   val rv = new collection.mutable.ArrayBuffer[Array[Int]]
   
-  def isEarTip(i:Int, reflexVerticesHead:Int):Boolean = {
+  def isEarTip(i:Int):Boolean = {
     if (reflexVertices.contains(i)) return false
-    var r = reflexVerticesHead
+    var r = reflexVertices.head
     val ip = vertices.prev(i)
     val in = vertices.next(i)
     if (ip == in) return false
@@ -40,8 +40,8 @@ class EarClippingTriangulator {
     }
   }
   
-  def testEarTip(p:Int, reflexVerticesHead:Int){
-    if (!isEarTip(p, reflexVerticesHead)){
+  def testEarTip(p:Int){
+    if (!isEarTip(p)){
       earTips.safeDrop(p)
     } else {
       earTips.safeAdd(p)
@@ -49,7 +49,7 @@ class EarClippingTriangulator {
   }
   
   private def triangulate:Boolean = {
-    var i = earTips.getOne
+    var i = earTips.head
     while (i >= 0) {
       earTips.drop(i)
       val vp = vertices.prev(i)
@@ -65,10 +65,9 @@ class EarClippingTriangulator {
         // a convex vertex can never become reflex, so there is no need to test those
         if (reflexVertices.contains(vp)) testAngleOfPoint(vp)
         if (reflexVertices.contains(vn)) testAngleOfPoint(vn)
-        val rhead = reflexVertices.head
-        testEarTip(vp, rhead)
-        testEarTip(vn, rhead)
-        i = earTips.getOne
+        testEarTip(vp)
+        testEarTip(vn)
+        i = earTips.head
       }
     }
     {
@@ -96,10 +95,9 @@ class EarClippingTriangulator {
       testAngleOfPoint(i)
         
     var i = earTips.head
-    val rhead = reflexVertices.head 
     while (i >= 0) {
       val ii = earTips.next(i)
-      testEarTip(i, rhead)
+      testEarTip(i)
       i = ii
     }
     

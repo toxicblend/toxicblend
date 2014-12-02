@@ -109,22 +109,6 @@ class DoubleLinkedArrayTest extends VecMathBaseTest {
     vertices.toIndexedSeq(0) should be (2)
     
   }
-  
-  "DoubleLinkedArrayTest-12" should "test connect" in {
-    var size = 5
-    val vertices = new LinearDoubleLinkedArray(size)
-    vertices.head should be (0)
-    vertices.connect(1,3)
-    vertices.toIndexedSeq should contain inOrderOnly (0,1,3,4)
-    vertices.connect(0,4)
-    vertices.toIndexedSeq should contain inOrderOnly (0,4)
-    vertices.drop(4)
-    vertices.toIndexedSeq.size should be (1)
-    vertices.toIndexedSeq(0) should be (0)
-    vertices.head should be (0)
-    vertices.drop(0)
-    vertices.toIndexedSeq.size should be (0)
-  }
 }
 
 object DoubleLinkedArrayTest extends App {
