@@ -30,7 +30,7 @@ import org.toxicblend.vecmath.Polygon2D
 import org.toxicblend.vecmath.AABB2D
 import org.toxicblend.util.IntNumberUtils.{max,min,abs,sqrt}
 import org.toxicblend.util.CyclicTree
-import org.toxicblend.vecmath.GdxEarClippingTriangulator
+import org.toxicblend.vecmath.EarClippingTriangulator
 
 import scala.collection.JavaConversions._
 
@@ -52,7 +52,7 @@ class MeshGeneratorOperation extends CommandProcessorTrait {
     
     @inline def toTVec3D(v:Vec2D):TVec3D = new TVec3D(v.x.toFloat, v.y.toFloat, 0f)
     
-    val triangulator = new GdxEarClippingTriangulator
+    val triangulator = new EarClippingTriangulator
     //println("processDataPerThread: aabb.width/delta=" + aabb.width/delta  + " aabb.height/delta=" +  aabb.height/delta) 
     val reducedClipPolygon = {
       val clipAABB = {
@@ -122,8 +122,10 @@ class MeshGeneratorOperation extends CommandProcessorTrait {
             rvMesh.addFace(p03d, p23d, p13d)
             rvMesh.addFace(p03d, p33d, p23d)            
           } else {
-            triangulator.triangulatePolygon(clipped).foreach(t => 
-              rvMesh.addFace(toTVec3D(t(0)), toTVec3D(t(2)), toTVec3D(t(1))) )
+            val v = clipped.vertices
+            triangulator.triangulatePolygon(v).foreach(t => 
+              rvMesh.addFace(toTVec3D(v(t(0))), toTVec3D(v(t(2))), toTVec3D(v(t(1)))) 
+            )
           }
         })
       } else if (false) {
