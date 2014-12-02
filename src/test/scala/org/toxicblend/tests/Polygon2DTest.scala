@@ -163,7 +163,7 @@ class Polygon2DTest extends VecMathBaseTest {
     p.isSimple should be (true)
   }
   
-  "Polygon2DTest-11" should "test area of a triangle" in {
+  "Polygon2DTest-12" should "test area of a triangle and cross products" in {
    val p1 = Vec2D(1,2)  
    val p2 = Vec2D(2,1) 
    val p3 = Vec2D(1,1)
