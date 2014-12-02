@@ -10,7 +10,9 @@ class CyclicDoubleLinkedArray private (var indices:Array[DoubleLinkedElement] ) 
   }
   
   // an index to a vertex that has not been removed yet 
-  var someplace = 0
+  protected var someplace = 0
+  
+  def getOne = someplace
   
   @inline def next(i:Int):Int = indices(i).next
   @inline def prev(i:Int):Int = indices(i).prev
