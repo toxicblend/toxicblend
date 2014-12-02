@@ -126,29 +126,43 @@ class LinearDoubleLinkedArray private (var indices:Array[DoubleLinkedElement] ) 
     } else Array[Int]()
   }
   
-  def setup(inputSize:Int) = {
+  def setup(inputSize:Int, empty:Boolean=false) = {
     if (indices.size < inputSize) {
       val newIndices = new Array[DoubleLinkedElement](inputSize)
       val oldSize = indices.size
       for (i <- 0 until oldSize) {
         val e =  indices(i)
-        e.prev = i-1
-        e.next = i+1
+        if (empty){
+          e.prev = -1
+          e.next = -1
+        } else {
+          e.prev = i-1
+          e.next = i+1
+        }
         newIndices(i) = e
       }
       for (i <- oldSize until inputSize) 
-        newIndices(i) = new DoubleLinkedElement(i-1, i+1)
+        newIndices(i) = if (empty) new DoubleLinkedElement(-1, -1) else new DoubleLinkedElement(i-1, i+1) 
       indices = newIndices
     } else {
       for (i <- 0 until inputSize) {
         val e =  indices(i)
-        e.prev = i-1
-        e.next = i+1
+        if (empty){
+          e.prev = -1
+          e.next = -1
+        } else {
+          e.prev = i-1
+          e.next = i+1
+        }
       }
     }
-    indices(0).prev = -1
-    indices(inputSize-1).next = -1
-    someplace = 0
+    if (!empty){
+      indices(0).prev = -1
+      indices(inputSize-1).next = -1
+      someplace = 0
+    } else {
+      someplace = -1
+    }
   }
   @inline def apply(i:Int) = indices(i)
 }
