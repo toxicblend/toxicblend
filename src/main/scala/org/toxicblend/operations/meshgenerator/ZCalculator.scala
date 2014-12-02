@@ -75,23 +75,3 @@ class ArcCalculator (val rLow:Double, val rHigh:Double) extends ZCalculator {
     }
   }
 }
-
-/*
-object Test extends App {
-  val calc = new ArcCalculator(0d, 1d)
-  val (k,c) = calc.interpolateParameters(x=> x, 0.7, 0.9)
-  println("k=" + k)
-  println("c=" + c)
-  def inverse(x:Double) = (x-k)/c
-  
-  println( "inverse(0)=" + inverse(0))
-  println( "inverse(1)=" + inverse(1))
-  
-  println( calc.interpolated(x=> -x,k,c,0.7))
-  println( calc.interpolated(x=> -x,k,c,0.9))
-  
-  println("calculateZ(0)=" + calc.calculateZ(0))
-  println("calculateZ(1)=" + calc.calculateZ(1))
-  for (i <- 0 to 10) println("calculateZ(" + i.toFloat/10d + ")=" + calc.calculateZ(i.toFloat/10d) ) 
-}
-*/
