@@ -3,16 +3,61 @@ package org.toxicblend.vecmath
 import org.toxicblend.util.CyclicDoubleLinkedArray
 import org.toxicblend.util.LinearDoubleLinkedArray
 
+final class Triangles private () extends Traversable[Array[Int]]{
+  private var numberOfElements = 0
+  private var data:Array[Array[Int]] = null
+  
+  def this(initialSize:Int) = {
+    this()   
+    data = new Array[Array[Int]](initialSize)
+    for (i<-0 until initialSize) data(i) = Array(0,0,0)
+    numberOfElements = 0
+  }
+  
+  def append(p0:Int,p1:Int,p2:Int) = {
+    if (numberOfElements+1 >= data.size) {
+      ensureCapacity((numberOfElements+1)*2)
+    }
+    val e = data(numberOfElements)
+    e(0) = p0
+    e(1) = p1
+    e(2) = p2
+    numberOfElements += 1
+  }
+  
+  override def size = numberOfElements
+  @inline def apply(i:Int) = data(i)
+  
+  def foreach[U](f: Array[Int] => U) = for (i<- 0 until numberOfElements) f(data(i))
+    
+  def ensureCapacity(newSize:Int) = {
+    // resize array and copy old data
+    if(newSize>data.size){
+      val newData = new Array[Array[Int]](newSize)
+      for (i<-0 until data.size) {
+        newData(i) = data(i)
+        data(i)=null
+      }
+      for (i<-data.size until newData.size) newData(i) = Array(0,0,0)
+      data = newData
+    }
+  }
+  
+  def clear = numberOfElements = 0
+}
+
 /**
  * Implements ear clipping triangulation.
- * Class is not thread safe, but as long as each thread has it's own instance it will be safe to use
+ * Class is not thread safe, but as long as each thread has it's own instance it will be safe to use.
+ * By tradition this class operates in allocation free mode.
+ * Every data container is reused. So make sure you use or copy result of the triangulation in between invocations. 
  */
 class EarClippingTriangulator {
   var input:IndexedSeq[Vec2D] = null
   val vertices = new CyclicDoubleLinkedArray
   val earTips = new LinearDoubleLinkedArray
   val reflexVertices = new LinearDoubleLinkedArray
-  val rv = new collection.mutable.ArrayBuffer[Array[Int]]
+  val rv = new Triangles(10)
   
   def isEarTip(i:Int):Boolean = {
     if (reflexVertices.contains(i)) return false
@@ -57,7 +102,7 @@ class EarClippingTriangulator {
       if (vp == vn) {
         return true
       } else {
-        rv.append(Array(vp, i, vn))
+        rv.append(vp, i, vn)
         vertices.drop(i)
         reflexVertices.safeDrop(i)
         //println("removed " + i + " from further processing")
@@ -76,11 +121,12 @@ class EarClippingTriangulator {
     }
   }
   
-  def triangulatePolygon(input:IndexedSeq[Vec2D]):IndexedSeq[Array[Int]] = {
-    
+  def triangulatePolygon(input:IndexedSeq[Vec2D]):Triangles = {
     rv.clear
+    rv.ensureCapacity(input.size-2)
+    
     if (input.size == 3) {
-      rv.append(Array(0,1,2))
+      rv.append(0,1,2)
       return rv
     }
     
