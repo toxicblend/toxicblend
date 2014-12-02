@@ -3,6 +3,10 @@ package org.toxicblend.vecmath
 import org.toxicblend.util.CyclicDoubleLinkedArray
 import org.toxicblend.util.LinearDoubleLinkedArray
 
+/**
+ * Implements ear clipping triangulation
+ * Class is not thread safe, but as long as each thread has it's own instance it will be safe to use
+ */
 class EarClippingTriangulator {
   var input:IndexedSeq[Vec2D] = null
   val vertices = new CyclicDoubleLinkedArray
@@ -11,6 +15,7 @@ class EarClippingTriangulator {
   val convexVertices = new LinearDoubleLinkedArray
   
   def isEarTip(i:Int, reflexVerticesHead:Int):Boolean = {
+    if (reflexVertices.contains(i)) return false
     var r = reflexVerticesHead
     val ip = vertices.prev(i)
     val in = vertices.next(i)
@@ -28,15 +33,18 @@ class EarClippingTriangulator {
   }
   
   def testAngleOfPoint(p:Int) {
-    if (Vec2D.ccw(input(vertices.prev(p)), input(p), input(vertices.next(p))) < 0) {
-      //println("" + p + " is convex")
-      reflexVertices.safeDrop(p)
-      convexVertices.safeAdd(p)
-    } else {
-      //println("" + p + " is reflex")
-      reflexVertices.safeAdd(p)
-      convexVertices.safeDrop(p)
-    }  
+    // a convex vertex can never become reflex, so there is no need to test those
+    if (!convexVertices.contains(p)){
+      if (Vec2D.ccw(input(vertices.prev(p)), input(p), input(vertices.next(p))) < 0) {
+        //println("" + p + " is convex")
+        reflexVertices.safeDrop(p)
+        convexVertices.safeAdd(p)
+      } else {
+        //println("" + p + " is reflex")
+        reflexVertices.safeAdd(p)
+        convexVertices.safeDrop(p)
+      }
+    }
   }
   
   def testEarTip(p:Int, reflexVerticesHead:Int){
@@ -47,20 +55,52 @@ class EarClippingTriangulator {
     }
   }
   
-  def triangulate(input:IndexedSeq[Vec2D]):IndexedSeq[Array[Int]] = {
+  private def triangulate:IndexedSeq[Array[Int]] = {
+    val rv = new collection.mutable.ArrayBuffer[Array[Int]](input.size-2)
+    var i = earTips.getOne
+    while (i >= 0) {
+      earTips.drop(i)
+      val vp = vertices.prev(i)
+      val vn = vertices.next(i)
+      if (vp == vn) {
+        if (vertices.toIndexedSeq.size > 0) println("early return")
+        return rv
+      } else {
+        rv.append(Array(vp, i, vn))
+        //println("added triangle: " + rv.last.mkString(","))
+        vertices.drop(i)
+        //reflexVertices.safeDrop(i)
+        convexVertices.safeDrop(i)
+        println("removed " + i + " from further processing")
+        testAngleOfPoint(vp)
+        testAngleOfPoint(vn)
+        val rhead = reflexVertices.head
+        testEarTip(vp, rhead)
+        testEarTip(vn, rhead)
+        i = earTips.getOne
+      }
+    }
+    if (vertices.toIndexedSeq.size > 0) println("early return. ears=" + earTips.toIndexedSeq.mkString(","))
+    rv
+  }
+  
+  def triangulatePolygon(input:IndexedSeq[Vec2D]):IndexedSeq[Array[Int]] = {
     this.input = input
-    val rv = new collection.mutable.ArrayBuffer[Array[Int]]
     
     val size = input.size;
     vertices.setup(size)
     earTips.setup(size)
-    reflexVertices.setup(size)
-    convexVertices.setup(size)
+    reflexVertices.setup(size, empty=true)
+    convexVertices.setup(size, empty=true)
+    
+    //println("reflexVertices =" + reflexVertices.indices.map(i=>"p="+i.prev +",n="+i.next).mkString(","))
+    //println("convexVertices =" + convexVertices.indices.map(i=>"p="+i.prev +",n="+i.next).mkString(","))
     
     for(i<-0 until size) 
       testAngleOfPoint(i)
-    //println("reflexVertices =" + reflexVertices.toIndexedSeq.mkString(","))
-    //println("convexVertices =" + convexVertices.toIndexedSeq.mkString(","))
+      
+    //println("reflexVertices =" + reflexVertices.indices.map(i=>"p="+i.prev +",n="+i.next).mkString(","))
+    //println("convexVertices =" + convexVertices.indices.map(i=>"p="+i.prev +",n="+i.next).mkString(","))
     
     var i = earTips.head
     val rhead = reflexVertices.head 
@@ -70,7 +110,7 @@ class EarClippingTriangulator {
       i = ii
     }
     
-    if (false){
+    if (true){
       println("initial setup:")
       println("vertices       =" + vertices.toIndexedSeq.mkString(","))
       println("earTips        =" + earTips.toIndexedSeq.mkString(","))
@@ -79,40 +119,21 @@ class EarClippingTriangulator {
       println
     }
     
-    i = earTips.getOne
-    while (i >= 0) {
-      earTips.drop(i)
-      val vp = vertices.prev(i)
-      val vn = vertices.next(i)
-      if (vp == vn) {
-        i = -1
-      } else {
-        rv.append(Array(vp, i, vn))
-        //println("added triangle: " + rv.last.mkString(","))
-        vertices.drop(i)
-        if (reflexVertices.contains(i)) reflexVertices.drop(i)
-        if (convexVertices.contains(i)) convexVertices.drop(i)
-        //println("removed " + i + " from further processing")
-        testAngleOfPoint(vp)
-        testAngleOfPoint(vn)
-        val rhead = reflexVertices.head
-        testEarTip(vp, rhead)
-        testEarTip(vn, rhead)
-        i = earTips.getOne
-      }
-    }
+    val rv = triangulate
     
-    println("vertices       =" + vertices.toIndexedSeq.mkString(","))
-    println("earTips        =" + earTips.toIndexedSeq.mkString(","))
-    println("reflexVertices =" + reflexVertices.toIndexedSeq.mkString(","))
-    println("convexVertices =" + convexVertices.toIndexedSeq.mkString(","))
+    if (true){
+      println("vertices       =" + vertices.toIndexedSeq.mkString(","))
+      println("earTips        =" + earTips.toIndexedSeq.mkString(","))
+      println("reflexVertices =" + reflexVertices.toIndexedSeq.mkString(","))
+      println("convexVertices =" + convexVertices.toIndexedSeq.mkString(","))
+    }
     rv
   }
 }
 
 object EarClippingTriangulator extends App {
   val ec = new EarClippingTriangulator
-  val p = Array(Vec2D(0,0),Vec2D(1,0),Vec2D(1,1), Vec2D(0,1) )
-  val t = ec.triangulate(p)
+  val p = Array((250.0,250.0),(400.0,100.0),(100.0,100.0),(100.0,400.0),(280.0,300.0)).map(v=>Vec2D(v._1, v._2))
+  val t = ec.triangulatePolygon(p)
   println("Result " + t.map(p=>p.mkString("(",",",")")).mkString(","))
 }
