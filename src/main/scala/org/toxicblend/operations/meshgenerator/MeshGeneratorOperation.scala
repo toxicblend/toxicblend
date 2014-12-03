@@ -38,16 +38,6 @@ class MeshGeneratorOperation extends CommandProcessorTrait {
   
   private val IDEAL_SIZE = 5000 // totally random number
   
-  /*def checkForCorruption1(i:Iterator[toxi.geom.mesh.Vertex]) :Boolean = {
-    i.foreach( v=> if (v.x.isNaN || v.y.isNaN || v.z.isNaN || v.x.isInfinite || v.y.isInfinite || v.z.isInfinite ) return true)
-    false
-  }
-  
-  def checkForCorruption2(i:Iterator[Vec2D]) :Boolean = {
-    i.foreach(v=> if (v.x.isNaN || v.y.isNaN || v.x.isInfinite || v.y.isInfinite ) return true)
-    false
-  }
-  */
   def processDataPerThread(clockwiseClipPolygon:Polygon2D, aabb:AABB2D, center:Vec2D, parts:Int, delta:Double):TriangleMesh = {
     
     @inline def toTVec3D(v:Vec2D):TVec3D = new TVec3D(v.x.toFloat, v.y.toFloat, 0f)
@@ -66,12 +56,12 @@ class MeshGeneratorOperation extends CommandProcessorTrait {
       else {
         println("********** reducedClipPolygon was anti-clockwise. was forced to reverse it")
         p.reverse
-      }
+      } 
     }
     val reducedAABB = reducedClipPolygon.bounds 
     val rvMesh = new TriangleMesh
     
-    for (xp <- 0 until parts; yp <-0 until parts) yield {
+    for (xp <- 0 until parts; yp <-0 until parts) {
       val p2 = Vec2D(aabb.min.x + xp*delta, aabb.min.y + yp*delta)
       val p3 = Vec2D(p2.x+delta, p2.y)
       val p1 = Vec2D(p2.x, p2.y+delta)
@@ -84,15 +74,14 @@ class MeshGeneratorOperation extends CommandProcessorTrait {
       
       val p = Polygon2D(IndexedSeq(p3, p2, p1, p0))
       val intersects = p.intersects(reducedClipPolygon) 
-      
+      //println("p=" + p + " intersects=" + intersects + " contains=" + cp0 + cp1 + cp2 + cp3)
       if (cp0 && cp1 && cp2 && cp3 && !intersects) {
-        
         // p is cleanly inside the clip polygon
         val p03d = toTVec3D(p0)
         val p13d = toTVec3D(p1)
         val p23d = toTVec3D(p2)
         val p33d = toTVec3D(p3)
-        // try to make the triangulation parallel with the circumference
+        // try to make the triangles parallel with the circumference
         if ({ val direction = p1.sub(center); direction.x*direction.y<0}) {  
           rvMesh.addFace(p23d, p03d, p13d)
           rvMesh.addFace(p03d, p23d, p33d)
@@ -102,7 +91,11 @@ class MeshGeneratorOperation extends CommandProcessorTrait {
         }
       } else if (intersects) { 
         val clippings = WeilerAthertonClipper.clip(p, reducedClipPolygon, Polygon2D.ε )
-        if (clippings.size == 1 && clippings(0) == p) {
+        if (clippings.size == 0) {
+          println("p=" + p)
+          println("reducedClipPolygon=" + reducedClipPolygon)
+          println("produced nothing!!!")
+        } else if (clippings.size == 1 && clippings(0) == p) {
           // every vertex survived clipping intact
           val p03d = toTVec3D(p0)
           val p13d = toTVec3D(p1)
@@ -110,22 +103,29 @@ class MeshGeneratorOperation extends CommandProcessorTrait {
           val p33d = toTVec3D(p3)
           rvMesh.addFace(p23d, p03d, p13d)
           rvMesh.addFace(p03d, p23d, p33d)
-        } else clippings.filter(c => c.size>=3).foreach(clipped=>{ 
-          
-          if (clipped.size == 4 ) {
+        } else clippings.foreach(clipped=>{ 
+          if (clipped.size < 3){
+            println("ignoring junk polygon. N=" + clipped.size)
+          } else if (clipped.size == 3 ) {
+            val v = clipped.vertices
+            val p03d = toTVec3D(clipped.vertices(0))
+            val p13d = toTVec3D(clipped.vertices(1))
+            val p23d = toTVec3D(clipped.vertices(2))
+            rvMesh.addFace(p03d, p23d, p13d)
+          } else if (clipped.size == 4 ) {
             val v = clipped.vertices
             val p03d = toTVec3D(clipped.vertices(0))
             val p13d = toTVec3D(clipped.vertices(1))
             val p23d = toTVec3D(clipped.vertices(2))
             val p33d = toTVec3D(clipped.vertices(3))
-
             rvMesh.addFace(p03d, p23d, p13d)
-            rvMesh.addFace(p03d, p33d, p23d)            
+            rvMesh.addFace(p03d, p33d, p23d)
           } else {
             val v = clipped.vertices
-            triangulator.triangulatePolygon(v).foreach(t => 
+            val triangles = triangulator.triangulatePolygon(v)
+            triangles.foreach(t => {
               rvMesh.addFace(toTVec3D(v(t(0))), toTVec3D(v(t(2))), toTVec3D(v(t(1)))) 
-            )
+            })
           }
         })
       } else if (false) {
