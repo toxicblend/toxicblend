@@ -6,7 +6,7 @@ import scala.collection.JavaConversions._
  * A 2 dimensional polygon representation.
  * Any point within ε distance from an edge is considered 'inside' the polygon
  */
-class Polygon2D protected (val vertices:IndexedSeq[Vec2D], val ε:Double = Polygon2D.ε) extends Iterable[Vec2D]{
+class Polygon2D protected (val vertices:IndexedSeq[Vec2D], val ε:Double = Polygon2D.ε) extends Iterable[Vec2D] with Traversable[Vec2D]{
   override val size = vertices.size
    
   lazy val bounds = AABB2D(vertices)
@@ -59,6 +59,8 @@ class Polygon2D protected (val vertices:IndexedSeq[Vec2D], val ε:Double = Polyg
   def isSelfIntersecting = Polygon2D.isSelfIntersecting(vertices)
   
   def getBounds = bounds
+  
+  override def foreach[U](f:Vec2D => U) = vertices.foreach(f)
   
   /**
    * Checks if the polygon is convex.
@@ -596,10 +598,4 @@ object Polygon2D {
   
   def apply(vertices:IndexedSeq[(Double,Double)]) = 
     new Polygon2D(dropConsecutiveDoubles(vertices.map(v => Vec2D(v._1, v._2)),ε))
-}
-
-object Test extends App {
-  val p = Polygon2D(IndexedSeq((0d,0d), (1d,0d), /*(1d,.5d),*/ (1d,1d), (0d,1d)))
-  println("p=" + p + " p.isSelfIntersecting=" + p.isSelfIntersecting)
-  println("isSimple = " + p.isSimple)
 }
