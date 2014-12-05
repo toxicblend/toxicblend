@@ -3,6 +3,8 @@ package org.toxicblend.tests
 import org.scalatest._
 import org.toxicblend.util.CyclicDoubleLinkedArray
 import org.toxicblend.util.LinearDoubleLinkedArray
+import org.toxicblend.util.SortedLinearDoubleLinkedArray
+
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.JavaConversions._
 
@@ -71,7 +73,7 @@ class DoubleLinkedArrayTest extends VecMathBaseTest {
     def next(i:Int) = if (i>=size-1) -1 else i+1
     def prev(i:Int) = if (i<=0) -1 else i-1
     
-    val vertices = new LinearDoubleLinkedArray(size)
+    val vertices = new LinearDoubleLinkedArray(size, setupAsEmpty=false)
      
     for (i <- 0 until size){
       vertices(i).next should be (next(i))
@@ -93,7 +95,7 @@ class DoubleLinkedArrayTest extends VecMathBaseTest {
   
   "DoubleLinkedArrayTest-11" should "test drop" in {
     var size = 4
-    val vertices = new LinearDoubleLinkedArray(size)
+    val vertices = new LinearDoubleLinkedArray(size, setupAsEmpty=false)
     vertices.toIndexedSeq should contain inOrderOnly (0,1,2,3) 
     vertices.drop(0)
     vertices.toIndexedSeq should contain inOrderOnly (1,2,3)
@@ -109,66 +111,38 @@ class DoubleLinkedArrayTest extends VecMathBaseTest {
     vertices.toIndexedSeq(0) should be (2)
     
   }
-}
-
-object DoubleLinkedArrayTest extends App {
   
-  var size = 3
-  val vertices = new LinearDoubleLinkedArray(size)
-  vertices.setup(4)
-  vertices.drop(3)
+  
+  "DoubleLinkedArrayTest-20" should "test add and drop" in {
+    val data = Array(0d,1d,2d,10d,3d,4,5d,0.5d,2.5d,6.5d)
+    var size = data.size
+    val l = new SortedLinearDoubleLinkedArray[Double](size,0,true)
     
-  for (i <- 0 until size){
-   println("i=" + i + " n=" + vertices(i).next + " p=" + vertices(i).prev ) 
+    for (i <- 0 until data.size) {
+      l.add(i,data(i))
+    }
+    l.toIndexedSeq.map(i=>l(i).value) should be (data.sortWith(_ > _).toSeq)
+    
+    l.drop(9)
+    var data1 = data.dropRight(1)
+    l.toIndexedSeq.map(i=>l(i).value) should be (data1.sortWith(_ > _).toSeq)
+    
+    l.drop(0)
+    data1 = data1.drop(1)
+    l.toIndexedSeq.map(i=>l(i).value) should be (data1.sortWith(_ > _).toSeq)
+    
+    data(0)=121
+    l.add(0,data(0))
+    data(9)=122
+    l.add(9,data(9))
+    l.toIndexedSeq.map(i=>l(i).value) should be (data.sortWith(_ > _).toSeq)
+    
+    data(0)=1223
+    l.update(0,data(0))
+    data(9)= -45d
+    l.update(9,data(9))
+    l.toIndexedSeq.map(i=>l(i).value) should be (data.sortWith(_ > _).toSeq)
+    l.head should be (0)
+    l.last should be (9)
   }
-  println("seq=" + vertices.toIndexedSeq.mkString(","))
-  println
-  
-  println("drop(0)")
-  vertices.drop(0)
-  for (i <- 0 until size){
-   println("i=" + i + " n=" + vertices(i).next + " p=" + vertices(i).prev )
-  }
-  println("seq=" + vertices.toIndexedSeq.mkString(","))
-  println
-  
-  println("drop(2)")
-  vertices.drop(2)
-  for (i <- 0 until size){
-   println("i=" + i + " n=" + vertices(i).next + " p=" + vertices(i).prev )
-  }
-  println("seq=" + vertices.toIndexedSeq.mkString(","))
-  println
-  println("drop(1)")
-  vertices.drop(1)
-  for (i <- 0 until size){
-   println("i=" + i + " n=" + vertices(i).next + " p=" + vertices(i).prev )
-  }
-  println
-  println("add(1)")
-  vertices.add(1)
-  for (i <- 0 until size){
-   println("i=" + i + " n=" + vertices(i).next + " p=" + vertices(i).prev )
-  }
-  println("add(2)")
-  vertices.add(2)
-  for (i <- 0 until size){
-   println("i=" + i + " n=" + vertices(i).next + " p=" + vertices(i).prev )
-  }
-  println("add(0)")
-  vertices.add(0)
-  for (i <- 0 until size){
-   println("i=" + i + " n=" + vertices(i).next + " p=" + vertices(i).prev )
-  }
-  
-  
-  println("seq=" + vertices.toIndexedSeq.mkString(","))
-  size = 20
-  vertices.setup(size)
-  size = 10
-  vertices.setup(size)
-  for (i <- 0 until size){
-   println("i=" + i + " n=" + vertices(i).next + " p=" + vertices(i).prev )
-  }
-  println("seq=" + vertices.toIndexedSeq.mkString(","))
 }
