@@ -1,10 +1,11 @@
 package org.toxicblend.util
 
 class LinearDoubleLinkedArray private (var indices:Array[DoubleLinkedElement] ) {
-  def this(initialSize:Int=4 ) {
+  
+  def this(initialSize:Int=4, setupAsEmpty:Boolean=true ) {
     this( new Array[DoubleLinkedElement](initialSize) )
     for (i<- 0 until initialSize) indices(i) = new DoubleLinkedElement(i-1, i+1)    
-    setup(initialSize)
+    setup(initialSize, setupAsEmpty)
   }
   
   // an index to a vertex that has not been removed yet 
@@ -22,20 +23,8 @@ class LinearDoubleLinkedArray private (var indices:Array[DoubleLinkedElement] ) 
     if ( i < 0 && j < 0 ) {
       return
     }
-      
-    if (i != -1){
-      val eI = indices(i)
-      eI.next = j
-      if (eI.prev != -1)
-        indices(eI.prev).next = i
-    }
-    
-    if (j != -1){    
-      val eJ = indices(j)
-      if (eJ.next != -1)
-        indices(eJ.next).prev = j
-      eJ.prev = i
-    }
+    if (i != -1) indices(i).next = j
+    if (j != -1) indices(j).prev = i  
   }
   
   /**
@@ -113,13 +102,13 @@ class LinearDoubleLinkedArray private (var indices:Array[DoubleLinkedElement] ) 
     } else Array[Int]()
   }
   
-  def setup(inputSize:Int, empty:Boolean=false) = {
+  def setup(inputSize:Int, setupAsEmpty:Boolean=false) = {
     if (indices.size < inputSize) {
       val newIndices = new Array[DoubleLinkedElement](inputSize)
       val oldSize = indices.size
       for (i <- 0 until oldSize) {
         val e =  indices(i)
-        if (empty){
+        if (setupAsEmpty){
           e.prev = -1
           e.next = -1
         } else {
@@ -129,12 +118,12 @@ class LinearDoubleLinkedArray private (var indices:Array[DoubleLinkedElement] ) 
         newIndices(i) = e
       }
       for (i <- oldSize until inputSize) 
-        newIndices(i) = if (empty) new DoubleLinkedElement(-1, -1) else new DoubleLinkedElement(i-1, i+1) 
+        newIndices(i) = if (setupAsEmpty) new DoubleLinkedElement(-1, -1) else new DoubleLinkedElement(i-1, i+1) 
       indices = newIndices
     } else {
       for (i <- 0 until inputSize) {
         val e =  indices(i)
-        if (empty){
+        if (setupAsEmpty){
           e.prev = -1
           e.next = -1
         } else {
@@ -143,7 +132,7 @@ class LinearDoubleLinkedArray private (var indices:Array[DoubleLinkedElement] ) 
         }
       }
     }
-    if (!empty){
+    if (!setupAsEmpty){
       indices(0).prev = -1
       indices(inputSize-1).next = -1
       theHead = 0
