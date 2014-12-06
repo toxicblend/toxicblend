@@ -10,6 +10,8 @@ class AABB2D protected (val min:Vec2D, val max:Vec2D) extends ImmutableVec2D((ma
   protected def this(x1:Double, y1:Double, x2:Double, y2:Double) = this(Vec2D(x1,y1), Vec2D(x2,y2) )
   def center:Vec2D = this
   def containsPoint(p:Vec2D, ε:Double=Polygon2D.ε):Boolean = p.x<=max.x+ε && p.x>=min.x-ε && p.y<=max.y+ε && p.y>=min.y-ε
+  def contain(other:AABB2D):Boolean = min.x <= other.min.x && min.y <= other.min.y && max.x >= other.max.x && max.y >= other.max.y
+
   def width = max.x-min.x
   def height = max.y-min.y
   override def toString = "AABB(" + min + "->" + max + ")"
