@@ -9,15 +9,7 @@ abstract class Vec2DBase extends Vec2D {
   def sub(xp:Double, yp:Double):Vec2D = if (xp==0.0 && yp==0.0) this else new ImmutableVec2D(x-xp, y-yp)
   def sub(v:Vec2D):Vec2D = if (v.x==0.0 && v.y==0.0) this else new ImmutableVec2D(x-v.x, y-v.y)
   def =~=(v:Vec2D,ε:Double) = Vec2D.almostEqual(this, v, ε)
-  def heading = math.atan2(y, x)
-  def magnitude:Double = Vec2D.magnitude(x,y)
-  def magnitudeSquared:Double = Vec2D.magnitudeSquared(x,y)
-  def distanceTo(vx:Double, vy:Double) = math.sqrt(Vec2D.distanceToSquared(x,y,vx,vy))
-  def distanceTo(v:Vec2D) = math.sqrt(distanceToSquared(v))
-  def distanceToSquared(v:Vec2D) = distanceToSquared(v.x, v.y)
-  def distanceToSquared(vx:Double, vy:Double) = Vec2D.distanceToSquared(x,y,vx,vy)
-  def cross(v:Vec2D) = Vec2D.cross(x,y,v.x,v.y)
-  def dot(v:Vec2D) = Vec2D.dot(x,y,v.x,v.y)
+  
   def normalized:Vec2D= {
     val mag = x * x + y * y
     assert(mag>0)
