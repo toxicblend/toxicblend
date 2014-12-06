@@ -38,11 +38,11 @@ class MeshGeneratorOperation extends CommandProcessorTrait {
   
   private val IDEAL_SIZE = 5000 // totally random number
   
-  def processDataPerThread(clockwiseClipPolygon:Polygon2D, aabb:AABB2D, center:Vec2D, parts:Int, delta:Double):TriangleMesh = {
+  def processDataPerThread(clockwiseClipPolygon:Polygon2D, useQualityTriangulation:Boolean, aabb:AABB2D, center:Vec2D, parts:Int, delta:Double):TriangleMesh = {
     
     @inline def toTVec3D(v:Vec2D):TVec3D = new TVec3D(v.x.toFloat, v.y.toFloat, 0f)
     
-    val triangulator = new EarClippingTriangulator
+    val triangulator = new EarClippingTriangulator(useQualityTriangulation)
     //println("processDataPerThread: aabb.width/delta=" + aabb.width/delta  + " aabb.height/delta=" +  aabb.height/delta) 
     val reducedClipPolygon = {
       val clipAABB = {
@@ -171,7 +171,7 @@ class MeshGeneratorOperation extends CommandProcessorTrait {
     })
   }
   
-  def processData(edges:Polygon2DConverter, center:Option[ReadonlyVec3D], parts:Int, calculator:ZCalculator, useMultiThreading:Boolean) : Mesh3DConverter = {
+  def processData(edges:Polygon2DConverter, center:Option[ReadonlyVec3D], parts:Int, calculator:ZCalculator, useMultiThreading:Boolean, useQualityTriangulation:Boolean) : Mesh3DConverter = {
     
     val (polygon,scale) = {
       val tPolygon = edges.polygons(0)
@@ -215,14 +215,14 @@ class MeshGeneratorOperation extends CommandProcessorTrait {
       }
       
       //println("subjobs:\n" + job.mkString("\n") + "\nsize=" + job.size + "\n")
-      job.par.map(j=>processDataPerThread(polygon,j,realCenter,parts=mtParts,delta=delta)).seq.foldLeft(new TriangleMesh)((rv,part)=>rv.addMesh(part))
+      job.par.map(j=>processDataPerThread(polygon,useQualityTriangulation, j,realCenter, parts=mtParts,delta=delta)).seq.foldLeft(new TriangleMesh)((rv,part)=>rv.addMesh(part))
     } else { 
       //val aabb = {
         // make the aabb a little bit bigger to include every pixel
       //  val deltaV = Vec2D(delta*0.1d, delta*0.1)
       //  convexHullAABB.growToContainPoint(convexHullAABB.min.sub(deltaV)).growToContainPoint(convexHullAABB.max.add(deltaV))
       //}
-      processDataPerThread(polygon,convexHullAABB,realCenter,parts=parts,delta=delta)
+      processDataPerThread(polygon,useQualityTriangulation, convexHullAABB,realCenter,parts=parts,delta=delta)
     }
     
     adjustZ(resultingMesh, polygon, convexHullPolygon, realCenter, calculator)
@@ -240,11 +240,13 @@ class MeshGeneratorOperation extends CommandProcessorTrait {
     
     println(options)
     val useMultiThreading = options.getMultiThreadingProperty(traceMsg,true)
+    val useQualityTriangulation = options.getBooleanProperty("qualityTriangulation", false, traceMsg)
+
     val unitScale = options.getUnitScaleProperty(traceMsg)
     val unitIsMetric = options.getUnitSystemProperty(traceMsg)
     val zAlgorithm = options.getStringProperty("zAlgorithm", "CIRCLEARC")
-    val (radius1Property,radius2Property) = inAscendingOrder( options.getFloatProperty("radius1Property", 0f, traceMsg),
-                                                              options.getFloatProperty("radius2Property", 1f, traceMsg) )
+    val (radius1Property,radius2Property) = inAscendingOrder( options.getFloatProperty("radius1", 0f, traceMsg),
+                                                              options.getFloatProperty("radius2", 1f, traceMsg) )
     val subdivisions = options.getIntProperty("subdivisions", 2, traceMsg)
     
     // Convert model vertices to world coordinates so that the radius unit makes sense
@@ -299,7 +301,7 @@ class MeshGeneratorOperation extends CommandProcessorTrait {
         case "CIRCLEARC" => new ArcCalculator(radius1Property,radius2Property)
       }
       val parts = subdivisions+1
-      returnMessageBuilder.addModels(processData(edgePolygon, center, parts, calculator, useMultiThreading).toPBModel(None, None))
+      returnMessageBuilder.addModels(processData(edgePolygon, center, parts, calculator, useMultiThreading, useQualityTriangulation).toPBModel(None, None))
       returnMessageBuilder
     })
   }

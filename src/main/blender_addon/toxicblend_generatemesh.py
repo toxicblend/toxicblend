@@ -44,6 +44,12 @@ class ToxicBlend_GenerateMesh(bpy.types.Operator):
     items=(("TRUE", "True",""),
            ("FALSE", "False","")),
            default="FALSE" )
+  qualityTrianglesProperty = bpy.props.EnumProperty(
+    description="Try to find triangles with as large (minimum) angles as possible",
+    name="Use quality triangulation algorithm",
+    items=(("TRUE", "True",""),
+           ("FALSE", "False","")),
+           default="FALSE" )
              
   @classmethod
   def poll(cls, context):
@@ -55,13 +61,14 @@ class ToxicBlend_GenerateMesh(bpy.types.Operator):
       with toxicblend.ByteCommunicator("localhost", 9999) as bc: 
         unitSystemProperty = context.scene.unit_settings
         activeObject = context.scene.objects.active
-        properties = {'useMultiThreading' : self.useMultiThreadingProperty,
-                      'zAlgorithm'        : self.zAlgorithmProperty,
-                      'subdivisions'      : str(self.subdivisionProperty),
-                      'radius1Property'   : str(self.radius1Property),
-                      'radius2Property'   : str(self.radius2Property),
-                      'unitSystem'        : str(unitSystemProperty.system), 
-                      'unitScale'         : str(unitSystemProperty.scale_length) }
+        properties = {'useMultiThreading'   : self.useMultiThreadingProperty,
+                      'zAlgorithm'          : self.zAlgorithmProperty,
+                      'subdivisions'        : str(self.subdivisionProperty),
+                      'radius1'             : str(self.radius1Property),
+                      'radius2'             : str(self.radius2Property),
+                      'unitSystem'          : str(unitSystemProperty.system), 
+                      'unitScale'           : str(unitSystemProperty.scale_length),
+                      'qualityTriangulation': self.qualityTrianglesProperty  }
                      
         bc.sendMultipleBlenderObjects(bpy.context.selected_objects, self.bl_idname, properties) 
         bc.receiveObjects()
