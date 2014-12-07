@@ -85,7 +85,7 @@ final class Triangles private () extends Traversable[Array[Int]]{
     false
   }
   
-  def edgeSwap(a:Int, b:Int, vertices:IndexedSeq[Vec2D], minAngle1:Double) {
+  def edgeSwap(a:Int, b:Int, vertices:IndexedSeq[Vec2D], minAngle1:Double) : Boolean = {
     val t1 = data(numberOfElements-1)
     searchAndRotate(t1,a,b)
     for (i<- 0 until numberOfElements -1) {
@@ -93,34 +93,45 @@ final class Triangles private () extends Traversable[Array[Int]]{
         //println("found nothing to edge swap with: " + t1.mkString("(",",",")") + " a=" + a + " b=" + b + " data(i)=" + data(i).mkString("(",",",")"))
       } else {
         val t2 = data(i)
-        //println("found swappable candidate : " + t2.mkString("(",",",")") + " to: " + t1.mkString("(",",",")"))
-        val minAngleÚnaltered = math.min(minAngle1, minumumAngle(vertices,t2(0),t2(1),t2(2))._1 )
-        val minAngleAltered = math.min( minumumAngle(vertices,t1(2),t2(2),t1(1))._1, 
-                                        minumumAngle(vertices,t1(0),t2(2),t1(2))._1 )
-        //println("minAngleÚnaltered=" + minAngleÚnaltered)
-        //println("minAngleAltered=" + minAngleAltered)
-          
-        if (minAngleÚnaltered >= minAngleAltered) {
-          // do nothing 
-          //println("keep as is")  
-        } else {
-          // do the edge swap
-          //println("do the edge swap") 
-          val t12 = t1(2)
-          val t22 = t2(2)
-          val t11 = t1(1)
-          val t10 = t1(0)
-          t1(0) = t12
-          t1(1) = t22
-          t1(2) = t11
-          
-          t2(0) = t10
-          t2(1) = t22
-          t2(2) = t12
-          //println("swapped to t1=" + t1.mkString("(",",",")") + " t2:=" + t2.mkString("(",",",")"))
+        val t12 = t1(2) 
+        val t20 = t2(0)
+        val t21 = t2(1)
+        val t22 = t2(2)
+        val t11 = t1(1)
+        val t10 = t1(0)
+        assert(t11 == t20)
+        assert(t21 == t10)
+        
+        if ( Vec2D.ccw(vertices(t22), vertices(t11), vertices(t12)) < 0 &&
+             Vec2D.ccw(vertices(t12), vertices(t10), vertices(t22)) < 0 ) {
+          //println("found swappable candidate : " + t2.mkString("(",",",")") + " to: " + t1.mkString("(",",",")"))
+          val minAngleÚnaltered = math.min(minAngle1, minumumAngle(vertices,t20,t21,t22)._1 )
+          val minAngleAltered = math.min( minumumAngle(vertices,t12,t22,t11)._1, 
+                                          minumumAngle(vertices,t10,t22,t12)._1 )
+          //println("minAngleÚnaltered=" + minAngleÚnaltered)
+          //println("minAngleAltered=" + minAngleAltered)
+            
+          if (minAngleÚnaltered >= minAngleAltered) {
+            // do nothing 
+            //println("keep as is")  
+          } else {
+            // do the edge swap
+            //println("do the edge swap") 
+            
+            t1(0) = t12
+            t1(1) = t22
+            t1(2) = t11
+            
+            t2(0) = t10
+            t2(1) = t22
+            t2(2) = t12
+            //println("swapped to t1=" + t1.mkString("(",",",")") + " t2:=" + t2.mkString("(",",",")"))
+            return true
+          }
         }
       }
     }
+    false
   }
   
   def appendAndOptimize(vertices:IndexedSeq[Vec2D], p0:Int, p1:Int, p2:Int) = {
@@ -129,14 +140,9 @@ final class Triangles private () extends Traversable[Array[Int]]{
     val minAngle2 = if (minAngle < 0) math.acos(-math.sqrt(-minAngle)) else math.acos(math.sqrt(minAngle))
     //println("minimum angle of " + p0 + "," + p1 + "," + p2 + " is " + r2d(minAngle2))
     append(p0,p1,p2)
-    if (!isOuterEdge(maxVertices, p0, p1)) {
-      edgeSwap(p0, p1, vertices, minAngle)
-    } else if (!isOuterEdge(maxVertices, p1, p2)) {
-      edgeSwap(p1, p2, vertices, minAngle)
-    } else if (!isOuterEdge(maxVertices, p2, p0)) {
-      edgeSwap(p2, p0, vertices, minAngle)
-    }
-    
+    if (!isOuterEdge(maxVertices, p1, p2) && edgeSwap(p1, p2, vertices, minAngle)) {}
+    else if (!isOuterEdge(maxVertices, p0, p1) && edgeSwap(p0, p1, vertices, minAngle)) {} 
+    else if (!isOuterEdge(maxVertices, p2, p0) && edgeSwap(p2, p0, vertices, minAngle)) {}
   }
   
   override def size = numberOfElements
@@ -155,6 +161,11 @@ final class Triangles private () extends Traversable[Array[Int]]{
       for (i<-data.size until newData.size) newData(i) = Array(0,0,0)
       data = newData
     }
+  }
+  
+  def isAllClockwise(vertices:IndexedSeq[Vec2D]) : Boolean = {
+    this.foreach(p => if (! Polygon2D.isClockwise(vertices(p(0)), vertices(p(1)), vertices(p(2)))) return false ) 
+    false
   }
   
   /**
@@ -240,9 +251,9 @@ class EarClippingTriangulator(val useQualityTriangulation:Boolean) {
       }
     }
     {
-      var i = vertices.getOne
-      !(vertices.isEmpty || (vertices.next(vertices.next(i)) == i)  )
-    }
+      i = vertices.getOne
+      !(vertices.isEmpty || (vertices.next(vertices.next(i)) == i)) 
+    } || !rv.isAllClockwise(input)
   }
   
   def triangulatePolygon(input:IndexedSeq[Vec2D]):Triangles = {
@@ -281,11 +292,13 @@ class EarClippingTriangulator(val useQualityTriangulation:Boolean) {
         
     if (triangulate){
       println("detected triangulation trouble:")
-      println("vertices       =" + input.mkString(","))
-      println("vertex indices =" + vertices.toIndexedSeq.mkString(","))
-      println("earTips        =" + earTips.toIndexedSeq.mkString(","))
-      println("reflexVertices =" + reflexVertices.toIndexedSeq.mkString(","))
-      println("rv             =" + rv.map(t=>t.mkString("{",",","}")).mkString(","))
+      println("input             =" + input.mkString(","))
+      println("vertex indices    =" + vertices.toIndexedSeq.mkString(","))
+      println("earTips           =" + earTips.toIndexedSeq.mkString(","))
+      println("reflexVertices    =" + reflexVertices.toIndexedSeq.mkString(","))
+      println("rv                =" + rv.map(t=>t.mkString("{",",","}")).mkString(","))
+      println("rv.isAllClockwise =" + rv.isAllClockwise(input))
+      println
     }
     rv
   }
