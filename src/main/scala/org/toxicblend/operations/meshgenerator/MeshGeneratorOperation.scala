@@ -82,7 +82,7 @@ class MeshGeneratorOperation extends CommandProcessorTrait {
         val p23d = toTVec3D(p2)
         val p33d = toTVec3D(p3)
         // try to make the triangles parallel with the circumference
-        if ({ val direction = p1.sub(center); direction.x*direction.y<0}) {  
+        if (useQualityTriangulation && { val direction = p1.sub(center); direction.x*direction.y<0}) {  
           rvMesh.addFace(p23d, p03d, p13d)
           rvMesh.addFace(p03d, p23d, p33d)
         } else {
