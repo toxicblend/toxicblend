@@ -42,8 +42,9 @@ class IntersectionCalculator(val rLow:Double, val rHigh:Double) extends ZCalcula
   
   def calculateZ(d:Double):Double = {
     val r = k1 + d*c1
-    val rv = k2 + c2*calculateH(r,d)
-    //val rv = if (h > 1d) 1d else h
+    val h = calculateH(r,d)
+    if (h.isNaN || h.isInfinite) return 0d
+    val rv = k2 + c2*h
     if (rv.isNaN || rv.isInfinite) {
       println("r=" + r + " generated=" + rv + " k1=" + k1 + " c1=" + c1+ " k2=" + k2+ " k2=" + c2)
       0d

@@ -285,9 +285,9 @@ object Polygon2D {
   }
   
   /**
-   * return the area of a triangle defined by the vectors o->a and o->b
+   * return the area of a triangle defined by the points a->b->c
    */
-  def getArea(o:Vec2D, a:Vec2D, b:Vec2D):Double = 0.5d*Vec2D.cross(o,a,b)
+  def getAreaOfTriangle(a:Vec2D, b:Vec2D, c:Vec2D):Double = 0.5d*Vec2D.cross(a,b,c)
   
   def getArea(vertices:IndexedSeq[Vec2D]):Double = {
     val size = vertices.size
@@ -296,7 +296,7 @@ object Polygon2D {
     (0 until size).foreach( current=> {
         val v = vertices(prev)      // == v(i)
         val vp1 = vertices(current) // == v(i+1)
-        area += v.x * vp1.y - vp1.x * v.y 
+        area += vp1.x * v.y -v.x * vp1.y
         prev = current
     })
     area*0.5d
@@ -305,7 +305,7 @@ object Polygon2D {
   /**
    * @return true if the polygon is clockwise
    */
-  def isClockwise(vertices:IndexedSeq[Vec2D]) = getArea(vertices) < 0d
+  def isClockwise(vertices:IndexedSeq[Vec2D]) = getArea(vertices) > 0d
   
   /**
    * Same as:

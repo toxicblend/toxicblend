@@ -27,7 +27,7 @@ final class Triangles private () extends Traversable[Array[Int]]{
     numberOfElements += 1
   }
   
-  def minumumAngle(vertices:IndexedSeq[Vec2D], p0:Int, p1:Int, p2:Int): (Double,Int) = {
+  def minimumAngle(vertices:IndexedSeq[Vec2D], p0:Int, p1:Int, p2:Int): (Double,Int) = {
     val v0 = vertices(p0)
     val v1 = vertices(p1)
     val v2 = vertices(p2)
@@ -71,15 +71,19 @@ final class Triangles private () extends Traversable[Array[Int]]{
   def searchAndRotate(triangle:Array[Int], a:Int, b:Int) :Boolean = {
     if (triangle(0) == a && triangle(1) == b) return true
     if (triangle(1) == a && triangle(2) == b) {
+      val c = triangle(0)
       rotate(triangle, false)
       assert(triangle(0)==a)
       assert(triangle(1)==b)
+      assert(triangle(2)==c)
       return true
     }
     if (triangle(2) == a && triangle(0) == b) {
+      val c = triangle(1)
       rotate(triangle, true)
       assert(triangle(0)==a)
       assert(triangle(1)==b)
+      assert(triangle(2)==c)
       return true
     }
     false
@@ -87,6 +91,7 @@ final class Triangles private () extends Traversable[Array[Int]]{
   
   def edgeSwap(a:Int, b:Int, vertices:IndexedSeq[Vec2D], minAngle1:Double) : Boolean = {
     val t1 = data(numberOfElements-1)
+    //assert(Polygon2D.isClockwise(vertices(t1(0)), vertices(t1(1)), vertices(t1(2))))
     searchAndRotate(t1,a,b)
     for (i<- 0 until numberOfElements -1) {
       if (!searchAndRotate(data(i),b,a)) {
@@ -104,10 +109,10 @@ final class Triangles private () extends Traversable[Array[Int]]{
         
         if ( Vec2D.ccw(vertices(t22), vertices(t11), vertices(t12)) < 0 &&
              Vec2D.ccw(vertices(t12), vertices(t10), vertices(t22)) < 0 ) {
-          //println("found swappable candidate : " + t2.mkString("(",",",")") + " to: " + t1.mkString("(",",",")"))
-          val minAngleÚnaltered = math.min(minAngle1, minumumAngle(vertices,t20,t21,t22)._1 )
-          val minAngleAltered = math.min( minumumAngle(vertices,t12,t22,t11)._1, 
-                                          minumumAngle(vertices,t10,t22,t12)._1 )
+          //println("found swap-able candidate : " + t2.mkString("(",",",")") + " to: " + t1.mkString("(",",",")"))
+          val minAngleÚnaltered = math.min(minAngle1, minimumAngle(vertices,t20,t21,t22)._1 )
+          val minAngleAltered = math.min( minimumAngle(vertices,t12,t22,t11)._1, 
+                                          minimumAngle(vertices,t10,t22,t12)._1 )
           //println("minAngleÚnaltered=" + minAngleÚnaltered)
           //println("minAngleAltered=" + minAngleAltered)
             
@@ -117,14 +122,15 @@ final class Triangles private () extends Traversable[Array[Int]]{
           } else {
             // do the edge swap
             //println("do the edge swap") 
-            
+            //assert(Polygon2D.isClockwise(vertices(t2(0)), vertices(t2(1)), vertices(t2(2))))
             t1(0) = t12
             t1(1) = t22
             t1(2) = t11
-            
+            //assert(Polygon2D.isClockwise(vertices(t1(0)), vertices(t1(1)), vertices(t1(2))))
             t2(0) = t10
             t2(1) = t22
             t2(2) = t12
+            //assert(Polygon2D.isClockwise(vertices(t2(0)), vertices(t2(1)), vertices(t2(2))))
             //println("swapped to t1=" + t1.mkString("(",",",")") + " t2:=" + t2.mkString("(",",",")"))
             return true
           }
@@ -136,9 +142,10 @@ final class Triangles private () extends Traversable[Array[Int]]{
   
   def appendAndOptimize(vertices:IndexedSeq[Vec2D], p0:Int, p1:Int, p2:Int) = {
     val maxVertices = vertices.size - 1
-    val (minAngle, minPos) = minumumAngle(vertices,p0,p1,p2)
-    val minAngle2 = if (minAngle < 0) math.acos(-math.sqrt(-minAngle)) else math.acos(math.sqrt(minAngle))
+    val (minAngle, minPos) = minimumAngle(vertices,p0,p1,p2)
+    //val minAngle2 = if (minAngle < 0) math.acos(-math.sqrt(-minAngle)) else math.acos(math.sqrt(minAngle))
     //println("minimum angle of " + p0 + "," + p1 + "," + p2 + " is " + r2d(minAngle2))
+    //assert(Polygon2D.isClockwise(vertices(p0), vertices(p1), vertices(p2)))
     append(p0,p1,p2)
     if (!isOuterEdge(maxVertices, p1, p2) && edgeSwap(p1, p2, vertices, minAngle)) {}
     else if (!isOuterEdge(maxVertices, p0, p1) && edgeSwap(p0, p1, vertices, minAngle)) {} 
@@ -164,8 +171,8 @@ final class Triangles private () extends Traversable[Array[Int]]{
   }
   
   def isAllClockwise(vertices:IndexedSeq[Vec2D]) : Boolean = {
-    this.foreach(p => if (! Polygon2D.isClockwise(vertices(p(0)), vertices(p(1)), vertices(p(2)))) return false ) 
-    false
+    this.foreach(p => if (!Polygon2D.isClockwise(vertices(p(0)), vertices(p(1)), vertices(p(2)))) return false ) 
+    true
   }
   
   /**

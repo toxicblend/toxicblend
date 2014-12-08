@@ -135,7 +135,7 @@ class LineIntersectionTest extends FlatSpec with Matchers {
     p.isClockwise should be (false)
     p.isSelfIntersecting should be (false)
     p.getCentroid should be (Vec2D(1d/3d, 1d/3d))
-    p.getArea should be (0.5d)
+    p.getArea should be (-0.5d plusOrMinus doubleTolerance)
   }
   
   "LineIntersectionTest-8" should "test isClockwise" in {

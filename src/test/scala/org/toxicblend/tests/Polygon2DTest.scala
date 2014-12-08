@@ -171,9 +171,9 @@ class Polygon2DTest extends VecMathBaseTest {
    
    p.isClockwise should be (true)
    Polygon2D.isClockwise(p1,p2,p3) should be (true)
-   p.getArea should be (-0.5d plusOrMinus tolerance)
-   Polygon2D.getArea(p2, p1, p3) should be (-0.5d plusOrMinus tolerance)
-   Polygon2D.getArea(p.vertices ) should be (-0.5d plusOrMinus tolerance)
+   p.getArea should be (0.5d plusOrMinus tolerance)
+   Polygon2D.getAreaOfTriangle(p2, p1, p3) should be (0.5d plusOrMinus tolerance)
+   Polygon2D.getArea(p.vertices ) should be (0.5d plusOrMinus tolerance)
   }
   
 }
