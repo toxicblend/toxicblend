@@ -65,13 +65,6 @@ class Mesh2D protected ( val vertices:ArrayBuffer[Vec2D], val faces:ArrayBuffer[
       newVertices(translationTable(pOldIndex)) = vertices(pOldIndex)
     })
     val newFaces = faces.map( f => uniqueConsecutivePoints(f.map(p => translationTable(p)))).filter(x => x.size>1)
-    /*
-    println("removeDoubles:")
-    println("  newVertices:" + newVertices.mkString("{",",","}"))
-    println("  newFaces   :" + newFaces.map(x => x.mkString("(",", ",")")).mkString(", ")) 
-    println()
-    //(newVertices,fuseFaces(newFaces))
-    */ 
     setState(newVertices,newFaces)
     this
   }
