@@ -52,11 +52,11 @@ object Vec2D {
   @inline final def dot(v1x:Double, v1y:Double, v2x:Double, v2y:Double) = (v1x * v2x) + (v1y * v2y)
   
   /**
-   * returns +1 if a->b->c is a counterclockwise angle
-   * -1 if a->b->c is a clockwise angle
-   * and 0 if a->b->c are collinear
+   * returns +1 if (o->a) and (o->b) is at a counterclockwise angle
+   * -1 if (o->a) and (o->b) is at a clockwise angle
+   * and 0 (o->a) and (o->b) are collinear
    */
-  @inline final def ccw(a:Vec2D, b:Vec2D, c:Vec2D) = (b.x - a.x) * (c.y - a.y) - (c.x - a.x) * (b.y - a.y)
+  @inline final def ccw(o:Vec2D, a:Vec2D, b:Vec2D) = (a.x - o.x) * (b.y - o.y) - (b.x - o.x) * (a.y - o.y)
   
   /**
    * returns the angle between a->b->c
@@ -93,7 +93,8 @@ object Vec2D {
   
   /**
    * same as normalizedDotSquaredWithSign, but with "sign(cos(angle))" retained.
-   * The (negative) output of this method sorts in the same way as the angle between the vectors (but without any trigometrical method calls)
+   * The (negative) output of this method sorts in the same way as the angle between the vectors 
+   * (but without any trigometrical method calls)
    * 
    * graph: http://www.wolframalpha.com/share/clip?f=d41d8cd98f00b204e9800998ecf8427en8fh10hqa0
    * 
