@@ -31,4 +31,15 @@ class AABB2DTest extends VecMathBaseTest {
     aabb2.intersects(aabb2) should be (true)
     aabb1.intersects(aabb1) should be (true)
   }
+  
+  "AABB2DTest-3" should "test toIndexedSeq" in {
+    val aabb = AABB2D(100,100,200,200)
+    val clockwise = aabb.toIndexedSeq(true)
+    Polygon2D.isClockwise(clockwise) should be (true)
+    Polygon2D(clockwise).isClockwise should be (true)
+    val antiClockwise = aabb.toIndexedSeq(false)
+    Polygon2D.isClockwise(antiClockwise) should be (false)
+    Polygon2D(antiClockwise).isClockwise should be (false)
+  }
+  
 }

@@ -46,8 +46,8 @@ class AABB2D protected (val min:Vec2D, val max:Vec2D) extends ImmutableVec2D((ma
    * Copy to an array of vertices
    */
   def toIndexedSeq(clockwise:Boolean=false):IndexedSeq[Vec2D] = 
-    if (clockwise) IndexedSeq(Vec2D(max.x, max.y), Vec2D(min.x, max.y), Vec2D(min.x, min.y),Vec2D(max.x, min.y))
-    else IndexedSeq(Vec2D(max.x, max.y), Vec2D(max.x, min.y), Vec2D(min.x, min.y), Vec2D(min.x, max.y))
+    if (clockwise) IndexedSeq(Vec2D(max.x, max.y), Vec2D(max.x, min.y), Vec2D(min.x, min.y), Vec2D(min.x, max.y))
+    else IndexedSeq(Vec2D(max.x, max.y), Vec2D(min.x, max.y), Vec2D(min.x, min.y),Vec2D(max.x, min.y))
     
   def toPolygon2D(clockwise:Boolean=false)=Polygon2D(toIndexedSeq(clockwise))
 }
