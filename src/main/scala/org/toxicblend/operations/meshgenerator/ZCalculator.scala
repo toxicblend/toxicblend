@@ -2,7 +2,7 @@ package org.toxicblend.operations.meshgenerator
 
 import math.{sqrt,sin,cos}
 
-abstract class ZCalculator {
+class ZCalculator {
   /**
    * find the linear interpolation parameters such that :
    * k+c*f(lowX)  = 0
@@ -16,7 +16,7 @@ abstract class ZCalculator {
   
   def interpolated(f:(Double)=>Double, k:Double, c:Double, x:Double) = k+c*f(x)
   
-  def calculateZ(d:Double):Double
+  def calculateZ(d:Double):Double=0d
 }
 
 /**
@@ -40,7 +40,7 @@ class IntersectionCalculator(val rLow:Double, val rHigh:Double) extends ZCalcula
   val k2 = hMin/(hMin-1d)
   val c2 = 1d-k2     
   
-  def calculateZ(d:Double):Double = {
+  override def calculateZ(d:Double):Double = {
     val r = k1 + d*c1
     val h = calculateH(r,d)
     if (h.isNaN || h.isInfinite) return 0d
@@ -60,7 +60,7 @@ class ArcCalculator (val rLow:Double, val rHigh:Double) extends ZCalculator {
   val (k1,c1) = interpolateParameters(x=> x, rLow, rHigh)
   val (k2,c2) = interpolateParameters(x=> { val newR=(x-k1)/c1; sqrt(1-newR*newR)}, 0,1)  
   
-  def calculateZ(r:Double):Double = {
+  override def calculateZ(r:Double):Double = {
     if (c1.isNaN || c2.isNaN) 0d
     else {
       val newR = if (r>=1d) rHigh

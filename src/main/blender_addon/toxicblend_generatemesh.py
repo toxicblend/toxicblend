@@ -36,7 +36,8 @@ class ToxicBlend_GenerateMesh(bpy.types.Operator):
     description="Z coordinate is calculated by:",
     name="Use mulithreading algorithm",
     items=(("CIRCLEINTERSECTION", "Circle intersection","z=sqrt((4d*r*r-d*d)/4d)"),
-           ("CIRCLEARC", "Arc of a circle","z=sqrt(1-r*r)")),
+           ("CIRCLEARC", "Arc of a circle","z=sqrt(1-r*r)"),
+           ("FLAT", "Flat", "z=0.0")),
            default="CIRCLEARC" )
   useMultiThreadingProperty = bpy.props.EnumProperty(
     description="Sections of the computations will be processed in a separate threads",

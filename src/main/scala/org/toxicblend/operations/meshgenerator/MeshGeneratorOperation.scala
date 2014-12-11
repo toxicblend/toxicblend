@@ -299,6 +299,7 @@ class MeshGeneratorOperation extends CommandProcessorTrait {
       val calculator = zAlgorithm match {
         case "CIRCLEINTERSECTION" => new IntersectionCalculator(radius1Property,radius2Property)
         case "CIRCLEARC" => new ArcCalculator(radius1Property,radius2Property)
+        case "FLAT" => new ZCalculator
       }
       val parts = subdivisions+1
       returnMessageBuilder.addModels(processData(edgePolygon, center, parts, calculator, useMultiThreading, useQualityTriangulation).toPBModel(None, None))
