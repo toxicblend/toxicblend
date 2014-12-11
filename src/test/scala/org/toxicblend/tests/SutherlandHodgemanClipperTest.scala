@@ -3,10 +3,12 @@ package org.toxicblend.tests
 
 import org.scalatest._
 import org.toxicblend.vecmath.SutherlandHodgemanClipper
+import org.toxicblend.vecmath.SutherlandHodgemanRectangularClipper
 import org.toxicblend.ToxicblendException
 import org.toxicblend.vecmath.ImmutableVec2D
 import org.toxicblend.vecmath.MutableVec2D
 import org.toxicblend.vecmath.Vec2D
+import org.toxicblend.vecmath.AABB2D
 import org.toxicblend.vecmath.FiniteLine2D
 import org.toxicblend.vecmath.Polygon2D
 //import toxi.geom.{Polygon2D=>TPolygon2D}
@@ -15,6 +17,7 @@ import org.toxicblend.util.CyclicTree
 
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.JavaConversions._
+import Vec2DMatcher._
 
 class SutherlandHodgemanClipperTest extends FlatSpec with Matchers {
   
@@ -41,7 +44,7 @@ class SutherlandHodgemanClipperTest extends FlatSpec with Matchers {
    *  |   /|           |  /
    *  |_/__|           |_/
    *   /   
-   */
+   * /
   "SutherlandHodgemanClipperTest-1" should "clip just fine" in {
     
     val p0 = Vec2D(2,-1)
@@ -62,7 +65,7 @@ class SutherlandHodgemanClipperTest extends FlatSpec with Matchers {
     clipped.get(2) should be (i0)
     clipped.get(3) should be (i1)
     clipped.get(4) should be (p1)
-  }
+  }*/
   
   /** 
    *   ____  /             /
@@ -71,7 +74,7 @@ class SutherlandHodgemanClipperTest extends FlatSpec with Matchers {
    *  |   /|            /  |
    *  |_/__|           /___|
    *   /              /               
-   */
+   * /
   "SutherlandHodgemanClipperTest-2" should "clip just fine" in {
     
     val p0 = Vec2D(2,-1)
@@ -96,7 +99,7 @@ class SutherlandHodgemanClipperTest extends FlatSpec with Matchers {
     clipped.get(2) should be (p3)
     clipped.get(3) should be (p0)
     clipped.get(4) should be (p1)
-  }
+  } */
     
   /**
    * Rectangular, clockwise clipping 
@@ -332,27 +335,13 @@ class SutherlandHodgemanClipperTest extends FlatSpec with Matchers {
   /**
    *  Rectangular clipping from http://rosettacode.org/wiki/Sutherland-Hodgman_polygon_clipping
    */
-  "SutherlandHodgemanClipperTest-7" should "clip" in {
+  "SutherlandHodgemanClipperTest-7" should "clip like rosettacode.org" in {
       
     val polygon = ArrayBuffer((50,150),(200,50),(350,150),(350,300),(250,300),(200,250),(150,350),(100,250),(100,200)).map(p=>Vec2D(p._1,p._2))
     val clipEdges = ArrayBuffer((100,100),(300,100),(300,300),(100,300)).map(p=>Vec2D(p._1,p._2))
-    polygon += polygon.head
-    clipEdges += clipEdges.head
-    
-    //println("polygon: " + polygon)
-    //println("clipEdges: " + clipEdges)
-        
-    //println("polygon: " + polygon)
-    //println("clipEdges: " + clipEdges)
-    //println("center: " + center)
-    //println
-    val clipped = clipEdges.sliding(2).foldLeft(polygon:IndexedSeq[Vec2D])((x,e) => {
-      val edge = new FiniteLine2D(e.head, e.last)
-      val p = SutherlandHodgemanClipper.clip(x, edge, Polygon2D.ε)
-      //println("clipped with : " + edge)
-      //println("result : " + p)
-      p
-    })
+    val clipper = new SutherlandHodgemanClipper(polygon.size)
+
+    val clipped = clipper.clip(polygon, clipEdges, Polygon2D.ε)
     
     val correctAnswer = Array((100.000000, 116.666667),
                               (125.000000, 100.000000),
@@ -369,5 +358,12 @@ class SutherlandHodgemanClipperTest extends FlatSpec with Matchers {
       clipped(i).x should be ( correctAnswer(i).x plusOrMinus tolerance)
       clipped(i).y should be ( correctAnswer(i).y plusOrMinus tolerance)
     })
+    
+    val rectClipper = new SutherlandHodgemanRectangularClipper(polygon.size)
+    val aabb = AABB2D(clipEdges)
+    val rectClipped = rectClipper.clip(polygon, aabb, Polygon2D.ε)
+    rectClipped.size should be (correctAnswer.size)
+    (0 until rectClipped.size).foreach(i=> rectClipped(i) should equal2d (correctAnswer(i),tolerance) )
+    
   }
 }

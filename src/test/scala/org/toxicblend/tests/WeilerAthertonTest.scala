@@ -1,6 +1,8 @@
 package org.toxicblend.tests
 
 import org.scalatest._
+import org.scalatest.matchers.BeMatcher
+import org.scalatest.matchers.MatchResult
 import org.toxicblend.vecmath.WeilerAthertonClipper
 import org.toxicblend.ToxicblendException
 import org.toxicblend.vecmath.ImmutableVec2D
@@ -9,7 +11,7 @@ import org.toxicblend.vecmath.Vec2D
 import org.toxicblend.vecmath.FiniteLine2D
 import org.toxicblend.vecmath.Polygon2D
 
-
+import Vec2DMatcher._
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.JavaConversions._
 
@@ -31,10 +33,10 @@ class WeilerAthertonTest extends VecMathBaseTest {
     }
     //println("clipped=" + clipped.mkString(","))
     clipped.size should be (4)
-    clipped.get(0) should be (subject.vertices(3))
-    clipped.get(1) should be (subject.vertices(0))
-    clipped.get(2) should be (subject.vertices(1))
-    clipped.get(3) should be (subject.vertices(2))
+    clipped.get(0) should equal2d (subject.vertices(3),tolerance) 
+    clipped.get(1) should equal2d (subject.vertices(0),tolerance)
+    clipped.get(2) should equal2d (subject.vertices(1),tolerance)
+    clipped.get(3) should equal2d (subject.vertices(2),tolerance)
   }
   
   "WeilerAthertonTest-2" should "clip just fine" in {
@@ -51,10 +53,10 @@ class WeilerAthertonTest extends VecMathBaseTest {
     }
     //println("clipped=" + clipped.mkString(","))
     clipped.size should be (4)
-    clipped.get(0) should be (subject.vertices(3))
-    clipped.get(1) should be (subject.vertices(0))
-    clipped.get(2) should be (subject.vertices(1))
-    clipped.get(3) should be (subject.vertices(2))
+    clipped.get(0) should equal2d (subject.vertices(3),tolerance) 
+    clipped.get(1) should equal2d (subject.vertices(0),tolerance) 
+    clipped.get(2) should equal2d (subject.vertices(1),tolerance) 
+    clipped.get(3) should equal2d (subject.vertices(2),tolerance) 
   }
   
   "WeilerAthertonTest-3" should "clip just fine" in {
@@ -83,9 +85,9 @@ class WeilerAthertonTest extends VecMathBaseTest {
     }
     //println("clipped=" + clipped.mkString(","))
     clipped.size should be (3)
-    clipped.get(0) should be (Vec2D(50.0,75.0))
-    clipped.get(1) should be (Vec2D(100.0,50.0))
-    clipped.get(2) should be (Vec2D(50.0,25.0))
+    clipped.get(0) should equal2d (Vec2D(50.0,75.0),tolerance)
+    clipped.get(1) should equal2d (Vec2D(100.0,50.0),tolerance)
+    clipped.get(2) should equal2d (Vec2D(50.0,25.0),tolerance)
   }
   
   "WeilerAthertonTest-5" should "clip just fine" in {
@@ -103,12 +105,13 @@ class WeilerAthertonTest extends VecMathBaseTest {
     }
     //println("clipped=" + clipped.mkString(","))
     clipped.size should be (6)
-    clipped.get(0) should be (Vec2D(200.0,133.33333333333331))
-    clipped.get(1) should be (Vec2D(200.0,170.0))
-    clipped.get(2) should be (Vec2D(185.0,200.0))
-    clipped.get(3) should be (Vec2D(110.0,200.0))
-    clipped.get(4) should be (Vec2D(110.0,110.0))
-    clipped.get(5) should be (Vec2D(186.0,110.0))        
+    
+    clipped.get(0) should equal2d (Vec2D(200.0,133.33333333333331),tolerance) 
+    clipped.get(1) should equal2d (Vec2D(200.0,170.0),tolerance)
+    clipped.get(2) should equal2d (Vec2D(185.0,200.0),tolerance) 
+    clipped.get(3) should equal2d (Vec2D(110.0,200.0),tolerance)
+    clipped.get(4) should equal2d (Vec2D(110.0,110.0),tolerance) 
+    clipped.get(5) should equal2d (Vec2D(186.0,110.0),tolerance)
   }
 
   "WeilerAthertonTest-6" should "clip just fine" in {
