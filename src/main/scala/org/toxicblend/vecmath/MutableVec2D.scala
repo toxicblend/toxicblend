@@ -43,6 +43,12 @@ class MutableVec2D(var x:Double, var y:Double) extends Vec2DBase {
   }
   
   def copy:Vec2D = new MutableVec2D(this)
+  
+  def set(v:Vec2D):MutableVec2D = {
+    x = v.x
+    y = v.y
+    this 
+  }
 }
 
 object MutableVec2D {
