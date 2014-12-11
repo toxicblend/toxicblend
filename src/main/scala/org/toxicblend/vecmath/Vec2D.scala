@@ -34,6 +34,7 @@ object Vec2D {
   def apply(x:Double, y:Double) = new ImmutableVec2D(x, y)
   def apply() = new ImmutableVec2D(0d, 0d)
   def apply(angle:Double) = new ImmutableVec2D(angle)
+  def apply(vertex:Vec2D) = new ImmutableVec2D(vertex)
   
   @inline def almostEqual(v1:Vec2D, v2:Vec2D, ε:Double) = (v1.eq(v2)) || ( (v1.x - v2.x).abs < ε && (v1.y - v2.y).abs < ε)
   
