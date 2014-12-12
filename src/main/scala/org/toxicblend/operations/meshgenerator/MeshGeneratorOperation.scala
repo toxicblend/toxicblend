@@ -22,7 +22,7 @@ import scala.collection.mutable.ArrayBuffer
 import toxi.geom.mesh.TriangleMesh
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
-import org.toxicblend.vecmath.SutherlandHodgemanClipper
+import org.toxicblend.vecmath.SutherlandHodgemanRectangularClipper
 import org.toxicblend.vecmath.WeilerAthertonClipper
 import org.toxicblend.vecmath.Vec2D
 import org.toxicblend.vecmath.MutableVec2D
@@ -50,8 +50,8 @@ class MeshGeneratorOperation extends CommandProcessorTrait {
         val deltaV = Vec2D(delta*0.1d, delta*0.1)
         aabb.growToContainPoint(aabb.min.sub(deltaV)).growToContainPoint(aabb.max.add(deltaV))
       }
-      
-      val p = SutherlandHodgemanClipper.clip(clockwiseClipPolygon, clipAABB.toPolygon2D(true), Option(true), Polygon2D.ε)
+      val clipper = new SutherlandHodgemanRectangularClipper(clockwiseClipPolygon.size, Polygon2D.ε)
+      val p = clipper.clip(clockwiseClipPolygon, clipAABB)
       if (p.isClockwise) p
       else {
         println("********** reducedClipPolygon was anti-clockwise. was forced to reverse it")

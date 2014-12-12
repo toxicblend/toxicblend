@@ -339,9 +339,9 @@ class SutherlandHodgemanClipperTest extends FlatSpec with Matchers {
       
     val polygon = ArrayBuffer((50,150),(200,50),(350,150),(350,300),(250,300),(200,250),(150,350),(100,250),(100,200)).map(p=>Vec2D(p._1,p._2))
     val clipEdges = ArrayBuffer((100,100),(300,100),(300,300),(100,300)).map(p=>Vec2D(p._1,p._2))
-    val clipper = new SutherlandHodgemanClipper(polygon.size)
+    val clipper = new SutherlandHodgemanClipper(polygon.size, Polygon2D.ε)
 
-    val clipped = clipper.clip(polygon, clipEdges, Polygon2D.ε)
+    val clipped = clipper.clip(polygon, clipEdges)
     
     val correctAnswer = Array((100.000000, 116.666667),
                               (125.000000, 100.000000),
@@ -359,9 +359,9 @@ class SutherlandHodgemanClipperTest extends FlatSpec with Matchers {
       clipped(i).y should be ( correctAnswer(i).y plusOrMinus tolerance)
     })
     
-    val rectClipper = new SutherlandHodgemanRectangularClipper(polygon.size)
+    val rectClipper = new SutherlandHodgemanRectangularClipper(polygon.size, Polygon2D.ε)
     val aabb = AABB2D(clipEdges)
-    val rectClipped = rectClipper.clip(polygon, aabb, Polygon2D.ε)
+    val rectClipped = rectClipper.clip(polygon, aabb)
     rectClipped.size should be (correctAnswer.size)
     (0 until rectClipped.size).foreach(i=> rectClipped(i) should equal2d (correctAnswer(i),tolerance) )
     
