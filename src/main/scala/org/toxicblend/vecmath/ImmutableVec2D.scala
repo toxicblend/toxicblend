@@ -6,10 +6,6 @@ class ImmutableVec2D(val x:Double, val y:Double) extends Vec2DBase {
   def this(angle:Double) = this(math.cos(angle),math.sin(angle))
   
   def interpolateTo(v:Vec2D, f:Double): Vec2D = new ImmutableVec2D(x + (v.x - x) * f, y + (v.y - y) * f)
-  def interpolateTo(v:Vec2D): Vec2D = { 
-    assert(false, "Don't call this, this method is only here because of a compiler bug.") 
-    new ImmutableVec2D()
-  }
   def copy:Vec2D = new ImmutableVec2D(this)
 }
 

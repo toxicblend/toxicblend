@@ -3,7 +3,6 @@ package org.toxicblend.vecmath
 trait Vec2D {
   def x:Double
   def y:Double
-  def interpolateTo(v:Vec2D): Vec2D
   def scale(s:Double): Vec2D
   def add(xp:Double, yp:Double): Vec2D
   def add(v:Vec2D): Vec2D
@@ -21,7 +20,7 @@ trait Vec2D {
   @inline final def distanceToSquared(v:Vec2D):Double = distanceToSquared(v.x, v.y)
   @inline final def distanceToSquared(vx:Double, vy:Double) = Vec2D.distanceToSquared(x,y,vx,vy)
   @inline final def heading = math.atan2(y, x)
-  def interpolateTo(v:Vec2D, f:Double): Vec2D
+  def interpolateTo(v:Vec2D, f:Double):Vec2D
   def toIntString:String
   def canEqual(other: Any):Boolean
   def copy:Vec2D
