@@ -11,8 +11,9 @@ import org.toxicblend.typeconverters.Mesh2DConverter
 import org.toxicblend.typeconverters.OptionConverter
 import org.toxicblend.CommandProcessorTrait
 import org.toxicblend.util.Time.time
+import akka.actor.ActorSystem
 
-class ProjectionOutlineOperation extends CommandProcessorTrait {
+class ProjectionOutlineOperation (private val actorSystem:ActorSystem) extends CommandProcessorTrait {
   
   def processInput(inMessage:Message, options:OptionConverter) = {
     val traceMsg = "ProjectionOutlineOperation"
@@ -30,7 +31,8 @@ class ProjectionOutlineOperation extends CommandProcessorTrait {
     
     val returnMessageBuilder = Message.newBuilder()
     val result = Mesh2DConverter(inModel, projectionPlane, true)
-    time("projectionOutline: ", result.mesh2d.projectionOutline(useMultiThreading))
+    
+    time("projectionOutline: ", result.mesh2d.projectionOutline(actorSystem, useMultiThreading))
      
     val inverseMatrix = if (inModel.hasWorldOrientation()) {
       Option(Matrix4x4Converter(inModel.getWorldOrientation()))

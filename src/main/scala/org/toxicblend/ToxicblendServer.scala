@@ -5,13 +5,14 @@ import java.net.ServerSocket
 import java.net.Socket
 import java.io.DataInputStream
 import java.net.SocketTimeoutException 
+import akka.actor.ActorSystem
 
 /**
  * The main class for the toxic blend server
  */
 object ToxicblendServer {
   
-  class SocketListener(val port:Int) extends Thread("SocketListener") {
+  class SocketListener(val actorSystem:ActorSystem, val port:Int) extends Thread("SocketListener") {
     var quit = false
     var isRunning = true
    
@@ -25,7 +26,7 @@ object ToxicblendServer {
             val aSocket:Socket = socket.accept
             aSocket.setSoTimeout(0)
             println("Opening connection to " + aSocket.getPort() + "->" + aSocket.getLocalPort)
-            new ServerThread(aSocket).start 
+            new ServerThread(actorSystem, aSocket).start 
           } catch {
             case e: SocketTimeoutException => // println("ignoring " + e)
           }
@@ -46,8 +47,9 @@ object ToxicblendServer {
     val port = 9999
     //val keyboard = new Scanner(System.in)
     val keyboard=new DataInputStream(System.in);
+    val system = ActorSystem("ToxicBlend")
     
-    val socketListener = new SocketListener(port)
+    val socketListener = new SocketListener(system, port)
     socketListener.start
     var inputChar= ' '
     while (socketListener.isRunning && inputChar!='q' && inputChar!='Q' ) {      

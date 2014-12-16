@@ -25,7 +25,7 @@ import org.toxicblend.operations.offset2dshape.Offset2dShapeOperation
 import org.toxicblend.operations.subdivideedges.SubdivideEdgesOperation
 import org.toxicblend.operations.meshgenerator.MeshGeneratorOperation
 import org.toxicblend.util.Time
-
+import akka.actor.ActorSystem
 import com.google.protobuf.{CodedInputStream,CodedOutputStream}
 import toxi.geom.AABB
 import toxi.geom.Vec3D
@@ -34,7 +34,7 @@ object ServerThread {
     private val CHARSET = Charset.forName("UTF-8")
 }
 
-case class ServerThread(socket: Socket) extends Thread("ServerThread") {
+case class ServerThread(private val actorSystem:ActorSystem, socket: Socket) extends Thread("ServerThread") {
   var lastActiveTime = System.nanoTime
   
   override def run(): Unit = {
@@ -66,7 +66,7 @@ case class ServerThread(socket: Socket) extends Thread("ServerThread") {
               val processor:CommandProcessorTrait = inMessage.getCommand() match {
                 case "OBJECT_OT_toxicblend_volume" => new VolumetricMeshOperation
                 case "OBJECT_OT_toxicblend_add_dragon_curve" => new DragonCurveOperation
-                case "OBJECT_OT_toxicblend_projection_outline" => new ProjectionOutlineOperation
+                case "OBJECT_OT_toxicblend_projection_outline" => new ProjectionOutlineOperation(actorSystem)
                 case "OBJECT_OT_toxicblend_medianaxis" => new MedianAxisOperation
                 case "OBJECT_OT_toxicblend_simplify" => new SimplifyOperation
                 case "OBJECT_OT_toxicblend_simplegcodegenerator" => new SimpleGcodeGeneratorOperation     
