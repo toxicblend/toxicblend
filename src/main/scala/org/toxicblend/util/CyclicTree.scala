@@ -5,6 +5,8 @@ import scala.collection.mutable.Buffer
 import org.toxicblend.ToxicblendException
 import org.toxicblend.vecmath.ImmutableVec2D
 import org.toxicblend.vecmath.InfiniteLine2D
+import org.toxicblend.vecmath.SimpleIntersection
+import org.toxicblend.vecmath.CoincidentIntersection
 import org.toxicblend.vecmath.Polygon2D
 import org.toxicblend.vecmath.Vec2D
 
@@ -128,10 +130,13 @@ class CyclicTree(val seq:IndexedSeq[Payload], private val tree:Tree, val center:
     if (interval.isDefined) {
       val i1 = new InfiniteLine2D(center, center.add(Vec2D(searchAngle)))
       val i2 = new InfiniteLine2D(interval.get._1.pos, interval.get._2.pos)
-      i1.intersectLine(i2)
-    } else {
-      None
-    }
+      val int = i1.intersectLine(i2)
+      if (int.isDefined) int.get match {
+        case i:SimpleIntersection => return Option(i.p)
+        case i:CoincidentIntersection => return Option(i.a)
+      }
+    } 
+    None
   }
   
   override def toString = {

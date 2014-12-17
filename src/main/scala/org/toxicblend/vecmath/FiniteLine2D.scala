@@ -3,26 +3,73 @@ package org.toxicblend.vecmath
 import scala.IndexedSeq
 
 sealed abstract class Intersection
-sealed case class SimpleIntersection(val p:Vec2D) extends Intersection
+sealed case class SimpleIntersection(val p:Vec2D) extends Intersection {
+  @inline def x = p.x
+  @inline def y = p.y
+}
 sealed case class CoincidentIntersection(val a:Vec2D, val b:Vec2D) extends Intersection
 
-class FiniteLine2D(val a:Vec2D, val b:Vec2D) {
-  
-  def getDirection: Vec2D = b.sub(a).normalized
-  
-  protected def overlapIntervals(ub1:Double, ub2:Double) = {
-    val l = Math.min(ub1, ub2)
-    val r = Math.max(ub1, ub2)
-    val a = Math.max(0, l)
-    val b = Math.min(1, r)
-    if (a > b) // no intersection
-      IndexedSeq[Double]()
-    else if (a == b)
-      IndexedSeq( a )
-    else // if (a < B)
-      IndexedSeq( a, b)
-  }
+class FiniteLine2D(a:Vec2D, b:Vec2D) extends Line2D(a,b) {
+     
+  def middlePoint = FiniteLine2D.middlePoint(a,b) 
+  def intersects(that:FiniteLine2D): Boolean = FiniteLine2D.intersects(a, b, that.a, that.b)
+  def intersectLine(b1:Vec2D, b2:Vec2D): Option[Intersection] = FiniteLine2D.intersectLine(a,b,b1,b2)
+  def intersectLine(b:FiniteLine2D): Option[Intersection] = FiniteLine2D.intersectLine(this.a,this.b,b.a,b.b)
+  def sqrDistanceToPoint(p:Vec2D,ε:Double=Polygon2D.ε) = FiniteLine2D.sqrDistanceToPoint(p,a,b,ε)
+  def distanceToPoint(p:Vec2D,ε:Double=Polygon2D.ε) = math.sqrt(FiniteLine2D.sqrDistanceToPoint(p,a,b,ε))
+  def add(v:Vec2D) = FiniteLine2D(a.add(v), b.add(v))
+  def sub(v:Vec2D) = FiniteLine2D(a.sub(v), b.sub(v))
+  override def toString = a.toString + "->" + b.toString
+}
 
+object FiniteLine2D {
+  
+  def apply(s1:Vec2D, s2:Vec2D) = new FiniteLine2D(s1, s2)
+  def apply(x1:Double, y1:Double, x2:Double, y2:Double) = new FiniteLine2D(Vec2D(x1,y1), Vec2D(x2,y2))
+  
+  @inline def sqrDistanceToPoint(p:Vec2D, s1:Vec2D, s2:Vec2D, ε:Double=Polygon2D.ε):Double = {
+    if (s1.=~=(s2, Polygon2D.ε)) s1.distanceToSquared(p)
+    else {
+      val u = ((p.x-s1.x)*(s2.x-s1.x)+(p.y-s1.y)*(s2.y-s1.y))/s1.distanceToSquared(s2)
+      if (u <= 0) {
+        p.distanceToSquared(s1)
+      } else if (u >= 1d) {
+        p.distanceToSquared(s2)
+      } else {
+        val x = s1.x + u*(s2.x-s1.x)
+        val y = s1.y + u*(s2.y-s1.y)
+        p.distanceToSquared(x,y)
+      }
+    }
+  }
+  
+  /**
+   * from http://paulbourke.net/geometry/pointlineplane/
+   */
+  def intersectLine(a:Vec2D, b:Vec2D, p:Vec2D, q:Vec2D):Option[Intersection] = {
+    val denom = (b.y - a.y) * (q.x - p.x) - (b.x - a.x) * (q.y - p.y)
+    val na = (b.x - a.x) * (p.y - a.y) - (b.y - a.y) * (p.x - a.x)
+    val nb = (q.x - p.x) * (p.y - a.y) - (q.y - p.y) * (p.x - a.x)
+
+    if (denom != 0.0) {
+      val ua = na / denom
+      val ub = nb / denom
+      if (ua >= 0d && ua <= 1d && ub >= 0d && ub <= 1d) {
+        val intersection = p.interpolateTo(q, ua)
+        //println("" + this + " intersects " + l + " at " + intersection)
+        Option(new SimpleIntersection(intersection))
+      } else return None
+    } else if (na == 0.0 && nb == 0.0) {
+      val r = intersectCoincidentLine(p, q, a, b)
+      r.size match {
+        case 0 => None
+        case 1 => Option(new SimpleIntersection(r(0)))
+        case 2 => Option(new CoincidentIntersection(r(0), r(1)))
+        case _ => assert(false, "should never happen"); None
+      }
+    } else None
+  }
+  
   // IMPORTANT: a1 and a2 cannot be the same, e.g. a1--a2 is a true segment, not a point
   // b1/b2 may be the same (b1--b2 is a point)
   protected def intersectCoincidentLine(a1:Vec2D, a2:Vec2D, b1:Vec2D, b2:Vec2D) = {
@@ -43,67 +90,20 @@ class FiniteLine2D(val a:Vec2D, val b:Vec2D) {
       Vec2D(x, y)
     })
   }
-   
-  def intersectLine(l:FiniteLine2D): Option[Intersection] = {
-    val denom = (l.b.y - l.a.y) * (b.x - a.x) - (l.b.x - l.a.x) * (b.y - a.y)
-    val na = (l.b.x - l.a.x) * (a.y - l.a.y) - (l.b.y - l.a.y) * (a.x - l.a.x)
-    val nb = (b.x - a.x) * (a.y - l.a.y) - (b.y - a.y) * (a.x - l.a.x)
-
-    if (denom != 0.0) {
-      val ua = na / denom
-      val ub = nb / denom
-      if (ua >= 0d && ua <= 1d && ub >= 0d && ub <= 1d) {
-        val intersection = a.interpolateTo(b, ua)
-        //println("" + this + " intersects " + l + " at " + intersection)
-        Option(new SimpleIntersection(intersection))
-      } else return None
-    } else if (na == 0.0 && nb == 0.0) {
-      val r = intersectCoincidentLine(a, b, l.a, l.b)
-      //if (r.size>0) println("" + this + " is coincident with " + l )
-      //else println("" + this + " is coincident with " + l + " but no intersection")
-      
-      r.size match {
-        case 0 => None
-        case 1 => Option(new SimpleIntersection(r(0)))
-        case 2 => Option(new CoincidentIntersection(r(0), r(1)))
-        case _ => assert(false, "should never happen"); None
-      }
-    } else None
+  
+  protected def overlapIntervals(ub1:Double, ub2:Double) = {
+    val l = Math.min(ub1, ub2)
+    val r = Math.max(ub1, ub2)
+    val a = Math.max(0, l)
+    val b = Math.min(1, r)
+    if (a > b) // no intersection
+      IndexedSeq[Double]()
+    else if (a == b)
+      IndexedSeq( a )
+    else // if (a < B)
+      IndexedSeq( a, b)
   }
-  
-  def middlePoint = FiniteLine2D.middlePoint(a,b) 
-  def intersects(that:FiniteLine2D): Boolean = FiniteLine2D.intersects(a, b, that.a, that.b)
-  def sqrDistanceToPoint(p:Vec2D) = FiniteLine2D.sqrDistanceToPoint(p,a,b)
-  def distanceToPoint(p:Vec2D) = math.sqrt(FiniteLine2D.sqrDistanceToPoint(p,a,b))
-  def add(v:Vec2D) = FiniteLine2D(a.add(v), b.add(v))
-  def sub(v:Vec2D) = FiniteLine2D(a.sub(v), b.sub(v))
-  override def toString = a.toString + "->" + b.toString
-}
-
-object FiniteLine2D {
-  
-  def apply(s1:Vec2D, s2:Vec2D) = new FiniteLine2D(s1, s2)
-  
-  def apply(x1:Double, y1:Double,x2:Double, y2:Double ) = new FiniteLine2D(Vec2D(x1,y1), Vec2D(x2,y2))
-  
-  @inline def sqrDistanceToPoint(p:Vec2D, s1:Vec2D, s2:Vec2D, ε:Double=Polygon2D.ε): Double = {
-    if (s1.=~=(s2, Polygon2D.ε)) s1.distanceToSquared(p)
-    else {
-      val u = ((p.x-s1.x)*(s2.x-s1.x)+(p.y-s1.y)*(s2.y-s1.y))/s1.distanceToSquared(s2)
-      if (u <= 0) {
-        p.distanceToSquared(s1)
-      } else if (u >= 1d) {
-        p.distanceToSquared(s2)
-      } else {
-        val x = s1.x + u*(s2.x-s1.x)
-        val y = s1.y + u*(s2.y-s1.y)
-        p.distanceToSquared(x,y)
-      }
-    }
-  }
-  
-  
-  
+    
   /**
    * From http://stackoverflow.com/questions/7069420/check-if-two-line-segments-are-colliding-only-check-if-they-are-intersecting-n
    * 
@@ -125,9 +125,7 @@ object FiniteLine2D {
    * the segments do not intersect. 
    */
   @inline def intersects(aa:Vec2D, ab:Vec2D, ba:Vec2D, bb:Vec2D): Boolean = differentSide(aa,ab,ba,bb) && differentSide(ba,bb,aa,ab)
-  
-  def intersectLine(aa:Vec2D, ab:Vec2D, ba:Vec2D, bb:Vec2D): Option[Intersection] = FiniteLine2D(aa,ab).intersectLine(FiniteLine2D(ba,bb))
-  
+    
   /**
    * @return true if the vectors a->b and b->c are collinear (ignoring direction)
    */
@@ -159,5 +157,5 @@ object FiniteLine2D {
   /**
    * @return the point in the middle of a and b
    */
-  @inline def middlePoint(a:Vec2D, b:Vec2D):Vec2D = Vec2D(a.x+0.5*(b.x-a.x),a.y+0.5*(b.y-a.y))
+  @inline def middlePoint(a:Vec2D, b:Vec2D):Vec2D = a.interpolateTo(b, 0.5d)
 }
