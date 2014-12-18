@@ -1,10 +1,10 @@
 package org.toxicblend.util
 
-class LinearDoubleLinkedArray private (var indices:Array[DoubleLinkedElement] ) {
+class LinearDoubleLinkedArray[T] private (val defaultValue:T, var indices:Array[DoubleLinkedArrayElement[T]] ) {
   
-  def this(initialSize:Int=4, setupAsEmpty:Boolean=true ) {
-    this( new Array[DoubleLinkedElement](initialSize) )
-    for (i<- 0 until initialSize) indices(i) = new DoubleLinkedElement(i-1, i+1)    
+  def this(defaultValue:T, initialSize:Int, setupAsEmpty:Boolean=false) {
+    this( defaultValue, new Array[DoubleLinkedArrayElement[T]](initialSize) )
+    for (i<- 0 until initialSize) indices(i) = new DoubleLinkedArrayElement[T](defaultValue, i-1, i+1)    
     setup(initialSize, setupAsEmpty)
   }
   
@@ -104,7 +104,7 @@ class LinearDoubleLinkedArray private (var indices:Array[DoubleLinkedElement] ) 
   
   def setup(inputSize:Int, setupAsEmpty:Boolean=false) = {
     if (indices.size < inputSize) {
-      val newIndices = new Array[DoubleLinkedElement](inputSize)
+      val newIndices = new Array[DoubleLinkedArrayElement[T]](inputSize)
       val oldSize = indices.size
       for (i <- 0 until oldSize) {
         val e =  indices(i)
@@ -118,7 +118,9 @@ class LinearDoubleLinkedArray private (var indices:Array[DoubleLinkedElement] ) 
         newIndices(i) = e
       }
       for (i <- oldSize until inputSize) 
-        newIndices(i) = if (setupAsEmpty) new DoubleLinkedElement(-1, -1) else new DoubleLinkedElement(i-1, i+1) 
+        newIndices(i) = 
+          if (setupAsEmpty) new DoubleLinkedArrayElement[T](defaultValue,-1, -1) 
+          else new DoubleLinkedArrayElement[T](defaultValue, i-1, i+1) 
       indices = newIndices
     } else {
       for (i <- 0 until inputSize) {

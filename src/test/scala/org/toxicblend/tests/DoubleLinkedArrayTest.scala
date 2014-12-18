@@ -17,21 +17,25 @@ class DoubleLinkedArrayTest extends VecMathBaseTest {
     def next(i:Int) = if (i>=size-1) 0 else i+1
     def prev(i:Int) = if (i<=0) size-1 else i-1
     
-    val vertices = new CyclicDoubleLinkedArray(size)
+    val sillyDefaultValue = 1234
+    val vertices = new CyclicDoubleLinkedArray(sillyDefaultValue, size)
      
     for (i <- 0 until size){
+      vertices(i).value should be (sillyDefaultValue)
       vertices(i).next should be (next(i))
       vertices(i).prev should be (prev(i))
     }
     size = 20
     vertices.setup(size)
     for (i <- 0 until size){
+      vertices(i).value should be (sillyDefaultValue)
       vertices(i).next should be (next(i))
       vertices(i).prev should be (prev(i))
     }
     size = 10
     vertices.setup(size)
     for (i <- 0 until size){
+      vertices(i).value should be (sillyDefaultValue)
       vertices(i).next should be (next(i))
       vertices(i).prev should be (prev(i))
     }
@@ -39,7 +43,7 @@ class DoubleLinkedArrayTest extends VecMathBaseTest {
   
   "DoubleLinkedArrayTest-2" should "test drop" in {
     var size = 4
-    val vertices = new CyclicDoubleLinkedArray(size)
+    val vertices = new CyclicDoubleLinkedArray(Unit, size)
     vertices.toIndexedSeq should contain inOrderOnly (0, 1, 2, 3) 
     vertices.drop(0)
     vertices.toIndexedSeq should contain inOrderOnly (3, 1, 2)
@@ -56,7 +60,7 @@ class DoubleLinkedArrayTest extends VecMathBaseTest {
   
   "DoubleLinkedArrayTest-3" should "test connect" in {
     var size = 5
-    val vertices = new CyclicDoubleLinkedArray(size)
+    val vertices = new CyclicDoubleLinkedArray(1234,size)
     vertices.connect(3,1) 
     vertices.toIndexedSeq should contain inOrderOnly (3,1,2)
     vertices.connect(1,3)
@@ -72,8 +76,8 @@ class DoubleLinkedArrayTest extends VecMathBaseTest {
     var size = 10
     def next(i:Int) = if (i>=size-1) -1 else i+1
     def prev(i:Int) = if (i<=0) -1 else i-1
-    
-    val vertices = new LinearDoubleLinkedArray(size, setupAsEmpty=false)
+    val sillyDefaultValue = 1234
+    val vertices = new LinearDoubleLinkedArray(sillyDefaultValue, size, setupAsEmpty=false)
      
     for (i <- 0 until size){
       vertices(i).next should be (next(i))
@@ -95,7 +99,8 @@ class DoubleLinkedArrayTest extends VecMathBaseTest {
   
   "DoubleLinkedArrayTest-11" should "test drop" in {
     var size = 4
-    val vertices = new LinearDoubleLinkedArray(size, setupAsEmpty=false)
+    val sillyDefaultValue = 1234
+    val vertices = new LinearDoubleLinkedArray(sillyDefaultValue, size, setupAsEmpty=false)
     vertices.toIndexedSeq should contain inOrderOnly (0,1,2,3) 
     vertices.drop(0)
     vertices.toIndexedSeq should contain inOrderOnly (1,2,3)

@@ -1,11 +1,12 @@
 package org.toxicblend.util
 
-class DoubleLinkedElement(var prev:Int, var next:Int)
+class DoubleLinkedArrayElement[T](var value:T, var prev:Int, var next:Int)
 
-class CyclicDoubleLinkedArray private (var indices:Array[DoubleLinkedElement] ) {
-  def this(initialSize:Int=4 ) {
-    this( new Array[DoubleLinkedElement](initialSize) )
-    for (i<- 0 until initialSize) indices(i) = new DoubleLinkedElement(i-1, i+1)
+class CyclicDoubleLinkedArray[T] private (val defaultValue:T, var indices:Array[DoubleLinkedArrayElement[T]] ) {
+  
+  def this(defaultValue:T, initialSize:Int) {
+    this( defaultValue, new Array[DoubleLinkedArrayElement[T]](initialSize) )
+    for (i<- 0 until initialSize) indices(i) = new DoubleLinkedArrayElement[T](defaultValue, i-1, i+1)
     setup(initialSize)
   }
   
@@ -16,6 +17,8 @@ class CyclicDoubleLinkedArray private (var indices:Array[DoubleLinkedElement] ) 
   
   @inline def next(i:Int):Int = indices(i).next
   @inline def prev(i:Int):Int = indices(i).prev
+  @inline def value(i:Int):T = indices(i).value
+  
   /**
    * the ordering of i and j matter
    */
@@ -93,20 +96,25 @@ class CyclicDoubleLinkedArray private (var indices:Array[DoubleLinkedElement] ) 
     } else Array[Int]()
   }
   
+  /**
+   * Resets the array so that it's size is inputSize and each element n has references to element n+1 and n-1
+   */
   def setup(inputSize:Int) = {
     if (indices.size < inputSize) {
-      val newIndices = new Array[DoubleLinkedElement](inputSize)
+      // grow the container array
+      val newIndices = new Array[DoubleLinkedArrayElement[T]](inputSize)
       val oldSize = indices.size
       for (i <- 0 until oldSize) {
-        val e =  indices(i)
+        val e = indices(i)
         e.prev = (i-1 + inputSize) % inputSize
         e.next = (i+1 + inputSize) % inputSize
         newIndices(i) = e
       }
       for (i <- oldSize until inputSize) 
-        newIndices(i) = new DoubleLinkedElement((i-1 + inputSize) % inputSize, (i+1 + inputSize) % inputSize)
+        newIndices(i) = new DoubleLinkedArrayElement[T](defaultValue, (i-1 + inputSize) % inputSize, (i+1 + inputSize) % inputSize)
       indices = newIndices
     } else {
+      // no need to resize the container array
       for (i <- 0 until inputSize) {
         val e =  indices(i)
         e.prev = (i-1 + inputSize) % inputSize

@@ -189,10 +189,10 @@ final class Triangles private () extends Traversable[Array[Int]]{
  */
 class EarClippingTriangulator(val useQualityTriangulation:Boolean) {
   var input:IndexedSeq[Vec2D] = null
-  val vertices = new CyclicDoubleLinkedArray
+  val vertices = new CyclicDoubleLinkedArray(Unit, 6)
   val earTips = new SortedLinearDoubleLinkedArray[Double](initialValue=0d, setupAsEmpty=true)
   
-  val reflexVertices = new LinearDoubleLinkedArray
+  val reflexVertices = new LinearDoubleLinkedArray(Unit, 6, setupAsEmpty=true)
   val rv = new Triangles(10)
   
   def isEarTip(i:Int):Boolean = {
