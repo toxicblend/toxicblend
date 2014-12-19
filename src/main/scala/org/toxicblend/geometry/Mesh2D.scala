@@ -108,7 +108,7 @@ class Mesh2D protected ( val vertices:ArrayBuffer[Vec2D], val faces:ArrayBuffer[
     val rvVertices = new ArrayBuffer[TVec2D]()
     val rvFaces = new ArrayBuffer[ArrayBuffer[Int]]()
     unionPolygons.foreach(polygon => {
-      if (polygon.size>1) {
+      if (polygon.size>2) {
         var index = rvVertices.size
         val tmpFaces = new ArrayBuffer[Int]
         polygon.foreach(v => { 
