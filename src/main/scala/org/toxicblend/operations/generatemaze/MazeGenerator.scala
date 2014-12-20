@@ -13,8 +13,8 @@ import org.toxicblend.protobuf.ToxicBlendProtos.Model.{Builder=>PbBuilder}
 import org.toxicblend.typeconverters.Matrix4x4Converter
 import scala.util.Random
 
-case class WallIndex(val index:Int)  // just a typesafe int dedicated for Walls
-case class NodeIndex(val index:Int)  // just a typesafe int dedicated for Nodes
+case class WallIndex(val index:Int)  // just a typesafe Int dedicated for Walls
+case class NodeIndex(val index:Int)  // just a typesafe Int dedicated for Nodes
 class Wall(val index:WallIndex, val nodeA:NodeIndex, val nodeB:NodeIndex, val aToB:IndexedSeq[ReadonlyVec3D]) 
 class Node(val index:NodeIndex, val walls:ArrayBuffer[WallIndex], val coordinate:ReadonlyVec3D)
 
