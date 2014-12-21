@@ -30,14 +30,14 @@ class ToxicBlend_ParametricCircle(bpy.types.Operator):
   bl_label = "Toxicblend:Add Custom Circle"
   bl_options = {'REGISTER', 'UNDO'}  # enable undo for the operator.
   
-  drawTypeProperty = bpy.props.EnumProperty(
-    name="Draw type",
-    description = "Select draw type.",
-    items=(("CIRCLE", "CIRCLE",""),
-           ("BOX", "BOX",""), 
-           ("SPHERE", "SPHERE","")),
-           default="CIRCLE"    
-          )
+  #drawTypeProperty = bpy.props.EnumProperty(
+  #  name="Draw type",
+  #  description = "Select draw type.",
+  #  items=(("CIRCLE", "CIRCLE",""),
+  #         ("BOX", "BOX",""), 
+  #         ("SPHERE", "SPHERE","")),
+  #         default="CIRCLE"    
+  #        )
             
   useMultiThreadingProperty = bpy.props.EnumProperty(
     description="Each continous ring segment will be processed in a separate thread",
@@ -59,7 +59,7 @@ class ToxicBlend_ParametricCircle(bpy.types.Operator):
         activeObject = context.scene.objects.active
       
         cursor_location = bpy.context.scene.cursor_location.copy()
-        properties = {'drawTypeProperty'      : str(self.drawTypeProperty), 
+        properties = {'drawTypeProperty'      : "CIRCLE", #str(self.drawTypeProperty), 
                       'useMultiThreading'     : str(self.useMultiThreadingProperty),
                       'simplifyLimit'         : str(self.simplifyLimitProperty),
                       'zEpsilon'              : str(self.zEpsilonProperty),

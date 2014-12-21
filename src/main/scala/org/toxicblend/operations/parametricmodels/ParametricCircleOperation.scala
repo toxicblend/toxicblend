@@ -80,7 +80,6 @@ class ParametricCircleOperation extends CommandProcessorTrait {
     if (useMultiThreading) if (useMultiThreading) System.err.println(traceMsg + ":useMultiThreading=True but it's not implemented yet")
     val drawType = options.getOrElse("drawTypeProperty", "CIRCLE").toUpperCase() match {
       case "CIRCLE" => "CIRCLE"
-      case "BOX" => "BOX"
       case s:String => System.err.println("ParametricCircleOperation: Unrecognizable 'drawTypeProperty' property value: " +  s ); "CIRCLE"
     }
     val unitScale = options.getUnitScaleProperty(traceMsg)
