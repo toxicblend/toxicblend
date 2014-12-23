@@ -49,13 +49,13 @@ class RamerDouglasPeuckerAlgorithm(private val pts:IndexedSeq[ReadonlyVec3D], pr
     seg.p1 = pts(j)
     var maxDistance = -1.0f
     var maxIndex = i;
-    (i+1 until j).foreach(k=>{
+    for( k <- i+1 until j) {
       val distance = seg.distanceSquared(pts(k))
       if (distance > maxDistance) {
         maxDistance = distance;
         maxIndex = k;
       }
-    })
+    }
     
     if (maxDistance <= distanceToleranceSquared) {
       (i+1 until j).foreach(k => usePt(k) = false)

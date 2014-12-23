@@ -150,8 +150,8 @@ object FiniteLine2D {
     val d1y = a.y-b.y
     val d2x = b.x-c.x
     val d2y = b.y-c.y
-    val dotm1 = Vec2D.dot(d1x,d1y,d2x,d2y)/(Vec2D.magnitude(d1x, d1y)*Vec2D.magnitude(d2x, d2y)) -1
-    dotm1 <= ε && dotm1 >= -ε
+    val normDot = Vec2D.dot(d1x,d1y,d2x,d2y)/(Vec2D.magnitude(d1x, d1y)*Vec2D.magnitude(d2x, d2y)) -1
+    normDot <= ε && normDot >= -ε
   }
   
   /**
